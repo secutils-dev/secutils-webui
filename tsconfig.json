@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "jsx": "react",
+    "jsxImportSource": "@emotion/react",
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "lib": [
+      "dom",
+      "es5",
+      "es2015",
+      "es2019"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "name": "secutils-webui",
+  "private": true,
+  "author": {
+    "name": "Secutils.dev",
+    "email": "dev@secutils.dev"
+  },
+  "version": "0.1.0",
+  "engines": {
+    "node": "18.x"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "Firefox ESR",
+    "not dead"
+  ],
+  "alias": {
+    "process": false
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.20.6",
+    "@elastic/datemath": "^5.0.3",
+    "@elastic/eui": "^71.1.0",
+    "@emotion/css": "^11.10.5",
+    "@emotion/react": "^11.10.5",
+    "axios": "^1.2.1",
+    "moment": "^2.29.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.4.5",
+    "use-http": "^1.0.27"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^1.3.3",
+    "@parcel/compressor-brotli": "^2.8.1",
+    "@parcel/compressor-gzip": "^2.8.1",
+    "@parcel/config-default": "^2.8.1",
+    "@parcel/core": "^2.8.1",
+    "@parcel/packager-raw-url": "^2.8.1",
+    "@parcel/reporter-bundle-buddy": "^2.8.1",
+    "@parcel/transformer-image": "^2.8.1",
+    "@parcel/transformer-js": "^2.8.1",
+    "@parcel/transformer-raw": "^2.8.1",
+    "@parcel/transformer-webmanifest": "^2.8.1",
+    "@parcel/validator-typescript": "^2.8.1",
+    "@typescript-eslint/eslint-plugin": "^5.46.1",
+    "@typescript-eslint/parser": "^5.46.1",
+    "buffer": "^5.7.1",
+    "eslint": "^8.29.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.31.11",
+    "parcel": "^2.8.1",
+    "prettier": "^2.8.1",
+    "process": "^0.11.10",
+    "typescript": "^4.9.4",
+    "url": "^0.11.0"
+  },
+  "scripts": {
+    "prebuild": "eslint . && rm -rf dist",
+    "build": "parcel build src/index.html src/favicon.ico",
+    "watch": "parcel src/index.html src/favicon.ico",
+    "perf": "parcel build --reporter @parcel/reporter-bundle-buddy src/index.html src/favicon.ico"
+  }
+}
