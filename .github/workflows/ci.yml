@@ -1,0 +1,33 @@
+name: Secutils Web UI
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'config/**'
+      - 'Dockerfile'
+      - 'LICENSE'
+      - '*.md'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout
+
+      - name: Set Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
