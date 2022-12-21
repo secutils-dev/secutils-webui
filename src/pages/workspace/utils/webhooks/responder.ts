@@ -1,5 +1,3 @@
-import { User } from '../../../../model';
-
 export const RESPONDERS_DATA_KEY = 'hp.ar';
 
 export interface SerializedResponder {
