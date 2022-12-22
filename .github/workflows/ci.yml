@@ -9,9 +9,6 @@ on:
       - 'LICENSE'
       - '*.md'
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   ci:
     name: Build (Linux)
