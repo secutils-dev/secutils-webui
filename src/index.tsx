@@ -49,10 +49,7 @@ import { WorkspacePage } from './pages';
 import { PageContainer } from './page_container';
 import { PageLoadingState } from './components';
 
-const AboutUsPage = React.lazy(() => import('./pages/about_us'));
 const LoginPage = React.lazy(() => import('./pages/login'));
-const PrivacyPolicyPage = React.lazy(() => import('./pages/privacy_policy'));
-const TermsPage = React.lazy(() => import('./pages/terms'));
 
 appendIconComponentCache({
   alert: EuiIconAlert,
@@ -108,30 +105,6 @@ const IndexPage = () => {
             element={
               <React.Suspense fallback={<PageLoadingState />}>
                 <LoginPage />
-              </React.Suspense>
-            }
-          />
-          <Route
-            path="about-us"
-            element={
-              <React.Suspense fallback={<PageLoadingState />}>
-                <AboutUsPage />
-              </React.Suspense>
-            }
-          />
-          <Route
-            path="privacy"
-            element={
-              <React.Suspense fallback={<PageLoadingState />}>
-                <PrivacyPolicyPage />
-              </React.Suspense>
-            }
-          />
-          <Route
-            path="terms"
-            element={
-              <React.Suspense fallback={<PageLoadingState />}>
-                <TermsPage />
               </React.Suspense>
             }
           />

@@ -1,5 +1,4 @@
 import React, { MouseEventHandler, ReactElement, ReactNode, useCallback, useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { css } from '@emotion/react';
 import {
@@ -42,7 +41,6 @@ export interface WorkspacePageContainerProps {
 export function WorkspacePageContainer({ children, sideBar, breadcrumbs, pageTitle }: WorkspacePageContainerProps) {
   const { getURL, getApiURL, addToast } = useContext(PageContext);
   const { settings, setSettings, uiState } = useContext(PageContext);
-  const navigate = useNavigate();
 
   const [utilSearchQuery, setUtilSearchQuery] = useState<string>('');
 
@@ -59,33 +57,6 @@ export function WorkspacePageContainer({ children, sideBar, breadcrumbs, pageTit
   };
 
   const settingsFlyout = isSettingsOpen ? <SettingsFlyout onClose={onToggleSettings} /> : null;
-
-  const onNavigatePrivacyPolicy: MouseEventHandler<HTMLAnchorElement> = useCallback(
-    (e) => {
-      e.preventDefault();
-
-      navigate(getURL('/privacy'));
-    },
-    [getURL],
-  );
-
-  const onNavigateTerms: MouseEventHandler<HTMLAnchorElement> = useCallback(
-    (e) => {
-      e.preventDefault();
-
-      navigate(getURL('/terms'));
-    },
-    [getURL],
-  );
-
-  const onNavigateAboutUs: MouseEventHandler<HTMLAnchorElement> = useCallback(
-    (e) => {
-      e.preventDefault();
-
-      navigate(getURL('/about-us'));
-    },
-    [getURL],
-  );
 
   const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState<boolean>(false);
   const onLogout = useCallback(() => {
@@ -212,15 +183,15 @@ export function WorkspacePageContainer({ children, sideBar, breadcrumbs, pageTit
         <EuiPageSection>
           <EuiHorizontalRule size={'half'} margin="m" />
           <EuiText textAlign={'center'} size={'xs'}>
-            <EuiLink href={getURL('/about-us')} onClick={onNavigateAboutUs} color={'success'}>
+            <EuiLink target="_blank" href={getURL('/about-us')} color={'success'}>
               About Us
             </EuiLink>{' '}
             |{' '}
-            <EuiLink href={getURL('/privacy')} onClick={onNavigatePrivacyPolicy} color={'success'}>
+            <EuiLink target="_blank" href={getURL('/privacy')} color={'success'}>
               Privacy Policy
             </EuiLink>{' '}
             |{' '}
-            <EuiLink href={getURL('/terms')} onClick={onNavigateTerms} color={'success'}>
+            <EuiLink target="_blank" href={getURL('/terms')} color={'success'}>
               Terms of Use
             </EuiLink>{' '}
             |{' '}
