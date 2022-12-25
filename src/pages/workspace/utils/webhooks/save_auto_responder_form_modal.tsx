@@ -123,8 +123,8 @@ export function SaveAutoResponderFormModal({ onClose, autoResponder }: SaveAutoR
             setAlias('');
           }
         },
-        (err) => {
-          setUpdatingStatus({ status: 'failed', error: err });
+        (err: Error) => {
+          setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
         },
       );
     },

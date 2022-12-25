@@ -15,7 +15,7 @@ export function WorkspacePage() {
   usePageMeta('Workspace');
 
   const navigate = useNavigate();
-  const { settings, parameters, getURL } = useContext(PageContext);
+  const { settings, uiState, getURL } = useContext(PageContext);
   const { util: utilIdFromParam = 'home' } = useParams<{ util?: string }>();
 
   const [isSideNavOpenOnMobile, setIsSideNavOpenOnMobile] = useState<boolean>(false);
@@ -76,8 +76,8 @@ export function WorkspacePage() {
       };
     };
 
-    return [parameters.utils.map(createItem) as EuiSideNavItemType<unknown>[], utilsMap];
-  }, [parameters, getURL, selectedUtil]);
+    return [uiState.utils.map(createItem), utilsMap];
+  }, [uiState, getURL, selectedUtil]);
 
   useEffect(() => {
     const newSelectedUtil =

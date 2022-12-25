@@ -6,8 +6,8 @@ import { useLocalStorage } from '../hooks';
 import {
   CURRENT_SETTINGS_VERSION,
   deserializeUser,
-  Parameters,
-  SerializedParameters,
+  UiState,
+  SerializedUiState,
   Settings,
   settingsDefault,
   upgradeSettings,
@@ -54,15 +54,15 @@ export function PageContainer() {
   const setUserData = useCallback((data: Record<string, string>) => {
     return axios
       .post(getApiURL('/api/user/data'), { data })
-      .then(() => axios.get(getApiURL('/api/parameters')))
-      .then(({ data }: { data: SerializedParameters }) => {
+      .then(() => axios.get(getApiURL('/api/ui/state')))
+      .then(({ data }: { data: SerializedUiState }) => {
         const user = data.user ? deserializeUser(data.user) : undefined;
-        setParameters({ synced: true, status: data.status, license: data.license, utils: data.utils, user });
+        setUiState({ synced: true, status: data.status, license: data.license, utils: data.utils, user });
         return user;
       });
   }, []);
 
-  const [parameters, setParameters] = useState<Parameters>({
+  const [uiState, setUiState] = useState<UiState>({
     synced: false,
     status: { level: 'available' },
     license: {
@@ -71,9 +71,9 @@ export function PageContainer() {
     utils: [],
   });
   useEffect(() => {
-    axios.get(getApiURL('/api/parameters')).then(
-      ({ data }: { data: SerializedParameters }) => {
-        setParameters({
+    axios.get(getApiURL('/api/ui/state')).then(
+      ({ data }: { data: SerializedUiState }) => {
+        setUiState({
           synced: true,
           status: data.status,
           license: data.license,
@@ -86,13 +86,13 @@ export function PageContainer() {
         }
       },
       () => {
-        setParameters({ ...parameters, status: { level: 'unavailable' }, synced: true });
+        setUiState({ ...uiState, status: { level: 'unavailable' }, synced: true });
       },
     );
   }, [settings]);
 
   const content =
-    parameters?.status?.level === 'unavailable' ? (
+    uiState?.status?.level === 'unavailable' ? (
       <PageErrorState
         title="Cannot connect to the server"
         content={
@@ -107,7 +107,9 @@ export function PageContainer() {
 
   return (
     <EuiProvider colorMode={settings.theme}>
-      <PageContext.Provider value={{ settings, setSettings, parameters, getURL, getApiURL, addToast, setUserData }}>
+      <PageContext.Provider
+        value={{ settings, setSettings, uiState: uiState, getURL, getApiURL, addToast, setUserData }}
+      >
         {content}
         <EuiGlobalToastList toasts={toasts} dismissToast={removeToast} toastLifeTimeMs={5000} />
       </PageContext.Provider>

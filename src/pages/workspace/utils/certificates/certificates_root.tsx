@@ -94,8 +94,8 @@ export default function CertificatesRoot() {
           (response) => {
             setGenerationStatus({ status: 'succeeded', data: response.data.value.value });
           },
-          (err) => {
-            setGenerationStatus({ status: 'failed', error: err?.toString() ?? 'Unknown error' });
+          (err: Error) => {
+            setGenerationStatus({ status: 'failed', error: err?.message ?? err?.toString() ?? 'Unknown error' });
           },
         );
     },

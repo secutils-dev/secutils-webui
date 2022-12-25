@@ -40,7 +40,7 @@ function parseAutoResponders(user?: User): Responder[] {
 }
 
 export default function WebhooksResponders() {
-  const { parameters, setUserData } = useContext(PageContext);
+  const { uiState, setUserData } = useContext(PageContext);
 
   const getResponderUrl = useCallback((autoResponder: Responder, user: User) => {
     return `${location.origin}/api/webhooks/ar/${encodeURIComponent(user.handle)}/${encodeURIComponent(
@@ -55,11 +55,11 @@ export default function WebhooksResponders() {
     setIsSaveResponderFormOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
   }, []);
 
-  if (!parameters.synced || !parameters.user) {
+  if (!uiState.synced || !uiState.user) {
     return <PageLoadingState />;
   }
 
-  const autoResponders = parseAutoResponders(parameters.user);
+  const autoResponders = parseAutoResponders(uiState.user);
   const saveAutoResponderFormModal = isSaveResponderFormOpen.isOpen ? (
     <SaveAutoResponderFormModal
       onClose={onToggleAddResponderForm}
@@ -70,7 +70,7 @@ export default function WebhooksResponders() {
   const onRemoveResponder = useCallback((autoResponder: Responder) => {
     setUserData({
       [RESPONDERS_DATA_KEY]: JSON.stringify({ [autoResponder.alias]: null }),
-    }).catch((err) => {
+    }).catch((err: Error) => {
       console.log(`Failed to remove responder: ${err?.message}`);
     });
   }, []);
@@ -252,7 +252,7 @@ export default function WebhooksResponders() {
                 field: 'alias',
                 sortable: true,
                 render: (_, autoResponder: Responder) => {
-                  const url = parameters.user ? getResponderUrl(autoResponder, parameters.user) : undefined;
+                  const url = uiState.user ? getResponderUrl(autoResponder, uiState.user) : undefined;
                   return url ? (
                     <EuiLink href={url} target="_blank">
                       {url}

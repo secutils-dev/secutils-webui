@@ -47,8 +47,8 @@ export function LoginPage() {
           setLoginStatus({ status: 'succeeded', data: null });
           navigate(getURL('/ws'));
         },
-        (err) => {
-          setLoginStatus({ status: 'failed', error: err });
+        (err: Error) => {
+          setLoginStatus({ status: 'failed', error: err?.message ?? err });
         },
       );
     },

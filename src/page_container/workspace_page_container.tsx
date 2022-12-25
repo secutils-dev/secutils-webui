@@ -41,7 +41,7 @@ export interface WorkspacePageContainerProps {
 
 export function WorkspacePageContainer({ children, sideBar, breadcrumbs, pageTitle }: WorkspacePageContainerProps) {
   const { getURL, getApiURL, addToast } = useContext(PageContext);
-  const { settings, setSettings, parameters } = useContext(PageContext);
+  const { settings, setSettings, uiState } = useContext(PageContext);
   const navigate = useNavigate();
 
   const [utilSearchQuery, setUtilSearchQuery] = useState<string>('');
@@ -168,7 +168,7 @@ export function WorkspacePageContainer({ children, sideBar, breadcrumbs, pageTit
               >
                 <EuiContextMenuPanel
                   size="m"
-                  title={parameters.user ? parameters.user.email : null}
+                  title={uiState.user ? uiState.user.email : null}
                   items={[
                     <EuiContextMenuItem key="settings" icon="gear" onClick={onToggleSettings}>
                       Settings

@@ -12,14 +12,14 @@ export interface License {
   maxEndpoints: number;
 }
 
-export interface SerializedParameters {
+export interface SerializedUiState {
   status: ServerStatus;
   license: License;
   user?: SerializedUser;
   utils: Util[];
 }
 
-export interface Parameters {
+export interface UiState {
   synced: boolean;
   status: ServerStatus;
   license: License;

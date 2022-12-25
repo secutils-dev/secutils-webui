@@ -3,6 +3,7 @@
     "jsx": "react",
     "jsxImportSource": "@emotion/react",
     "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
     "noEmit": true,
     "skipLibCheck": true,
     "strict": true,
@@ -11,7 +12,11 @@
       "es5",
       "es2015",
       "es2019"
-    ]
+    ],
+    "paths": {
+      "@elastic/eui/es/components/icon/*": ["./src/assets.d.ts"],
+      "@elastic/eui/dist/*": ["./src/assets.d.ts"]
+    }
   },
   "include": [
     "src/**/*"

@@ -50,8 +50,8 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
           setMessage('');
           setEmail('');
         },
-        (err) => {
-          setSendingStatus({ status: 'failed', error: err });
+        (err: Error) => {
+          setSendingStatus({ status: 'failed', error: err?.message ?? err });
         },
       );
     },

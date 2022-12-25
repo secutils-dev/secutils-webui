@@ -32,7 +32,7 @@ function parseCspPolicies(user?: User): CspPolicy[] {
 }
 
 export default function WebSecurityCspPolicies() {
-  const { parameters, setUserData } = useContext(PageContext);
+  const { uiState, setUserData } = useContext(PageContext);
 
   const [isEditCspPolicyPanelOpen, setIsEditCspPolicyPanelOpen] = useState<
     { isOpen: false } | { isOpen: true; policyToEdit?: CspPolicy }
@@ -41,16 +41,16 @@ export default function WebSecurityCspPolicies() {
     setIsEditCspPolicyPanelOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
   }, []);
 
-  if (!parameters.synced || !parameters.user) {
+  if (!uiState.synced || !uiState.user) {
     return <PageLoadingState />;
   }
 
-  const cspPolicies = parseCspPolicies(parameters.user);
+  const cspPolicies = parseCspPolicies(uiState.user);
 
   const onRemoveCspPolicy = useCallback((cspPolicy: CspPolicy) => {
     setUserData({
       [CSP_POLICIES_DATA_KEY]: JSON.stringify({ [cspPolicy.name]: null }),
-    }).catch((err) => {
+    }).catch((err: Error) => {
       console.log(`Failed to remove CSP policy: ${err?.message}`);
     });
   }, []);

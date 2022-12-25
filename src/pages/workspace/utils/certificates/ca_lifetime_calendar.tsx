@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { EuiDatePicker } from '@elastic/eui/es/components/date_picker';
+import { EuiDatePicker } from '@elastic/eui';
 import moment, { Moment } from 'moment';
 
 export interface CacheExpirationCalendarProps {

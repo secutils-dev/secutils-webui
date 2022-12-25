@@ -141,4 +141,4 @@ const IndexPage = () => {
   );
 };
 
-createRoot(document.getElementById('root')).render(<IndexPage />);
+createRoot(document.getElementById('root') as Element).render(<IndexPage />);

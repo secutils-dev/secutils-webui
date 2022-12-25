@@ -1,11 +1,11 @@
 import React from 'react';
-import { Parameters, Settings, settingsDefault, User } from '../model';
+import { UiState, Settings, settingsDefault, User } from '../model';
 import { PageToast } from './page_container';
 
 export interface PageContextValue {
   settings: Settings;
   setSettings: (settings: Settings) => void;
-  parameters: Parameters;
+  uiState: UiState;
   getURL: (path: string) => string;
   getApiURL: (path: string) => string;
   setUserData: (data: Record<string, string>) => Promise<User | undefined>;
@@ -17,7 +17,7 @@ export const PageContext = React.createContext<PageContextValue>({
   setSettings: () => {
     //
   },
-  parameters: {
+  uiState: {
     synced: false,
     status: { level: 'available' },
     license: {
