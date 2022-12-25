@@ -16,6 +16,7 @@
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/consistent-type-exports": "error",
+    "@typescript-eslint/no-unused-vars": "error",
     "object-curly-spacing": ["error", "always"],
     "max-len": ["error", { "code": 120, "ignoreStrings": true }],
     "eol-last": ["error", "always"],
