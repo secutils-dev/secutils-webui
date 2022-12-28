@@ -71,7 +71,7 @@ export function WorkspacePage() {
           setBreadcrumbs(getBreadcrumbs(util, utilsMap));
           navigate(getURL(utilUrl));
         },
-        disabled: settings.isOffline,
+        disabled: settings.showOnlyFavorites,
         items: util.utils?.map((util) => createItem(util)) ?? [],
       };
     };

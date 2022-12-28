@@ -2,14 +2,14 @@ export const CURRENT_SETTINGS_VERSION = 1;
 
 export interface Settings {
   version: number;
-  isOffline?: boolean;
+  showOnlyFavorites?: boolean;
   theme?: 'light' | 'dark';
 }
 
 export function settingsDefault(): Settings {
   return {
     version: CURRENT_SETTINGS_VERSION,
-    isOffline: false,
+    showOnlyFavorites: false,
   };
 }
 
@@ -20,6 +20,6 @@ export function upgradeSettings(settings: Settings): Settings {
   return settings;
 }
 
-export function settingsSetIsOffline(settings: Settings, isOffline: boolean) {
-  return { ...settings, isOffline };
+export function settingsSetShowOnlyFavorites(settings: Settings, showOnlyFavorites: boolean) {
+  return { ...settings, showOnlyFavorites };
 }

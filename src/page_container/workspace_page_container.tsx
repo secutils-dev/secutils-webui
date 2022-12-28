@@ -24,7 +24,7 @@ import {
   EuiHeaderBreadcrumbs,
 } from '@elastic/eui';
 import { Logo } from '../components';
-import { settingsSetIsOffline } from '../model';
+import { settingsSetShowOnlyFavorites } from '../model';
 import { ContactFormModal } from './contact_form_modal';
 import { PageContext } from './page_context';
 import { SettingsFlyout } from './settings_flyout';
@@ -50,10 +50,10 @@ export function WorkspacePageContainer({ children, sideBar, breadcrumbs, pageTit
     setIsSettingsOpen(!isSettingsOpen);
   }, [isSettingsOpen]);
 
-  const [isOffline, setIsOffline] = useState<boolean>(settings.isOffline ?? false);
-  const onChangeIsOffline = (isOfflineValue: boolean) => {
-    setIsOffline(isOfflineValue);
-    setSettings(settingsSetIsOffline(settings, isOfflineValue));
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState<boolean>(settings.showOnlyFavorites ?? false);
+  const onChangeShowOnlyFavorites = (showOnlyFavoritesValue: boolean) => {
+    setShowOnlyFavorites(showOnlyFavoritesValue);
+    setSettings(settingsSetShowOnlyFavorites(settings, showOnlyFavoritesValue));
   };
 
   const settingsFlyout = isSettingsOpen ? <SettingsFlyout onClose={onToggleSettings} /> : null;
@@ -114,9 +114,9 @@ export function WorkspacePageContainer({ children, sideBar, breadcrumbs, pageTit
               <EuiSwitch
                 label="Favorites only"
                 compressed
-                checked={isOffline}
-                onChange={() => onChangeIsOffline(!isOffline)}
-                title="Use workspace in the offline mode. In this mode certain functionality might not be available."
+                checked={showOnlyFavorites}
+                onChange={() => onChangeShowOnlyFavorites(!showOnlyFavorites)}
+                title="Show only utils that are marked as favorite."
               />
             </EuiHeaderSectionItem>
             <EuiHeaderSectionItem>
