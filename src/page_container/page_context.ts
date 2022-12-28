@@ -9,6 +9,7 @@ export interface PageContextValue {
   getURL: (path: string) => string;
   getApiURL: (path: string) => string;
   setUserData: (data: Record<string, string>) => Promise<User | undefined>;
+  setUser: (user: User) => void;
   addToast: (toast: PageToast) => void;
 }
 
@@ -28,6 +29,9 @@ export const PageContext = React.createContext<PageContextValue>({
   getURL: (path) => path,
   getApiURL: (path) => path,
   setUserData: () => Promise.resolve(undefined),
+  setUser: () => {
+    // Empty impl
+  },
   addToast: () => {
     // Empty impl
   },

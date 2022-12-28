@@ -14,13 +14,13 @@ import {
 } from '@elastic/eui';
 import { PageContext } from '../../page_container';
 import { usePageMeta } from '../../hooks';
-import { AsyncData } from '../../model';
+import { AsyncData, deserializeUser, SerializedUser } from '../../model';
 
 export function LoginPage() {
   usePageMeta('Login');
 
   const navigate = useNavigate();
-  const { getURL, getApiURL } = useContext(PageContext);
+  const { getURL, getApiURL, setUser } = useContext(PageContext);
 
   const [username, setUsername] = useState<string>('');
   const onUsernameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -43,8 +43,9 @@ export function LoginPage() {
 
       setLoginStatus({ status: 'pending' });
       axios.post(getApiURL('/api/login'), { username, password }).then(
-        () => {
+        ({ data }: { data: { user: SerializedUser } }) => {
           setLoginStatus({ status: 'succeeded', data: null });
+          setUser(deserializeUser(data.user));
           navigate(getURL('/ws'));
         },
         (err: Error) => {

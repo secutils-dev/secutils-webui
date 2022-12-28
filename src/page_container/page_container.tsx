@@ -11,6 +11,7 @@ import {
   Settings,
   settingsDefault,
   upgradeSettings,
+  User,
 } from '../model';
 import { PageContext } from './page_context';
 import { PageErrorState } from '../components';
@@ -62,6 +63,10 @@ export function PageContainer() {
       });
   }, []);
 
+  const setUser = useCallback((user: User) => {
+    setUiState((currentUiState) => ({ ...currentUiState, user }));
+  }, []);
+
   const [uiState, setUiState] = useState<UiState>({
     synced: false,
     status: { level: 'available' },
@@ -108,7 +113,7 @@ export function PageContainer() {
   return (
     <EuiProvider colorMode={settings.theme}>
       <PageContext.Provider
-        value={{ settings, setSettings, uiState: uiState, getURL, getApiURL, addToast, setUserData }}
+        value={{ settings, setSettings, uiState, getURL, getApiURL, addToast, setUserData, setUser }}
       >
         {content}
         <EuiGlobalToastList toasts={toasts} dismissToast={removeToast} toastLifeTimeMs={5000} />
