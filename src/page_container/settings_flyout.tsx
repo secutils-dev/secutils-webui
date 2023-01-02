@@ -1,4 +1,5 @@
-import React, { ChangeEvent, useCallback, useContext } from 'react';
+import type { ChangeEvent } from 'react';
+import React, { useCallback, useContext } from 'react';
 import { EuiFlyout, EuiFlyoutBody, EuiFlyoutHeader, EuiFormRow, EuiSelect, EuiTitle } from '@elastic/eui';
 import { PageContext } from './page_context';
 
@@ -20,7 +21,7 @@ export function SettingsFlyout({ onClose }: Props) {
   );
 
   return (
-    <EuiFlyout size="s" onClose={onClose} ownFocus={true} maskProps={{ headerZindexLocation: 'above' }}>
+    <EuiFlyout size="s" maxWidth onClose={onClose} ownFocus={true} maskProps={{ headerZindexLocation: 'above' }}>
       <EuiFlyoutHeader>
         <EuiTitle size="s">
           <h1>Settings</h1>

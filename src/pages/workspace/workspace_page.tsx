@@ -1,13 +1,26 @@
 import React, { Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { EuiButtonIcon, EuiIcon, EuiSideNav, EuiSideNavItemType } from '@elastic/eui';
-import { PageContext, WorkspacePageContainer } from '../../page_container';
+import type { EuiSideNavItemType } from '@elastic/eui';
+import {
+  EuiButtonIcon,
+  EuiContextMenuItem,
+  EuiContextMenuPanel,
+  EuiFieldSearch,
+  EuiIcon,
+  EuiPopover,
+  EuiSideNav,
+  EuiSpacer,
+  EuiSwitch,
+} from '@elastic/eui';
+import { Page, PageContext, SettingsFlyout } from '../../page_container';
 import { usePageMeta } from '../../hooks';
 import { PageLoadingState } from '../../components';
 import { UtilsComponents } from './utils';
-import { Util } from '../../model';
-import { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
+import type { Util } from '../../model';
+import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
 import { css } from '@emotion/react';
+import { settingsSetShowOnlyFavorites } from '../../model';
+import axios from 'axios';
 
 const DEFAULT_COMPONENT = React.lazy(() => import('../../components/page_under_construction_state'));
 
@@ -15,7 +28,7 @@ export function WorkspacePage() {
   usePageMeta('Workspace');
 
   const navigate = useNavigate();
-  const { settings, uiState, getURL } = useContext(PageContext);
+  const { settings, uiState, getURL, setSettings, getApiURL, addToast } = useContext(PageContext);
   const { util: utilIdFromParam = 'home' } = useParams<{ util?: string }>();
 
   const [isSideNavOpenOnMobile, setIsSideNavOpenOnMobile] = useState<boolean>(false);
@@ -121,20 +134,106 @@ export function WorkspacePage() {
     )
   ) : null;
 
+  const [utilSearchQuery, setUtilSearchQuery] = useState<string>('');
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const onToggleSettings = useCallback(() => {
+    setIsAccountPopoverOpen(false);
+    setIsSettingsOpen(!isSettingsOpen);
+  }, [isSettingsOpen]);
+
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState<boolean>(settings.showOnlyFavorites ?? false);
+  const onChangeShowOnlyFavorites = (showOnlyFavoritesValue: boolean) => {
+    setShowOnlyFavorites(showOnlyFavoritesValue);
+    setSettings(settingsSetShowOnlyFavorites(settings, showOnlyFavoritesValue));
+  };
+
+  const settingsFlyout = isSettingsOpen ? <SettingsFlyout onClose={onToggleSettings} /> : null;
+
+  const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState<boolean>(false);
+  const onLogout = useCallback(() => {
+    setIsAccountPopoverOpen(false);
+    axios.post(getApiURL('/api/logout')).then(
+      () => {
+        window.location.reload();
+      },
+      () => {
+        addToast({ id: 'logout-error', title: 'Failed to logout' });
+      },
+    );
+  }, []);
+
   return (
-    <WorkspacePageContainer
-      sideBar={
-        <EuiSideNav
-          mobileTitle="All Utils"
-          toggleOpenOnMobile={toggleOpenOnMobile}
-          isOpenOnMobile={isSideNavOpenOnMobile}
-          items={sideNavItems}
-        />
-      }
+    <Page
       pageTitle={pageTitle}
-      breadcrumbs={breadcrumbs}
+      sideBar={
+        <aside>
+          <EuiFieldSearch
+            fullWidth
+            placeholder="Search util"
+            value={utilSearchQuery}
+            isClearable
+            onChange={(e) => setUtilSearchQuery(e.target.value)}
+          />
+          <EuiSpacer size="m" />
+          <EuiSideNav
+            mobileTitle="All Utils"
+            toggleOpenOnMobile={toggleOpenOnMobile}
+            isOpenOnMobile={isSideNavOpenOnMobile}
+            items={sideNavItems}
+          />
+        </aside>
+      }
+      headerBreadcrumbs={breadcrumbs}
+      headerActions={[
+        <EuiSwitch
+          label="Favorites only"
+          compressed
+          checked={showOnlyFavorites}
+          onChange={() => onChangeShowOnlyFavorites(!showOnlyFavorites)}
+          title="Show only utils that are marked as favorite."
+        />,
+        <EuiPopover
+          anchorClassName="eui-fullWidth"
+          button={
+            <EuiButtonIcon
+              aria-label={'Account menu'}
+              size={'m'}
+              display={'empty'}
+              iconType="user"
+              title={'Account'}
+              onClick={() => setIsAccountPopoverOpen(!isAccountPopoverOpen)}
+            />
+          }
+          isOpen={isAccountPopoverOpen}
+          closePopover={() => setIsAccountPopoverOpen(false)}
+          panelPaddingSize="none"
+          anchorPosition="downLeft"
+        >
+          <EuiContextMenuPanel
+            size="m"
+            title={uiState.user ? uiState.user.email : null}
+            items={[
+              <EuiContextMenuItem key="settings" icon="gear" onClick={onToggleSettings}>
+                Settings
+              </EuiContextMenuItem>,
+              <EuiContextMenuItem key="logout" icon="exit" onClick={onLogout}>
+                Logout
+              </EuiContextMenuItem>,
+            ]}
+          />
+        </EuiPopover>,
+      ]}
+      contentProps={{
+        css: css`
+          height: 100%;
+        `,
+      }}
     >
-      <Suspense fallback={<PageLoadingState />}>{content}</Suspense>
-    </WorkspacePageContainer>
+      <Suspense fallback={<PageLoadingState />}>
+        {content}
+        {settingsFlyout}
+      </Suspense>
+    </Page>
   );
 }

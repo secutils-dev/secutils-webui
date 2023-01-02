@@ -1,6 +1,7 @@
 import React from 'react';
-import { UiState, Settings, settingsDefault, User } from '../model';
-import { PageToast } from './page_container';
+import type { UiState, Settings, User } from '../model';
+import { settingsDefault } from '../model';
+import type { PageToast } from './page_container';
 
 export interface PageContextValue {
   settings: Settings;

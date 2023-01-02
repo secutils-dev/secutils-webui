@@ -1,21 +1,15 @@
-import React, { ReactElement, ReactNode, useCallback, useEffect, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { EuiProvider, EuiGlobalToastList, IconType } from '@elastic/eui';
+import type { IconType } from '@elastic/eui';
+import { EuiProvider, EuiGlobalToastList } from '@elastic/eui';
 import { useLocalStorage } from '../hooks';
-import {
-  CURRENT_SETTINGS_VERSION,
-  deserializeUser,
-  UiState,
-  SerializedUiState,
-  Settings,
-  settingsDefault,
-  upgradeSettings,
-  User,
-} from '../model';
+import type { UiState, SerializedUiState, Settings, User } from '../model';
+import { CURRENT_SETTINGS_VERSION, deserializeUser, settingsDefault, upgradeSettings } from '../model';
 import { PageContext } from './page_context';
 import { PageErrorState } from '../components';
-import { Toast } from '@elastic/eui/src/components/toast/global_toast_list';
+import type { Toast } from '@elastic/eui/src/components/toast/global_toast_list';
 
 export interface PageToast {
   id: string;
@@ -37,18 +31,12 @@ export function PageContainer() {
   }
 
   const [toasts, setToasts] = useState<PageToast[]>([]);
-  const addToast = useCallback(
-    (toast: PageToast) => {
-      setToasts([...toasts, toast]);
-    },
-    [toasts],
-  );
-  const removeToast = useCallback(
-    (removedToast: Toast) => {
-      setToasts(toasts.filter((toast) => toast.id !== removedToast.id));
-    },
-    [toasts],
-  );
+  const addToast = useCallback((toast: PageToast) => {
+    setToasts((currentToasts) => [...currentToasts, toast]);
+  }, []);
+  const removeToast = useCallback((removedToast: Toast) => {
+    setToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== removedToast.id));
+  }, []);
 
   const getURL = useCallback((path: string) => path, []);
   const getApiURL = useCallback((path: string) => path, []);

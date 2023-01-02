@@ -14,8 +14,9 @@ import {
   EuiTitle,
 } from '@elastic/eui';
 import axios from 'axios';
-import React, { ChangeEvent, MouseEventHandler, useCallback, useContext, useState } from 'react';
-import { AsyncData } from '../model';
+import type { ChangeEvent, MouseEventHandler } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
+import type { AsyncData } from '../model';
 import { PageContext } from './page_context';
 
 export interface ContactFormModalProps {

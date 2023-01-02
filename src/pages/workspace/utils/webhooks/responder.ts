@@ -3,17 +3,21 @@ export const RESPONDERS_DATA_KEY = 'hp.ar';
 export interface SerializedResponder {
   a: string;
   m: string;
+  t?: number;
   s: number;
   h?: Array<[string, string]>;
   b?: string;
+  d?: number;
 }
 
 export interface Responder {
   alias: string;
   method: string;
+  trackingRequests?: number;
   statusCode: number;
   headers?: Array<[string, string]>;
   body?: string;
+  delay?: number;
 }
 
 export function deserializeResponder(serializedResponder: SerializedResponder): Responder {
@@ -23,12 +27,20 @@ export function deserializeResponder(serializedResponder: SerializedResponder): 
     statusCode: serializedResponder.s,
   };
 
+  if (serializedResponder.t) {
+    responder.trackingRequests = serializedResponder.t;
+  }
+
   if (serializedResponder.h) {
     responder.headers = serializedResponder.h;
   }
 
   if (serializedResponder.b) {
     responder.body = serializedResponder.b;
+  }
+
+  if (serializedResponder.d) {
+    responder.delay = serializedResponder.d;
   }
 
   return responder;
@@ -42,12 +54,20 @@ export function serializeResponder(responder: Responder): SerializedResponder {
     h: responder.headers,
   };
 
+  if (responder.trackingRequests) {
+    serializedResponder.t = responder.trackingRequests;
+  }
+
   if (responder.headers) {
     serializedResponder.h = responder.headers;
   }
 
   if (responder.body != null) {
     serializedResponder.b = responder.body;
+  }
+
+  if (responder.delay) {
+    serializedResponder.d = responder.delay;
   }
 
   return serializedResponder;

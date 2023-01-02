@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 declare module '@elastic/eui/es/components/icon/icon' {
   export function appendIconComponentCache(icons: Record<string, React.SVGProps<SVGSVGElement>>): void;

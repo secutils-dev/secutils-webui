@@ -1,5 +1,5 @@
+import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
-  Criteria,
   EuiButton,
   EuiEmptyPrompt,
   EuiFlexGroup,
@@ -8,14 +8,13 @@ import {
   EuiInMemoryTable,
   EuiSpacer,
   EuiToolTip,
-  Pagination,
-  PropertySort,
 } from '@elastic/eui';
 import React, { useCallback, useContext, useState } from 'react';
 import { PageContext } from '../../../../../page_container';
 import { PageLoadingState } from '../../../../../components';
-import { User } from '../../../../../model';
-import { CSP_POLICIES_DATA_KEY, CspPolicy, deserializeCspPolicy, SerializedCspPolicy } from './csp_policy';
+import type { User } from '../../../../../model';
+import type { CspPolicy, SerializedCspPolicy } from './csp_policy';
+import { CSP_POLICIES_DATA_KEY, deserializeCspPolicy } from './csp_policy';
 import { CspPolicyEditFlyout } from './csp_policy_edit_flyout';
 
 function parseCspPolicies(user?: User): CspPolicy[] {

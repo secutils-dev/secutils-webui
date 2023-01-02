@@ -1,6 +1,6 @@
-import { ServerStatus } from './server_status';
-import { SerializedUser, User } from './user';
-import { Util } from './util';
+import type { ServerStatus } from './server_status';
+import type { SerializedUser, User } from './user';
+import type { Util } from './util';
 
 /**
  * Licence-based properties.

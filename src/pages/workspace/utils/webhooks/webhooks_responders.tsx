@@ -1,5 +1,5 @@
+import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
-  Criteria,
   EuiButton,
   EuiEmptyPrompt,
   EuiFlexGroup,
@@ -10,21 +10,14 @@ import {
   EuiSpacer,
   EuiText,
   EuiToolTip,
-  Pagination,
-  PropertySort,
 } from '@elastic/eui';
 import React, { useCallback, useContext, useState } from 'react';
 import { PageContext } from '../../../../page_container';
-import { User } from '../../../../model';
+import type { User } from '../../../../model';
 import { PageLoadingState } from '../../../../components';
-import {
-  SerializedResponder,
-  Responder,
-  deserializeResponder,
-  RESPONDERS_DATA_KEY,
-  deserializeHttpMethod,
-} from './responder';
-import { SaveAutoResponderFormModal } from './save_auto_responder_form_modal';
+import type { SerializedResponder, Responder } from './responder';
+import { deserializeResponder, RESPONDERS_DATA_KEY, deserializeHttpMethod } from './responder';
+import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
 
 function parseAutoResponders(user?: User): Responder[] {
   const autoResponders = user?.profile?.data?.get(RESPONDERS_DATA_KEY);
@@ -61,7 +54,7 @@ export default function WebhooksResponders() {
 
   const autoResponders = parseAutoResponders(uiState.user);
   const saveAutoResponderFormModal = isSaveResponderFormOpen.isOpen ? (
-    <SaveAutoResponderFormModal
+    <SaveAutoResponderFlyout
       onClose={onToggleAddResponderForm}
       autoResponder={isSaveResponderFormOpen.responderToEdit}
     />

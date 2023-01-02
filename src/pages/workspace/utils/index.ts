@@ -1,4 +1,5 @@
-import React, { ComponentType, LazyExoticComponent } from 'react';
+import type { ComponentType, LazyExoticComponent } from 'react';
+import React from 'react';
 
 export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType>>([
   ['webhooks', React.lazy(() => import('./webhooks/webhooks'))],

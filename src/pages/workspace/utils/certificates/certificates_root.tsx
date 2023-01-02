@@ -8,8 +8,9 @@ import {
   EuiSelect,
   EuiSpacer,
 } from '@elastic/eui';
-import React, { MouseEventHandler, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { AsyncData } from '../../../../model';
+import type { MouseEventHandler } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import type { AsyncData } from '../../../../model';
 import axios from 'axios';
 import { CaLifetimeCalendar } from './ca_lifetime_calendar';
 import moment from 'moment';

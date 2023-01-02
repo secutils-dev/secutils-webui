@@ -1,20 +1,12 @@
-import React, { ChangeEvent, MouseEventHandler, useCallback, useContext, useState } from 'react';
+import type { ChangeEvent, MouseEventHandler } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import {
-  EuiButton,
-  EuiCallOut,
-  EuiFieldText,
-  EuiForm,
-  EuiFormRow,
-  EuiPage,
-  EuiPageBody,
-  EuiPageSection,
-  EuiPanel,
-} from '@elastic/eui';
-import { PageContext } from '../../page_container';
+import { EuiButton, EuiCallOut, EuiFieldText, EuiForm, EuiFormRow, EuiPanel } from '@elastic/eui';
+import { Page, PageContext } from '../../page_container';
 import { usePageMeta } from '../../hooks';
-import { AsyncData, deserializeUser, SerializedUser } from '../../model';
+import type { AsyncData, SerializedUser } from '../../model';
+import { deserializeUser } from '../../model';
 
 export function LoginPage() {
   usePageMeta('Login');
@@ -64,39 +56,30 @@ export function LoginPage() {
     ) : undefined;
 
   return (
-    <EuiPage grow direction={'row'}>
-      <EuiPageBody paddingSize="none" panelled>
-        <EuiPageSection color="plain" alignment={'center'} grow>
-          <EuiPanel>
-            <EuiForm id="login-form" component="form">
-              {loginStatusCallout}
-              <EuiFormRow>
-                <EuiFieldText
-                  placeholder="Username / email"
-                  value={username}
-                  type={'email'}
-                  onChange={onUsernameChange}
-                />
-              </EuiFormRow>
-              <EuiFormRow>
-                <EuiFieldText placeholder="Password" value={password} type={'password'} onChange={onPasswordChange} />
-              </EuiFormRow>
-              <EuiFormRow>
-                <EuiButton
-                  type="submit"
-                  form="login-form"
-                  fill
-                  onClick={onLogin}
-                  isLoading={loginStatus?.status === 'pending'}
-                  isDisabled={username.trim().length === 0 || password.trim().length === 0}
-                >
-                  Login
-                </EuiButton>
-              </EuiFormRow>
-            </EuiForm>
-          </EuiPanel>
-        </EuiPageSection>
-      </EuiPageBody>
-    </EuiPage>
+    <Page contentAlignment={'center'}>
+      <EuiPanel>
+        <EuiForm id="login-form" component="form">
+          {loginStatusCallout}
+          <EuiFormRow>
+            <EuiFieldText placeholder="Username / email" value={username} type={'email'} onChange={onUsernameChange} />
+          </EuiFormRow>
+          <EuiFormRow>
+            <EuiFieldText placeholder="Password" value={password} type={'password'} onChange={onPasswordChange} />
+          </EuiFormRow>
+          <EuiFormRow>
+            <EuiButton
+              type="submit"
+              form="login-form"
+              fill
+              onClick={onLogin}
+              isLoading={loginStatus?.status === 'pending'}
+              isDisabled={username.trim().length === 0 || password.trim().length === 0}
+            >
+              Login
+            </EuiButton>
+          </EuiFormRow>
+        </EuiForm>
+      </EuiPanel>
+    </Page>
   );
 }
