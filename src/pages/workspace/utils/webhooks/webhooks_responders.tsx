@@ -95,14 +95,14 @@ export default function WebhooksResponders() {
     [pagination],
   );
 
-  const createResponderButton = (
-    <EuiButton iconType={'plusInCircle'} title="Create new responder" onClick={() => onToggleAddResponderForm()}>
+  const createButton = (
+    <EuiButton iconType={'plusInCircle'} title="Create new responder" fill onClick={() => onToggleAddResponderForm()}>
       Create responder
     </EuiButton>
   );
 
   useEffect(() => {
-    setTitleActions(autoResponders.length === 0 ? null : createResponderButton);
+    setTitleActions(autoResponders.length === 0 ? null : createButton);
   }, [autoResponders]);
 
   let content;
@@ -124,7 +124,7 @@ export default function WebhooksResponders() {
             body={
               <div>
                 <p>Go ahead and create your first HTTP responder.</p>
-                {createResponderButton}
+                {createButton}
               </div>
             }
           />

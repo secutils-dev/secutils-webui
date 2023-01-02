@@ -6,16 +6,16 @@ import {
   EuiFlexItem,
   EuiIcon,
   EuiInMemoryTable,
-  EuiSpacer,
   EuiToolTip,
 } from '@elastic/eui';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { PageContext } from '../../../../../page_container';
 import { PageLoadingState } from '../../../../../components';
 import type { User } from '../../../../../model';
 import type { CspPolicy, SerializedCspPolicy } from './csp_policy';
 import { CSP_POLICIES_DATA_KEY, deserializeCspPolicy } from './csp_policy';
 import { CspPolicyEditFlyout } from './csp_policy_edit_flyout';
+import { WorkspaceContext } from '../../../workspace_context';
 
 function parseCspPolicies(user?: User): CspPolicy[] {
   const cspPolicies = user?.profile?.data?.get(CSP_POLICIES_DATA_KEY);
@@ -32,6 +32,7 @@ function parseCspPolicies(user?: User): CspPolicy[] {
 
 export default function WebSecurityCspPolicies() {
   const { uiState, setUserData } = useContext(PageContext);
+  const { setTitleActions } = useContext(WorkspaceContext);
 
   const [isEditCspPolicyPanelOpen, setIsEditCspPolicyPanelOpen] = useState<
     { isOpen: false } | { isOpen: true; policyToEdit?: CspPolicy }
@@ -44,8 +45,7 @@ export default function WebSecurityCspPolicies() {
     return <PageLoadingState />;
   }
 
-  const cspPolicies = parseCspPolicies(uiState.user);
-
+  const cspPolicies = useMemo(() => parseCspPolicies(uiState.user), [uiState.user]);
   const onRemoveCspPolicy = useCallback((cspPolicy: CspPolicy) => {
     setUserData({
       [CSP_POLICIES_DATA_KEY]: JSON.stringify({ [cspPolicy.name]: null }),
@@ -80,6 +80,21 @@ export default function WebSecurityCspPolicies() {
     [pagination],
   );
 
+  const createButton = (
+    <EuiButton
+      iconType={'plusInCircle'}
+      fill
+      title="Create new CSP policy"
+      onClick={() => onToggleEditCspPolicyPanel()}
+    >
+      Create policy
+    </EuiButton>
+  );
+
+  useEffect(() => {
+    setTitleActions(cspPolicies.length === 0 ? null : createButton);
+  }, [cspPolicies]);
+
   let content;
   if (cspPolicies.length === 0) {
     content = (
@@ -99,13 +114,7 @@ export default function WebSecurityCspPolicies() {
             body={
               <div>
                 <p>Go ahead and create your first CSP policy.</p>
-                <EuiButton
-                  iconType={'plusInCircle'}
-                  title="Create new CSP policy"
-                  onClick={() => onToggleEditCspPolicyPanel()}
-                >
-                  Create
-                </EuiButton>
+                {createButton}
               </div>
             }
           />
@@ -114,107 +123,83 @@ export default function WebSecurityCspPolicies() {
     );
   } else {
     content = (
-      <EuiFlexGroup
-        direction={'column'}
-        gutterSize={'s'}
-        justifyContent="flexStart"
-        style={{ height: '100%' }}
-        responsive={false}
-      >
-        <EuiFlexItem grow={false}>
-          <EuiSpacer size="s" />
-          <EuiFlexGroup>
-            <EuiFlexItem grow={false}>
-              <EuiButton
-                iconType={'plusInCircle'}
-                title="Create new CSP policy"
-                onClick={() => onToggleEditCspPolicyPanel()}
-              >
-                Create
-              </EuiButton>
+      <EuiInMemoryTable
+        pagination={pagination}
+        allowNeutralSort={false}
+        sorting={sorting}
+        onTableChange={onTableChange}
+        items={cspPolicies}
+        itemId={(item) => item.name}
+        // @ts-expect-error no definition
+        noItemsMessage={
+          <EuiFlexGroup
+            direction={'column'}
+            gutterSize={'s'}
+            justifyContent="center"
+            alignItems="center"
+            style={{ height: '100%' }}
+          >
+            <EuiFlexItem>
+              <EuiEmptyPrompt
+                icon={<EuiIcon type={'node'} size={'xl'} />}
+                title={<h2>You don't have any CSP policies yet</h2>}
+                titleSize="s"
+                style={{ maxWidth: '60em', display: 'flex' }}
+                body={
+                  <div>
+                    <p>Go ahead and create your first CSP policy.</p>
+                    <EuiButton
+                      iconType={'plusInCircle'}
+                      title="Create new CSP policy"
+                      onClick={() => onToggleEditCspPolicyPanel()}
+                    >
+                      Create
+                    </EuiButton>
+                  </div>
+                }
+              />
             </EuiFlexItem>
           </EuiFlexGroup>
-        </EuiFlexItem>
-        <EuiFlexItem>
-          <EuiInMemoryTable
-            pagination={pagination}
-            allowNeutralSort={false}
-            sorting={sorting}
-            onTableChange={onTableChange}
-            items={cspPolicies}
-            itemId={(item) => item.name}
-            // @ts-expect-error no definition
-            noItemsMessage={
-              <EuiFlexGroup
-                direction={'column'}
-                gutterSize={'s'}
-                justifyContent="center"
-                alignItems="center"
-                style={{ height: '100%' }}
-              >
-                <EuiFlexItem>
-                  <EuiEmptyPrompt
-                    icon={<EuiIcon type={'node'} size={'xl'} />}
-                    title={<h2>You don't have any CSP policies yet</h2>}
-                    titleSize="s"
-                    style={{ maxWidth: '60em', display: 'flex' }}
-                    body={
-                      <div>
-                        <p>Go ahead and create your first CSP policy.</p>
-                        <EuiButton
-                          iconType={'plusInCircle'}
-                          title="Create new CSP policy"
-                          onClick={() => onToggleEditCspPolicyPanel()}
-                        >
-                          Create
-                        </EuiButton>
-                      </div>
-                    }
-                  />
-                </EuiFlexItem>
-              </EuiFlexGroup>
-            }
-            tableLayout={'auto'}
-            columns={[
+        }
+        tableLayout={'auto'}
+        columns={[
+          {
+            name: (
+              <EuiToolTip content="CSP policy name">
+                <span>
+                  Name <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
+                </span>
+              </EuiToolTip>
+            ),
+            field: 'name',
+            sortable: true,
+            render: (_, item: CspPolicy) => {
+              return item.name;
+            },
+          },
+          {
+            name: 'Actions',
+            field: 'headers',
+            width: '75px',
+            actions: [
               {
-                name: (
-                  <EuiToolTip content="CSP policy name">
-                    <span>
-                      Name <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
-                    </span>
-                  </EuiToolTip>
-                ),
-                field: 'name',
-                sortable: true,
-                render: (_, item: CspPolicy) => {
-                  return item.name;
-                },
+                name: 'Edit CSP policy',
+                description: 'Edit CSP policy',
+                icon: 'pencil',
+                type: 'icon',
+                onClick: onEditCspPolicy,
               },
               {
-                name: 'Actions',
-                field: 'headers',
-                width: '75px',
-                actions: [
-                  {
-                    name: 'Edit CSP policy',
-                    description: 'Edit CSP policy',
-                    icon: 'pencil',
-                    type: 'icon',
-                    onClick: onEditCspPolicy,
-                  },
-                  {
-                    name: 'Remove CSP policy',
-                    description: 'Remove CSP policy',
-                    icon: 'minusInCircle',
-                    type: 'icon',
-                    onClick: onRemoveCspPolicy,
-                  },
-                ],
+                name: 'Remove CSP policy',
+                description: 'Remove CSP policy',
+                icon: 'minusInCircle',
+                type: 'icon',
+                onClick: onRemoveCspPolicy,
               },
-            ]}
-          />
-        </EuiFlexItem>
-      </EuiFlexGroup>
+            ],
+          },
+        ]}
+      />
     );
   }
 

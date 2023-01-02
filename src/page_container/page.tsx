@@ -1,5 +1,6 @@
 import type { MouseEventHandler, ReactElement, ReactNode } from 'react';
 import React, { useCallback, useContext, useState } from 'react';
+import { css } from '@emotion/react';
 import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
 import {
   EuiHorizontalRule,
@@ -15,6 +16,7 @@ import {
   EuiHeaderSection,
   EuiHeaderLogo,
   EuiHeaderBreadcrumbs,
+  useEuiTheme,
 } from '@elastic/eui';
 import { Logo } from '../components';
 import { ContactFormModal } from './contact_form_modal';
@@ -40,6 +42,8 @@ export function Page({
   headerActions,
   pageTitle,
 }: PageProps) {
+  const theme = useEuiTheme();
+
   const { getURL } = useContext(PageContext);
 
   const [isContactFormOpen, setIsContactFormOpen] = useState<boolean>(false);
@@ -57,8 +61,14 @@ export function Page({
   );
 
   const header = pageTitle ? (
-    <EuiPageSection bottomBorder>
-      <EuiPageHeader pageTitle={pageTitle} />
+    <EuiPageSection
+      paddingSize={'none'}
+      bottomBorder
+      css={css`
+        background-color: ${theme.euiTheme.colors.lightestShade};
+      `}
+    >
+      <EuiPageHeader paddingSize={'m'} pageTitle={pageTitle} />
     </EuiPageSection>
   ) : null;
 
