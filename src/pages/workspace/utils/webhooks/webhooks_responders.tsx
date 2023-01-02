@@ -7,17 +7,17 @@ import {
   EuiIcon,
   EuiInMemoryTable,
   EuiLink,
-  EuiSpacer,
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { PageContext } from '../../../../page_container';
 import type { User } from '../../../../model';
 import { PageLoadingState } from '../../../../components';
 import type { SerializedResponder, Responder } from './responder';
 import { deserializeResponder, RESPONDERS_DATA_KEY, deserializeHttpMethod } from './responder';
 import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
+import { WorkspaceContext } from '../../workspace_context';
 
 function parseAutoResponders(user?: User): Responder[] {
   const autoResponders = user?.profile?.data?.get(RESPONDERS_DATA_KEY);
@@ -34,6 +34,7 @@ function parseAutoResponders(user?: User): Responder[] {
 
 export default function WebhooksResponders() {
   const { uiState, setUserData } = useContext(PageContext);
+  const { setTitleActions } = useContext(WorkspaceContext);
 
   const getResponderUrl = useCallback((autoResponder: Responder, user: User) => {
     return `${location.origin}/api/webhooks/ar/${encodeURIComponent(user.handle)}/${encodeURIComponent(
@@ -52,7 +53,7 @@ export default function WebhooksResponders() {
     return <PageLoadingState />;
   }
 
-  const autoResponders = parseAutoResponders(uiState.user);
+  const autoResponders = useMemo(() => parseAutoResponders(uiState.user), [uiState.user]);
   const saveAutoResponderFormModal = isSaveResponderFormOpen.isOpen ? (
     <SaveAutoResponderFlyout
       onClose={onToggleAddResponderForm}
@@ -94,6 +95,16 @@ export default function WebhooksResponders() {
     [pagination],
   );
 
+  const createResponderButton = (
+    <EuiButton iconType={'plusInCircle'} title="Create new responder" onClick={() => onToggleAddResponderForm()}>
+      Create responder
+    </EuiButton>
+  );
+
+  useEffect(() => {
+    setTitleActions(autoResponders.length === 0 ? null : createResponderButton);
+  }, [autoResponders]);
+
   let content;
   if (autoResponders.length === 0) {
     content = (
@@ -113,13 +124,7 @@ export default function WebhooksResponders() {
             body={
               <div>
                 <p>Go ahead and create your first HTTP responder.</p>
-                <EuiButton
-                  iconType={'plusInCircle'}
-                  title="Create new responder"
-                  onClick={() => onToggleAddResponderForm()}
-                >
-                  Create
-                </EuiButton>
+                {createResponderButton}
               </div>
             }
           />
@@ -128,158 +133,134 @@ export default function WebhooksResponders() {
     );
   } else {
     content = (
-      <EuiFlexGroup
-        direction={'column'}
-        gutterSize={'s'}
-        justifyContent="flexStart"
-        style={{ height: '100%' }}
-        responsive={false}
-      >
-        <EuiFlexItem grow={false}>
-          <EuiSpacer size="s" />
-          <EuiFlexGroup>
-            <EuiFlexItem grow={false}>
-              <EuiButton
-                iconType={'plusInCircle'}
-                title="Create new responder"
-                onClick={() => onToggleAddResponderForm()}
-              >
-                Create
-              </EuiButton>
+      <EuiInMemoryTable
+        pagination={pagination}
+        allowNeutralSort={false}
+        sorting={sorting}
+        onTableChange={onTableChange}
+        items={autoResponders}
+        itemId={(autoResponder) => autoResponder.alias}
+        // @ts-expect-error no definition
+        noItemsMessage={
+          <EuiFlexGroup
+            direction={'column'}
+            gutterSize={'s'}
+            justifyContent="center"
+            alignItems="center"
+            style={{ height: '100%' }}
+          >
+            <EuiFlexItem>
+              <EuiEmptyPrompt
+                icon={<EuiIcon type={'node'} size={'xl'} />}
+                title={<h2>You don't have any responders yet</h2>}
+                titleSize="s"
+                style={{ maxWidth: '60em', display: 'flex' }}
+                body={
+                  <div>
+                    <p>Go ahead and create your first HTTP responder.</p>
+                    <EuiButton
+                      iconType={'plusInCircle'}
+                      title="Create new responder"
+                      onClick={() => onToggleAddResponderForm()}
+                    >
+                      Create
+                    </EuiButton>
+                  </div>
+                }
+              />
             </EuiFlexItem>
+            {saveAutoResponderFormModal}
           </EuiFlexGroup>
-        </EuiFlexItem>
-        <EuiFlexItem>
-          <EuiInMemoryTable
-            pagination={pagination}
-            allowNeutralSort={false}
-            sorting={sorting}
-            onTableChange={onTableChange}
-            items={autoResponders}
-            itemId={(autoResponder) => autoResponder.alias}
-            // @ts-expect-error no definition
-            noItemsMessage={
-              <EuiFlexGroup
-                direction={'column'}
-                gutterSize={'s'}
-                justifyContent="center"
-                alignItems="center"
-                style={{ height: '100%' }}
-              >
-                <EuiFlexItem>
-                  <EuiEmptyPrompt
-                    icon={<EuiIcon type={'node'} size={'xl'} />}
-                    title={<h2>You don't have any responders yet</h2>}
-                    titleSize="s"
-                    style={{ maxWidth: '60em', display: 'flex' }}
-                    body={
-                      <div>
-                        <p>Go ahead and create your first HTTP responder.</p>
-                        <EuiButton
-                          iconType={'plusInCircle'}
-                          title="Create new responder"
-                          onClick={() => onToggleAddResponderForm()}
-                        >
-                          Create
-                        </EuiButton>
-                      </div>
-                    }
-                  />
-                </EuiFlexItem>
-                {saveAutoResponderFormModal}
-              </EuiFlexGroup>
-            }
-            tableLayout={'auto'}
-            columns={[
+        }
+        tableLayout={'auto'}
+        columns={[
+          {
+            name: 'Method',
+            field: 'method',
+            width: '100px',
+            render: (_, { method }: Responder) => (
+              <EuiText>
+                <b>{deserializeHttpMethod(method)}</b>
+              </EuiText>
+            ),
+            sortable: true,
+          },
+          {
+            name: 'Status',
+            field: 'statusCode',
+            sortable: true,
+            width: '75px',
+            render: (_, { statusCode }: Responder) => (
+              <EuiText color={statusCode <= 200 ? '#5cb800' : statusCode < 400 ? '#aea300' : 'danger'}>
+                <b>{statusCode.toString().toUpperCase()}</b>
+              </EuiText>
+            ),
+          },
+          {
+            name: 'Body',
+            field: 'body',
+            width: '50px',
+            align: 'center',
+            render: (_, { body }: Responder) => (
+              <EuiIcon color={body ? '#5cb800' : undefined} type={body ? 'dot' : 'minus'} />
+            ),
+          },
+          {
+            name: 'Headers',
+            field: 'headers',
+            width: '50px',
+            align: 'center',
+            render: (_, { headers }: Responder) => (
+              <EuiIcon
+                color={headers && headers.length > 0 ? '#5cb800' : undefined}
+                type={headers && headers.length > 0 ? 'dot' : 'minus'}
+              />
+            ),
+          },
+          {
+            name: (
+              <EuiToolTip content="A unique alias that will be used as a part of the responder endpoint path">
+                <span>
+                  Path <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
+                </span>
+              </EuiToolTip>
+            ),
+            field: 'alias',
+            sortable: true,
+            render: (_, autoResponder: Responder) => {
+              const url = uiState.user ? getResponderUrl(autoResponder, uiState.user) : undefined;
+              return url ? (
+                <EuiLink href={url} target="_blank">
+                  {url}
+                </EuiLink>
+              ) : (
+                <EuiIcon type="minus" />
+              );
+            },
+          },
+          {
+            name: 'Actions',
+            field: 'headers',
+            width: '75px',
+            actions: [
               {
-                name: 'Method',
-                field: 'method',
-                width: '100px',
-                render: (_, { method }: Responder) => (
-                  <EuiText>
-                    <b>{deserializeHttpMethod(method)}</b>
-                  </EuiText>
-                ),
-                sortable: true,
+                name: 'Edit responder',
+                description: 'Edit responder',
+                icon: 'pencil',
+                type: 'icon',
+                onClick: onEditResponder,
               },
               {
-                name: 'Status',
-                field: 'statusCode',
-                sortable: true,
-                width: '75px',
-                render: (_, { statusCode }: Responder) => (
-                  <EuiText color={statusCode <= 200 ? '#5cb800' : statusCode < 400 ? '#aea300' : 'danger'}>
-                    <b>{statusCode.toString().toUpperCase()}</b>
-                  </EuiText>
-                ),
+                name: 'Remove responder',
+                description: 'Remove responder',
+                icon: 'minusInCircle',
+                type: 'icon',
+                onClick: onRemoveResponder,
               },
-              {
-                name: 'Body',
-                field: 'body',
-                width: '50px',
-                align: 'center',
-                render: (_, { body }: Responder) => (
-                  <EuiIcon color={body ? '#5cb800' : undefined} type={body ? 'dot' : 'minus'} />
-                ),
-              },
-              {
-                name: 'Headers',
-                field: 'headers',
-                width: '50px',
-                align: 'center',
-                render: (_, { headers }: Responder) => (
-                  <EuiIcon
-                    color={headers && headers.length > 0 ? '#5cb800' : undefined}
-                    type={headers && headers.length > 0 ? 'dot' : 'minus'}
-                  />
-                ),
-              },
-              {
-                name: (
-                  <EuiToolTip content="A unique alias that will be used as a part of the responder endpoint path">
-                    <span>
-                      Path <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
-                    </span>
-                  </EuiToolTip>
-                ),
-                field: 'alias',
-                sortable: true,
-                render: (_, autoResponder: Responder) => {
-                  const url = uiState.user ? getResponderUrl(autoResponder, uiState.user) : undefined;
-                  return url ? (
-                    <EuiLink href={url} target="_blank">
-                      {url}
-                    </EuiLink>
-                  ) : (
-                    <EuiIcon type="minus" />
-                  );
-                },
-              },
-              {
-                name: 'Actions',
-                field: 'headers',
-                width: '75px',
-                actions: [
-                  {
-                    name: 'Edit responder',
-                    description: 'Edit responder',
-                    icon: 'pencil',
-                    type: 'icon',
-                    onClick: onEditResponder,
-                  },
-                  {
-                    name: 'Remove responder',
-                    description: 'Remove responder',
-                    icon: 'minusInCircle',
-                    type: 'icon',
-                    onClick: onRemoveResponder,
-                  },
-                ],
-              },
-            ]}
-          />
-        </EuiFlexItem>
-      </EuiFlexGroup>
+            ],
+          },
+        ]}
+      />
     );
   }
 

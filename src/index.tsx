@@ -21,6 +21,7 @@ import { icon as EuiIconCross } from '@elastic/eui/es/components/icon/assets/cro
 import { icon as EuiIconCut } from '@elastic/eui/es/components/icon/assets/cut';
 import { icon as EuiIconDot } from '@elastic/eui/es/components/icon/assets/dot';
 import { icon as EuiIconExit } from '@elastic/eui/es/components/icon/assets/exit';
+import { icon as EuiIconEmpty } from '@elastic/eui/es/components/icon/assets/empty';
 import { icon as EuiIconGear } from '@elastic/eui/es/components/icon/assets/gear';
 import { icon as EuiIconGlobe } from '@elastic/eui/es/components/icon/assets/globe';
 import { icon as EuiIconHelp } from '@elastic/eui/es/components/icon/assets/help';
@@ -65,6 +66,7 @@ appendIconComponentCache({
   cross: EuiIconCross,
   cut: EuiIconCut,
   dot: EuiIconDot,
+  empty: EuiIconEmpty,
   exit: EuiIconExit,
   gear: EuiIconGear,
   globe: EuiIconGlobe,

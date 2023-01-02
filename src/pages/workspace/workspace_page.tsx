@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import React, { Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { EuiSideNavItemType } from '@elastic/eui';
@@ -6,6 +7,8 @@ import {
   EuiContextMenuItem,
   EuiContextMenuPanel,
   EuiFieldSearch,
+  EuiFlexGroup,
+  EuiFlexItem,
   EuiIcon,
   EuiPopover,
   EuiSideNav,
@@ -21,6 +24,7 @@ import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs
 import { css } from '@emotion/react';
 import { settingsSetShowOnlyFavorites } from '../../model';
 import axios from 'axios';
+import { WorkspaceContext } from './workspace_context';
 
 const DEFAULT_COMPONENT = React.lazy(() => import('../../components/page_under_construction_state'));
 
@@ -64,6 +68,8 @@ export function WorkspacePage() {
     [getURL],
   );
 
+  const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
+
   const [selectedUtil, setSelectedUtil] = useState<Util | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<EuiBreadcrumbProps[]>([]);
 
@@ -80,6 +86,7 @@ export function WorkspacePage() {
         isSelected: selectedUtil?.id === util.id,
         onClick: (e) => {
           e.preventDefault();
+          setTitleActions(null);
           setSelectedUtil(util);
           setBreadcrumbs(getBreadcrumbs(util, utilsMap));
           navigate(getURL(utilUrl));
@@ -100,6 +107,7 @@ export function WorkspacePage() {
     if (newSelectedUtil && newSelectedUtil !== selectedUtil) {
       setSelectedUtil(newSelectedUtil);
       setBreadcrumbs(getBreadcrumbs(newSelectedUtil, utilsMap));
+      setTitleActions(null);
     }
   }, [utilIdFromParam, selectedUtil, utilsMap]);
 
@@ -108,29 +116,18 @@ export function WorkspacePage() {
     return <Component />;
   }, [selectedUtil]);
 
-  const pageTitle = selectedUtil ? (
+  const titleIcon = selectedUtil ? (
     selectedUtil.icon ? (
-      <>
-        <EuiIcon
-          css={css`
-            margin: 4px;
-            padding: 3px;
-          `}
-          type={selectedUtil.icon}
-          size={'xl'}
-        />{' '}
-        {selectedUtil?.name}
-      </>
+      <EuiIcon
+        css={css`
+          margin: 4px;
+          padding: 3px;
+        `}
+        type={selectedUtil.icon}
+        size={'xl'}
+      />
     ) : (
-      <>
-        <EuiButtonIcon
-          iconType="starEmpty"
-          iconSize="xl"
-          size="m"
-          aria-label={`Add ${selectedUtil.name} to favorites`}
-        />{' '}
-        {selectedUtil?.name}
-      </>
+      <EuiButtonIcon iconType="starEmpty" iconSize="xl" size="m" aria-label={`Add ${selectedUtil.name} to favorites`} />
     )
   ) : null;
 
@@ -165,7 +162,17 @@ export function WorkspacePage() {
 
   return (
     <Page
-      pageTitle={pageTitle}
+      pageTitle={
+        <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+          <EuiFlexItem>
+            <EuiFlexGroup responsive={false} gutterSize="s" alignItems="center">
+              <EuiFlexItem grow={false}>{titleIcon}</EuiFlexItem>
+              <EuiFlexItem>{selectedUtil?.name}</EuiFlexItem>
+            </EuiFlexGroup>
+          </EuiFlexItem>
+          {titleActions ? <EuiFlexItem grow={false}>{titleActions}</EuiFlexItem> : null}
+        </EuiFlexGroup>
+      }
       sideBar={
         <aside>
           <EuiFieldSearch
@@ -231,7 +238,7 @@ export function WorkspacePage() {
       }}
     >
       <Suspense fallback={<PageLoadingState />}>
-        {content}
+        <WorkspaceContext.Provider value={{ setTitleActions }}>{content}</WorkspaceContext.Provider>
         {settingsFlyout}
       </Suspense>
     </Page>
