@@ -3,7 +3,7 @@
 .root {
     display: flex;
     height: 100vh;
-    padding-top: 44px;
+    padding-top: 48px;
 }
 
 .euiToastHeader {
