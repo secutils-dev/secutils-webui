@@ -11,14 +11,14 @@ import {
 import type { ChangeEvent } from 'react';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { PageContext } from '../../../../page_container';
-import type { User, AsyncData } from '../../../../model';
+import type { AsyncData } from '../../../../model';
 import type { Responder } from './responder';
-import { RESPONDERS_DATA_KEY, serializeResponder, serializeHttpMethod } from './responder';
+import { RESPONDERS_USER_DATA_TYPE, serializeResponder, serializeHttpMethod } from './responder';
 import { EditorFlyout } from '../../components/editor_flyout';
 
 export interface SaveAutoResponderFormModalProps {
   autoResponder?: Responder;
-  onClose: () => void;
+  onClose: (hintReload?: boolean) => void;
 }
 
 const HTTP_METHODS = ['ANY', 'GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'CONNECT', 'TRACE', 'PATCH'];
@@ -92,37 +92,35 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
     setDelay(+e.target.value);
   }, []);
 
-  const [updatingStatus, setUpdatingStatus] = useState<AsyncData<User | undefined> | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<AsyncData<void>>();
   const onAddAutoResponder = useCallback(() => {
     if (updatingStatus?.status === 'pending') {
       return;
     }
 
     setUpdatingStatus({ status: 'pending' });
-    setUserData({
-      [RESPONDERS_DATA_KEY]: JSON.stringify({
-        [alias]: serializeResponder({
-          alias,
-          method,
-          trackingRequests,
-          statusCode,
-          body: body && method !== serializeHttpMethod('HEAD') ? body : undefined,
-          headers:
-            headers.length > 0
-              ? headers.map((headerValue) => {
-                  const separatorIndex = headerValue.label.indexOf(':');
-                  return [
-                    headerValue.label.substring(0, separatorIndex).trim(),
-                    headerValue.label.substring(separatorIndex + 1).trim(),
-                  ] as [string, string];
-                })
-              : undefined,
-          delay,
-        }),
+    setUserData(RESPONDERS_USER_DATA_TYPE, {
+      [alias]: serializeResponder({
+        alias,
+        method,
+        trackingRequests,
+        statusCode,
+        body: body && method !== serializeHttpMethod('HEAD') ? body : undefined,
+        headers:
+          headers.length > 0
+            ? headers.map((headerValue) => {
+                const separatorIndex = headerValue.label.indexOf(':');
+                return [
+                  headerValue.label.substring(0, separatorIndex).trim(),
+                  headerValue.label.substring(separatorIndex + 1).trim(),
+                ] as [string, string];
+              })
+            : undefined,
+        delay,
       }),
     }).then(
-      (user) => {
-        setUpdatingStatus({ status: 'succeeded', data: user });
+      () => {
+        setUpdatingStatus({ status: 'succeeded', data: undefined });
 
         addToast({
           id: `success-update-responder-${alias}`,
@@ -131,7 +129,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
           title: `Successfully saved "${alias}" responder`,
         });
 
-        onClose();
+        onClose(true);
       },
       (err: Error) => {
         setUpdatingStatus({ status: 'failed', error: err?.message ?? err });

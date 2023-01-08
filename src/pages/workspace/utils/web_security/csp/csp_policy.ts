@@ -1,4 +1,4 @@
-export const CSP_POLICIES_DATA_KEY = 'ws.csp';
+export const CSP_POLICIES_USER_DATA_TYPE = 'cspPolicies';
 
 export interface SerializedCspPolicy {
   n: string;

@@ -1,4 +1,4 @@
-export const RESPONDERS_DATA_KEY = 'hp.ar';
+export const RESPONDERS_USER_DATA_TYPE = 'autoResponders';
 
 export interface SerializedResponder {
   a: string;

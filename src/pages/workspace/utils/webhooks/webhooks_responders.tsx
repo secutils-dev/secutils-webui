@@ -10,30 +10,32 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { PageContext } from '../../../../page_container';
 import type { User } from '../../../../model';
 import { PageLoadingState } from '../../../../components';
 import type { SerializedResponder, Responder } from './responder';
-import { deserializeResponder, RESPONDERS_DATA_KEY, deserializeHttpMethod } from './responder';
+import { deserializeResponder, RESPONDERS_USER_DATA_TYPE, deserializeHttpMethod } from './responder';
 import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
 import { WorkspaceContext } from '../../workspace_context';
 
-function parseAutoResponders(user?: User): Responder[] {
-  const autoResponders = user?.profile?.data?.get(RESPONDERS_DATA_KEY);
+type AutoRespondersDataType = { [RESPONDERS_USER_DATA_TYPE]: Record<string, SerializedResponder> | null };
+
+function parseAutoResponders(data: AutoRespondersDataType): Responder[] {
+  const autoResponders = data[RESPONDERS_USER_DATA_TYPE];
   if (!autoResponders) {
     return [];
   }
 
   try {
-    return Object.values(JSON.parse(autoResponders) as Record<string, SerializedResponder>).map(deserializeResponder);
+    return Object.values(autoResponders).map(deserializeResponder);
   } catch {
     return [];
   }
 }
 
 export default function WebhooksResponders() {
-  const { uiState, setUserData } = useContext(PageContext);
+  const { uiState, setUserData, getUserData } = useContext(PageContext);
   const { setTitleActions } = useContext(WorkspaceContext);
 
   const getResponderUrl = useCallback((autoResponder: Responder, user: User) => {
@@ -45,15 +47,43 @@ export default function WebhooksResponders() {
   const [isSaveResponderFormOpen, setIsSaveResponderFormOpen] = useState<
     { isOpen: false } | { isOpen: true; responderToEdit?: Responder }
   >({ isOpen: false });
-  const onToggleAddResponderForm = useCallback(() => {
-    setIsSaveResponderFormOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
-  }, []);
+  const onToggleAddResponderForm = useCallback(
+    (hintReload?: boolean) => {
+      if (hintReload) {
+        reloadResponders();
+      }
+      setIsSaveResponderFormOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
+    },
+    [getUserData],
+  );
 
-  if (!uiState.synced || !uiState.user) {
-    return <PageLoadingState />;
-  }
+  const createButton = (
+    <EuiButton iconType={'plusInCircle'} title="Create new responder" fill onClick={() => onToggleAddResponderForm()}>
+      Create responder
+    </EuiButton>
+  );
 
-  const autoResponders = useMemo(() => parseAutoResponders(uiState.user), [uiState.user]);
+  const [autoResponders, setAutoResponders] = useState<Responder[] | null>(null);
+  const reloadResponders = useCallback(() => {
+    getUserData<AutoRespondersDataType>(RESPONDERS_USER_DATA_TYPE).then(
+      (data) => {
+        const parsedAutoResponders = parseAutoResponders(data);
+        setAutoResponders(parsedAutoResponders);
+        setTitleActions(parsedAutoResponders.length === 0 ? null : createButton);
+      },
+      () => {
+        setAutoResponders([]);
+        setTitleActions(null);
+      },
+    );
+  }, [getUserData]);
+
+  useEffect(() => {
+    if (uiState.synced && uiState.user) {
+      reloadResponders();
+    }
+  }, [uiState, reloadResponders]);
+
   const saveAutoResponderFormModal = isSaveResponderFormOpen.isOpen ? (
     <SaveAutoResponderFlyout
       onClose={onToggleAddResponderForm}
@@ -61,13 +91,12 @@ export default function WebhooksResponders() {
     />
   ) : null;
 
-  const onRemoveResponder = useCallback((autoResponder: Responder) => {
-    setUserData({
-      [RESPONDERS_DATA_KEY]: JSON.stringify({ [autoResponder.alias]: null }),
-    }).catch((err: Error) => {
-      console.log(`Failed to remove responder: ${err?.message}`);
-    });
-  }, []);
+  const onRemoveResponder = useCallback(
+    (autoResponder: Responder) => {
+      setUserData(RESPONDERS_USER_DATA_TYPE, { [autoResponder.alias]: null }).then(reloadResponders, reloadResponders);
+    },
+    [reloadResponders],
+  );
 
   const onEditResponder = useCallback((responder: Responder) => {
     setIsSaveResponderFormOpen({ isOpen: true, responderToEdit: responder });
@@ -95,15 +124,9 @@ export default function WebhooksResponders() {
     [pagination],
   );
 
-  const createButton = (
-    <EuiButton iconType={'plusInCircle'} title="Create new responder" fill onClick={() => onToggleAddResponderForm()}>
-      Create responder
-    </EuiButton>
-  );
-
-  useEffect(() => {
-    setTitleActions(autoResponders.length === 0 ? null : createButton);
-  }, [autoResponders]);
+  if (!uiState.synced || !uiState.user || !autoResponders) {
+    return <PageLoadingState />;
+  }
 
   let content;
   if (autoResponders.length === 0) {
@@ -186,7 +209,7 @@ export default function WebhooksResponders() {
             sortable: true,
           },
           {
-            name: 'Status',
+            name: 'Status code',
             field: 'statusCode',
             sortable: true,
             width: '75px',
@@ -219,9 +242,9 @@ export default function WebhooksResponders() {
           },
           {
             name: (
-              <EuiToolTip content="A unique alias that will be used as a part of the responder endpoint path">
+              <EuiToolTip content="A unique URL of the responder endpoint">
                 <span>
-                  Path <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
+                  URL <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
                 </span>
               </EuiToolTip>
             ),

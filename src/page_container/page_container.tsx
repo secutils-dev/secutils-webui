@@ -40,14 +40,14 @@ export function PageContainer() {
 
   const getURL = useCallback((path: string) => path, []);
   const getApiURL = useCallback((path: string) => path, []);
-  const setUserData = useCallback((data: Record<string, string>) => {
+  const getUserData = useCallback(<TData extends object>(dataType: string) => {
+    return axios.get<TData>(getApiURL(`/api/user/data?dataType=${dataType}`)).then((response) => response.data);
+  }, []);
+  const setUserData = useCallback((dataType: string, dataValue: unknown) => {
     return axios
-      .post(getApiURL('/api/user/data'), { data })
-      .then(() => axios.get(getApiURL('/api/ui/state')))
-      .then(({ data }: { data: SerializedUiState }) => {
-        const user = data.user ? deserializeUser(data.user) : undefined;
-        setUiState({ synced: true, status: data.status, license: data.license, utils: data.utils, user });
-        return user;
+      .post(getApiURL(`/api/user/data?dataType=${dataType}`), { dataValue: JSON.stringify(dataValue) })
+      .then(() => {
+        // drop response.
       });
   }, []);
 
@@ -101,7 +101,7 @@ export function PageContainer() {
   return (
     <EuiProvider colorMode={settings.theme}>
       <PageContext.Provider
-        value={{ settings, setSettings, uiState, getURL, getApiURL, addToast, setUserData, setUser }}
+        value={{ settings, setSettings, uiState, getURL, getApiURL, addToast, getUserData, setUserData, setUser }}
       >
         {content}
         <EuiGlobalToastList toasts={toasts} dismissToast={removeToast} toastLifeTimeMs={5000} />

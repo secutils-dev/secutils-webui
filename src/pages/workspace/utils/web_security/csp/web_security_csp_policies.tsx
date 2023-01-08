@@ -11,23 +11,13 @@ import {
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { PageContext } from '../../../../../page_container';
 import { PageLoadingState } from '../../../../../components';
-import type { User } from '../../../../../model';
-import type { CspPolicy, SerializedCspPolicy } from './csp_policy';
-import { CSP_POLICIES_DATA_KEY, deserializeCspPolicy } from './csp_policy';
+import type { CspPolicy } from './csp_policy';
+import { CSP_POLICIES_USER_DATA_TYPE } from './csp_policy';
 import { CspPolicyEditFlyout } from './csp_policy_edit_flyout';
 import { WorkspaceContext } from '../../../workspace_context';
 
-function parseCspPolicies(user?: User): CspPolicy[] {
-  const cspPolicies = user?.profile?.data?.get(CSP_POLICIES_DATA_KEY);
-  if (!cspPolicies) {
-    return [];
-  }
-
-  try {
-    return Object.values(JSON.parse(cspPolicies) as Record<string, SerializedCspPolicy>).map(deserializeCspPolicy);
-  } catch {
-    return [];
-  }
+function parseCspPolicies(): CspPolicy[] {
+  return [];
 }
 
 export default function WebSecurityCspPolicies() {
@@ -45,11 +35,9 @@ export default function WebSecurityCspPolicies() {
     return <PageLoadingState />;
   }
 
-  const cspPolicies = useMemo(() => parseCspPolicies(uiState.user), [uiState.user]);
+  const cspPolicies = useMemo(() => parseCspPolicies(), [uiState.user]);
   const onRemoveCspPolicy = useCallback((cspPolicy: CspPolicy) => {
-    setUserData({
-      [CSP_POLICIES_DATA_KEY]: JSON.stringify({ [cspPolicy.name]: null }),
-    }).catch((err: Error) => {
+    setUserData(CSP_POLICIES_USER_DATA_TYPE, { [cspPolicy.name]: null }).catch((err: Error) => {
       console.log(`Failed to remove CSP policy: ${err?.message}`);
     });
   }, []);
