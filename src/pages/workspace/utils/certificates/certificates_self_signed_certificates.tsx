@@ -13,7 +13,10 @@ import {
   EuiLink,
 } from '@elastic/eui';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import axios from 'axios';
 import { PageContext } from '../../../../page_container';
+import { PageLoadingState } from '../../../../components';
+import { Downloader } from '../../../../tools/downloader';
 import { WorkspaceContext } from '../../workspace_context';
 import type { SelfSignedCertificate, SerializedSelfSignedCertificate } from './self_signed_certificate';
 import {
@@ -23,7 +26,6 @@ import {
   SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE,
   signatureAlgorithmString,
 } from './self_signed_certificate';
-import { PageLoadingState } from '../../../../components';
 import { SaveSelfSignedCertificatesFlyout } from './save_self_signed_certificate_flyout';
 import moment from 'moment';
 
@@ -45,7 +47,7 @@ function parseSelfSignedCertificates(data: SelfSignedCertificatesDataType): Self
 }
 
 export default function CertificatesSelfSignedCertificates() {
-  const { uiState, setUserData, getUserData } = useContext(PageContext);
+  const { uiState, setUserData, getUserData, getApiURL, addToast } = useContext(PageContext);
   const { setTitleActions } = useContext(WorkspaceContext);
 
   const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
@@ -254,8 +256,38 @@ export default function CertificatesSelfSignedCertificates() {
                   icon: 'download',
                   type: 'icon',
                   isPrimary: true,
-                  onClick: () => {
-                    // TODO: Implement certificate generation.
+                  onClick: (certificate: SelfSignedCertificate) => {
+                    axios
+                      .post<{
+                        type: 'certificates';
+                        value: {
+                          type: 'generateSelfSignedCertificate';
+                          value: { privateKey: number[]; certificate: number[] };
+                        };
+                      }>(getApiURL('/api/utils/execute'), {
+                        request: {
+                          type: 'certificates',
+                          value: { type: 'generateSelfSignedCertificate', value: { templateName: certificate.name } },
+                        },
+                      })
+                      .then(
+                        (response) => {
+                          const result = response.data.value.value;
+                          Downloader.download(
+                            `${certificate.name}.crt`,
+                            result.certificate.map((byte) => String.fromCharCode(byte)).join(''),
+                            'application/x-x509-ca-cert',
+                          );
+                        },
+                        () => {
+                          addToast({
+                            id: `failed-generate-certificate-${certificate.name}`,
+                            iconType: 'alert',
+                            color: 'danger',
+                            title: `Unable to generate self-signed certificate, please try again later`,
+                          });
+                        },
+                      );
                   },
                 },
                 {
