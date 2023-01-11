@@ -3,13 +3,17 @@ import { EuiDatePicker } from '@elastic/eui';
 import type { Moment } from 'moment';
 import moment from 'moment';
 
-export interface CacheExpirationCalendarProps {
+export interface CertificateLifetimeCalendarProps {
   isDisabled?: boolean;
   currentTimestamp: number;
   onChange(timestamp: number): void;
 }
 
-export function CaLifetimeCalendar({ onChange, currentTimestamp, isDisabled = false }: CacheExpirationCalendarProps) {
+export function CertificateLifetimeCalendar({
+  onChange,
+  currentTimestamp,
+  isDisabled = false,
+}: CertificateLifetimeCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Moment | null>(moment.unix(currentTimestamp));
   const onSelectedDateChange = useCallback(
     (selectedDate: Moment | null) => {
@@ -23,6 +27,12 @@ export function CaLifetimeCalendar({ onChange, currentTimestamp, isDisabled = fa
   );
 
   return (
-    <EuiDatePicker selected={selectedDate} disabled={isDisabled} dateFormat={'LL'} onChange={onSelectedDateChange} />
+    <EuiDatePicker
+      selected={selectedDate}
+      disabled={isDisabled}
+      dateFormat={'LL HH:mm'}
+      showTimeSelect
+      onChange={onSelectedDateChange}
+    />
   );
 }

@@ -95,7 +95,7 @@ export default function WebSecurityCspPolicies() {
       >
         <EuiFlexItem>
           <EuiEmptyPrompt
-            icon={<EuiIcon type={'node'} size={'xl'} />}
+            icon={<EuiIcon type={'globe'} size={'xl'} />}
             title={<h2>You don't have any CSP policies yet</h2>}
             titleSize="s"
             style={{ maxWidth: '60em', display: 'flex' }}

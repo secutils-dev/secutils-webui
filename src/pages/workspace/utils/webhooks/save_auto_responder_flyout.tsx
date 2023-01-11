@@ -16,7 +16,7 @@ import type { Responder } from './responder';
 import { RESPONDERS_USER_DATA_TYPE, serializeResponder, serializeHttpMethod } from './responder';
 import { EditorFlyout } from '../../components/editor_flyout';
 
-export interface SaveAutoResponderFormModalProps {
+export interface SaveAutoResponderFlyoutProps {
   autoResponder?: Responder;
   onClose: (hintReload?: boolean) => void;
 }
@@ -27,7 +27,7 @@ const isHeaderValid = (header: string) => {
   return header.length >= 3 && header.includes(':') && !header.startsWith(':') && !header.endsWith(':');
 };
 
-export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResponderFormModalProps) {
+export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResponderFlyoutProps) {
   const { setUserData, addToast } = useContext(PageContext);
 
   const httpMethods = useMemo(

@@ -44,21 +44,21 @@ export default function WebhooksResponders() {
     )}`;
   }, []);
 
-  const [isSaveResponderFormOpen, setIsSaveResponderFormOpen] = useState<
+  const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
     { isOpen: false } | { isOpen: true; responderToEdit?: Responder }
   >({ isOpen: false });
-  const onToggleAddResponderForm = useCallback(
+  const onToggleEditFlyout = useCallback(
     (hintReload?: boolean) => {
       if (hintReload) {
         reloadResponders();
       }
-      setIsSaveResponderFormOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
+      setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
     },
     [getUserData],
   );
 
   const createButton = (
-    <EuiButton iconType={'plusInCircle'} title="Create new responder" fill onClick={() => onToggleAddResponderForm()}>
+    <EuiButton iconType={'plusInCircle'} title="Create new responder" fill onClick={() => onToggleEditFlyout()}>
       Create responder
     </EuiButton>
   );
@@ -84,11 +84,8 @@ export default function WebhooksResponders() {
     }
   }, [uiState, reloadResponders]);
 
-  const saveAutoResponderFormModal = isSaveResponderFormOpen.isOpen ? (
-    <SaveAutoResponderFlyout
-      onClose={onToggleAddResponderForm}
-      autoResponder={isSaveResponderFormOpen.responderToEdit}
-    />
+  const editFlyout = isEditFlyoutOpen.isOpen ? (
+    <SaveAutoResponderFlyout onClose={onToggleEditFlyout} autoResponder={isEditFlyoutOpen.responderToEdit} />
   ) : null;
 
   const onRemoveResponder = useCallback(
@@ -99,7 +96,7 @@ export default function WebhooksResponders() {
   );
 
   const onEditResponder = useCallback((responder: Responder) => {
-    setIsSaveResponderFormOpen({ isOpen: true, responderToEdit: responder });
+    setIsEditFlyoutOpen({ isOpen: true, responderToEdit: responder });
   }, []);
 
   const [pagination, setPagination] = useState<Pagination>({
@@ -163,38 +160,6 @@ export default function WebhooksResponders() {
         onTableChange={onTableChange}
         items={autoResponders}
         itemId={(autoResponder) => autoResponder.alias}
-        // @ts-expect-error no definition
-        noItemsMessage={
-          <EuiFlexGroup
-            direction={'column'}
-            gutterSize={'s'}
-            justifyContent="center"
-            alignItems="center"
-            style={{ height: '100%' }}
-          >
-            <EuiFlexItem>
-              <EuiEmptyPrompt
-                icon={<EuiIcon type={'node'} size={'xl'} />}
-                title={<h2>You don't have any responders yet</h2>}
-                titleSize="s"
-                style={{ maxWidth: '60em', display: 'flex' }}
-                body={
-                  <div>
-                    <p>Go ahead and create your first HTTP responder.</p>
-                    <EuiButton
-                      iconType={'plusInCircle'}
-                      title="Create new responder"
-                      onClick={() => onToggleAddResponderForm()}
-                    >
-                      Create
-                    </EuiButton>
-                  </div>
-                }
-              />
-            </EuiFlexItem>
-            {saveAutoResponderFormModal}
-          </EuiFlexGroup>
-        }
         tableLayout={'auto'}
         columns={[
           {
@@ -290,7 +255,7 @@ export default function WebhooksResponders() {
   return (
     <>
       {content}
-      {saveAutoResponderFormModal}
+      {editFlyout}
     </>
   );
 }

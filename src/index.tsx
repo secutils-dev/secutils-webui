@@ -15,11 +15,13 @@ import { icon as EuiIconArrowRight } from '@elastic/eui/es/components/icon/asset
 import { icon as EuiIconArrowUp } from '@elastic/eui/es/components/icon/assets/arrow_up';
 import { icon as EuiIconArrowStart } from '@elastic/eui/es/components/icon/assets/arrowStart';
 import { icon as EuiIconArrowEnd } from '@elastic/eui/es/components/icon/assets/arrowEnd';
+import { icon as EuiIconBoxesHorizontal } from '@elastic/eui/es/components/icon/assets/boxes_horizontal';
 import { icon as EuiIconCalendar } from '@elastic/eui/es/components/icon/assets/calendar';
 import { icon as EuiIconCheck } from '@elastic/eui/es/components/icon/assets/check';
 import { icon as EuiIconCross } from '@elastic/eui/es/components/icon/assets/cross';
 import { icon as EuiIconCut } from '@elastic/eui/es/components/icon/assets/cut';
 import { icon as EuiIconDot } from '@elastic/eui/es/components/icon/assets/dot';
+import { icon as EuiIconDownload } from '@elastic/eui/es/components/icon/assets/download';
 import { icon as EuiIconExit } from '@elastic/eui/es/components/icon/assets/exit';
 import { icon as EuiIconEmpty } from '@elastic/eui/es/components/icon/assets/empty';
 import { icon as EuiIconGear } from '@elastic/eui/es/components/icon/assets/gear';
@@ -61,11 +63,13 @@ appendIconComponentCache({
   arrowUp: EuiIconArrowUp,
   arrowStart: EuiIconArrowStart,
   arrowEnd: EuiIconArrowEnd,
+  boxesHorizontal: EuiIconBoxesHorizontal,
   calendar: EuiIconCalendar,
   check: EuiIconCheck,
   cross: EuiIconCross,
   cut: EuiIconCut,
   dot: EuiIconDot,
+  download: EuiIconDownload,
   empty: EuiIconEmpty,
   exit: EuiIconExit,
   gear: EuiIconGear,
