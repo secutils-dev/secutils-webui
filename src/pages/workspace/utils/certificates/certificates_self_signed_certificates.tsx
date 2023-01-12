@@ -13,10 +13,8 @@ import {
   EuiLink,
 } from '@elastic/eui';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import axios from 'axios';
 import { PageContext } from '../../../../page_container';
 import { PageLoadingState } from '../../../../components';
-import { Downloader } from '../../../../tools/downloader';
 import { WorkspaceContext } from '../../workspace_context';
 import type { SelfSignedCertificate, SerializedSelfSignedCertificate } from './self_signed_certificate';
 import {
@@ -28,6 +26,7 @@ import {
 } from './self_signed_certificate';
 import { SaveSelfSignedCertificatesFlyout } from './save_self_signed_certificate_flyout';
 import moment from 'moment';
+import { CertificateFormatModal } from './certificate_format_modal';
 
 type SelfSignedCertificatesDataType = {
   [SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE]: Record<string, SerializedSelfSignedCertificate> | null;
@@ -47,11 +46,22 @@ function parseSelfSignedCertificates(data: SelfSignedCertificatesDataType): Self
 }
 
 export default function CertificatesSelfSignedCertificates() {
-  const { uiState, setUserData, getUserData, getApiURL, addToast } = useContext(PageContext);
+  const { uiState, setUserData, getUserData } = useContext(PageContext);
   const { setTitleActions } = useContext(WorkspaceContext);
 
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState<
+    { isOpen: false } | { isOpen: true; certificate: SelfSignedCertificate }
+  >({ isOpen: false });
+  const onToggleGenerateModal = useCallback((certificate?: SelfSignedCertificate) => {
+    if (certificate) {
+      setIsGenerateModalOpen({ isOpen: true, certificate });
+    } else {
+      setIsGenerateModalOpen({ isOpen: false });
+    }
+  }, []);
+
   const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
-    { isOpen: false } | { isOpen: true; certificateToEdit?: SelfSignedCertificate }
+    { isOpen: false } | { isOpen: true; certificate?: SelfSignedCertificate }
   >({ isOpen: false });
   const onToggleEditFlyout = useCallback(
     (hintReload?: boolean) => {
@@ -96,7 +106,11 @@ export default function CertificatesSelfSignedCertificates() {
   }, [uiState, reloadCertificates]);
 
   const editFlyout = isEditFlyoutOpen.isOpen ? (
-    <SaveSelfSignedCertificatesFlyout onClose={onToggleEditFlyout} certificate={isEditFlyoutOpen.certificateToEdit} />
+    <SaveSelfSignedCertificatesFlyout onClose={onToggleEditFlyout} certificate={isEditFlyoutOpen.certificate} />
+  ) : null;
+
+  const generateModal = isGenerateModalOpen.isOpen ? (
+    <CertificateFormatModal onClose={() => onToggleGenerateModal()} certificate={isGenerateModalOpen.certificate} />
   ) : null;
 
   const onRemoveCertificate = useCallback(
@@ -110,7 +124,7 @@ export default function CertificatesSelfSignedCertificates() {
   );
 
   const onEditCertificate = useCallback((certificate: SelfSignedCertificate) => {
-    setIsEditFlyoutOpen({ isOpen: true, certificateToEdit: certificate });
+    setIsEditFlyoutOpen({ isOpen: true, certificate: certificate });
   }, []);
 
   const [pagination, setPagination] = useState<Pagination>({
@@ -256,39 +270,7 @@ export default function CertificatesSelfSignedCertificates() {
                   icon: 'download',
                   type: 'icon',
                   isPrimary: true,
-                  onClick: (certificate: SelfSignedCertificate) => {
-                    axios
-                      .post<{
-                        type: 'certificates';
-                        value: {
-                          type: 'generateSelfSignedCertificate';
-                          value: { privateKey: number[]; certificate: number[] };
-                        };
-                      }>(getApiURL('/api/utils/execute'), {
-                        request: {
-                          type: 'certificates',
-                          value: { type: 'generateSelfSignedCertificate', value: { templateName: certificate.name } },
-                        },
-                      })
-                      .then(
-                        (response) => {
-                          const result = response.data.value.value;
-                          Downloader.download(
-                            `${certificate.name}.crt`,
-                            result.certificate.map((byte) => String.fromCharCode(byte)).join(''),
-                            'application/x-x509-ca-cert',
-                          );
-                        },
-                        () => {
-                          addToast({
-                            id: `failed-generate-certificate-${certificate.name}`,
-                            iconType: 'alert',
-                            color: 'danger',
-                            title: `Unable to generate self-signed certificate, please try again later`,
-                          });
-                        },
-                      );
-                  },
+                  onClick: onToggleGenerateModal,
                 },
                 {
                   name: 'Edit template',
@@ -317,6 +299,7 @@ export default function CertificatesSelfSignedCertificates() {
     <>
       {content}
       {editFlyout}
+      {generateModal}
     </>
   );
 }
