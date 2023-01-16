@@ -1,6 +1,8 @@
 import {
   EuiButton,
   EuiButtonEmpty,
+  EuiCallOut,
+  EuiFieldText,
   EuiForm,
   EuiFormRow,
   EuiModal,
@@ -8,18 +10,17 @@ import {
   EuiModalFooter,
   EuiModalHeader,
   EuiModalHeaderTitle,
-  EuiFieldText,
-  EuiCallOut,
-  EuiTitle,
   EuiSelect,
+  EuiTitle,
 } from '@elastic/eui';
 import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
+
 import type { SelfSignedCertificate } from './self_signed_certificate';
 import type { AsyncData } from '../../../../model';
-import { Downloader } from '../../../../tools/downloader';
 import { getApiUrl } from '../../../../model';
+import { Downloader } from '../../../../tools/downloader';
 
 export interface CertificateFormatModalProps {
   certificate: SelfSignedCertificate;

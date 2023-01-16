@@ -1,7 +1,8 @@
-import type { ChangeEvent } from 'react';
-import React, { useCallback } from 'react';
 import type { EuiThemeColorMode } from '@elastic/eui';
 import { EuiFlyout, EuiFlyoutBody, EuiFlyoutHeader, EuiFormRow, EuiSelect, EuiTitle } from '@elastic/eui';
+import type { ChangeEvent } from 'react';
+import { useCallback } from 'react';
+
 import { useAppContext } from '../hooks';
 import { USER_SETTINGS_KEY_COMMON_UI_THEME } from '../model';
 

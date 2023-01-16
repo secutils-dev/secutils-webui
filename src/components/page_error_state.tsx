@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import React, { useCallback } from 'react';
 import { EuiEmptyPrompt, EuiFlexGroup, EuiFlexItem, EuiIcon, EuiLink } from '@elastic/eui';
+import type { ReactNode } from 'react';
+import { useCallback } from 'react';
 
 export interface PageContainerProps {
   title: string;

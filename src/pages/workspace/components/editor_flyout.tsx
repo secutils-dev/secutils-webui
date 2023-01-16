@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   EuiButton,
   EuiButtonEmpty,
@@ -10,10 +9,11 @@ import {
   EuiFlyoutHeader,
   EuiTitle,
 } from '@elastic/eui';
+import type { ReactNode } from 'react';
 
 export interface Props {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
   onClose: () => void;
   onSave: () => void;
 

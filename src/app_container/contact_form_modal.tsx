@@ -1,6 +1,8 @@
 import {
   EuiButton,
   EuiButtonEmpty,
+  EuiCallOut,
+  EuiFieldText,
   EuiForm,
   EuiFormRow,
   EuiModal,
@@ -9,13 +11,12 @@ import {
   EuiModalHeader,
   EuiModalHeaderTitle,
   EuiTextArea,
-  EuiFieldText,
-  EuiCallOut,
   EuiTitle,
 } from '@elastic/eui';
 import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
+
 import type { AsyncData } from '../model';
 import { getApiUrl } from '../model';
 

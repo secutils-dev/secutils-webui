@@ -1,5 +1,5 @@
 import { EuiComboBox } from '@elastic/eui';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export interface CspSourcesComboboxProps {
   sources?: string[];

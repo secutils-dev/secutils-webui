@@ -1,4 +1,3 @@
-import React from 'react';
 import { PageLoadingState } from './page_loading_state';
 
 export function PageUnderConstructionState() {

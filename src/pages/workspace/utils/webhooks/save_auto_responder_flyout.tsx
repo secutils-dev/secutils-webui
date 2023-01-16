@@ -1,20 +1,21 @@
 import {
-  EuiForm,
-  EuiFormRow,
-  EuiTextArea,
-  EuiFieldText,
-  EuiSelect,
-  EuiFieldNumber,
   EuiComboBox,
   EuiDescribedFormGroup,
+  EuiFieldNumber,
+  EuiFieldText,
+  EuiForm,
+  EuiFormRow,
+  EuiSelect,
+  EuiTextArea,
 } from '@elastic/eui';
 import type { ChangeEvent } from 'react';
-import React, { useCallback, useMemo, useState } from 'react';
-import type { AsyncData } from '../../../../model';
+import { useCallback, useMemo, useState } from 'react';
+
 import type { Responder, SerializedResponders } from './responder';
-import { RESPONDERS_USER_DATA_TYPE, serializeResponder, serializeHttpMethod, deserializeResponders } from './responder';
-import { EditorFlyout } from '../../components/editor_flyout';
+import { deserializeResponders, RESPONDERS_USER_DATA_TYPE, serializeHttpMethod, serializeResponder } from './responder';
+import type { AsyncData } from '../../../../model';
 import { setUserData } from '../../../../model';
+import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface SaveAutoResponderFlyoutProps {

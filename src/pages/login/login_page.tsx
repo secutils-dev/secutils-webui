@@ -1,8 +1,9 @@
-import type { ChangeEvent, MouseEventHandler } from 'react';
-import React, { useCallback, useState } from 'react';
-import axios from 'axios';
-import { Navigate } from 'react-router-dom';
 import { EuiButton, EuiCallOut, EuiFieldText, EuiForm, EuiFormRow, EuiPanel } from '@elastic/eui';
+import axios from 'axios';
+import type { ChangeEvent, MouseEventHandler } from 'react';
+import { useCallback, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+
 import { useAppContext, usePageMeta } from '../../hooks';
 import type { AsyncData } from '../../model';
 import { getApiUrl } from '../../model';

@@ -1,6 +1,7 @@
-import type { ChangeEvent } from 'react';
-import React, { useCallback, useState } from 'react';
 import { EuiDescribedFormGroup, EuiFieldText, EuiForm, EuiFormRow, EuiSelect } from '@elastic/eui';
+import type { ChangeEvent } from 'react';
+import { useCallback, useState } from 'react';
+
 import type { CspPolicy } from './csp_policy';
 import { CspSourcesCombobox } from './csp_sources_combobox';
 import { EditorFlyout } from '../../../components/editor_flyout';

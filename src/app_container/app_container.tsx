@@ -1,5 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import type { EuiThemeColorMode } from '@elastic/eui';
+import { EuiGlobalToastList, EuiProvider } from '@elastic/eui';
+import type { Toast } from '@elastic/eui/src/components/toast/global_toast_list';
+import axios from 'axios';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
+
+import { AppContext } from './app_context';
+import { useLocalStorage } from '../hooks';
 import type { SerializedUiState, UiState, UserSettings } from '../model';
 import {
   deserializeUser,
@@ -8,13 +15,6 @@ import {
   USER_SETTINGS_KEY_COMMON_UI_THEME,
   USER_SETTINGS_USER_DATA_TYPE,
 } from '../model';
-import { AppContext } from './app_context';
-
-import axios from 'axios/index';
-import { useLocalStorage } from '../hooks';
-import type { EuiThemeColorMode } from '@elastic/eui';
-import { EuiGlobalToastList, EuiProvider } from '@elastic/eui';
-import type { Toast } from '@elastic/eui/src/components/toast/global_toast_list';
 import type { PageToast } from '../pages/page';
 
 export function AppContainer() {

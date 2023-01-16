@@ -10,12 +10,13 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
-import React, { useCallback, useEffect, useState } from 'react';
-import type { User } from '../../../../model';
-import { PageLoadingState } from '../../../../components';
+import { useCallback, useEffect, useState } from 'react';
+
 import type { Responder, SerializedResponders } from './responder';
-import { RESPONDERS_USER_DATA_TYPE, deserializeHttpMethod, deserializeResponders } from './responder';
+import { deserializeHttpMethod, deserializeResponders, RESPONDERS_USER_DATA_TYPE } from './responder';
 import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
+import { PageLoadingState } from '../../../../components';
+import type { User } from '../../../../model';
 import { getUserData, setUserData } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 

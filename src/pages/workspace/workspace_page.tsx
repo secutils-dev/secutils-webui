@@ -1,6 +1,3 @@
-import type { ReactNode } from 'react';
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import type { EuiSideNavItemType, EuiSwitchEvent } from '@elastic/eui';
 import {
   EuiButtonIcon,
@@ -15,19 +12,23 @@ import {
   EuiSpacer,
   EuiSwitch,
 } from '@elastic/eui';
-import { SettingsFlyout } from '../../app_container';
-import { useAppContext, usePageMeta } from '../../hooks';
-import { PageLoadingState } from '../../components';
-import { UtilsComponents } from './utils';
-import type { Util } from '../../model';
 import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
 import { css } from '@emotion/react';
 import axios from 'axios';
-import { WorkspaceContext } from './workspace_context';
-import { Page } from '../page';
-import { getApiUrl, USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES } from '../../model';
+import type { ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-const DEFAULT_COMPONENT = React.lazy(() => import('../../components/page_under_construction_state'));
+import { UtilsComponents } from './utils';
+import { WorkspaceContext } from './workspace_context';
+import { SettingsFlyout } from '../../app_container';
+import { PageLoadingState } from '../../components';
+import { useAppContext, usePageMeta } from '../../hooks';
+import type { Util } from '../../model';
+import { getApiUrl, USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES } from '../../model';
+import { Page } from '../page';
+
+const DEFAULT_COMPONENT = lazy(() => import('../../components/page_under_construction_state'));
 
 export function WorkspacePage() {
   usePageMeta('Workspace');

@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import { getApiUrl } from './urls';
 
 export interface SerializedUser {

@@ -1,5 +1,6 @@
-import React from 'react';
+import { createContext } from 'react';
 import type { Dispatch } from 'react';
+
 import type { UiState, UserSettings } from '../model';
 import type { PageToast } from '../pages/page';
 
@@ -11,4 +12,4 @@ export interface AppContextValue {
   addToast: (toast: PageToast) => void;
 }
 
-export const AppContext = React.createContext<AppContextValue | undefined>(undefined);
+export const AppContext = createContext<AppContextValue | undefined>(undefined);

@@ -1,20 +1,23 @@
-import type { Pagination, PropertySort, Criteria } from '@elastic/eui';
+import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
   EuiCallOut,
+  EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiEmptyPrompt,
   EuiIcon,
   EuiInMemoryTable,
+  EuiLink,
+  EuiSpacer,
   EuiText,
   EuiToolTip,
-  EuiSpacer,
-  EuiLink,
 } from '@elastic/eui';
-import React, { useCallback, useEffect, useState } from 'react';
-import { PageLoadingState } from '../../../../components';
-import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
+import { unix } from 'moment';
+import { useCallback, useEffect, useState } from 'react';
+
+import { CertificateFormatModal } from './certificate_format_modal';
+import { SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
+import { SaveSelfSignedCertificatesFlyout } from './save_self_signed_certificate_flyout';
 import {
   deserializeSelfSignedCertificates,
   getDistinguishedNameString,
@@ -22,10 +25,8 @@ import {
   SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE,
   signatureAlgorithmString,
 } from './self_signed_certificate';
-import { SaveSelfSignedCertificatesFlyout } from './save_self_signed_certificate_flyout';
-import moment from 'moment';
-import { CertificateFormatModal } from './certificate_format_modal';
-import { SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
+import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
+import { PageLoadingState } from '../../../../components';
 import { getUserData, setUserData } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
@@ -227,7 +228,7 @@ export default function CertificatesSelfSignedCertificates() {
               field: 'notValidBefore',
               sortable: true,
               render: (_, certificate: SelfSignedCertificate) => (
-                <EuiText>{moment.unix(certificate.notValidBefore).format('LL HH:mm')}</EuiText>
+                <EuiText>{unix(certificate.notValidBefore).format('LL HH:mm')}</EuiText>
               ),
             },
             {
@@ -235,7 +236,7 @@ export default function CertificatesSelfSignedCertificates() {
               field: 'notValidAfter',
               sortable: true,
               render: (_, certificate: SelfSignedCertificate) => (
-                <EuiText>{moment.unix(certificate.notValidAfter).format('LL HH:mm')}</EuiText>
+                <EuiText>{unix(certificate.notValidAfter).format('LL HH:mm')}</EuiText>
               ),
             },
             {

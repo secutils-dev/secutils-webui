@@ -1,26 +1,27 @@
-import type { MouseEventHandler, ReactElement, ReactNode } from 'react';
-import React, { useCallback, useState } from 'react';
-import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
 import {
+  EuiHeader,
+  EuiHeaderBreadcrumbs,
+  EuiHeaderLogo,
+  EuiHeaderSection,
+  EuiHeaderSectionItem,
   EuiHorizontalRule,
   EuiLink,
   EuiPage,
   EuiPageBody,
-  EuiText,
-  EuiPageSidebar,
   EuiPageSection,
-  EuiHeaderSectionItem,
-  EuiHeader,
-  EuiHeaderSection,
-  EuiHeaderLogo,
-  EuiHeaderBreadcrumbs,
+  EuiPageSidebar,
+  EuiText,
 } from '@elastic/eui';
-import { Logo, PageErrorState, PageLoadingState } from '../components';
-import { ContactFormModal } from '../app_container/contact_form_modal';
 import type { EuiPageSectionProps, IconType } from '@elastic/eui';
+import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
+import type { MouseEventHandler, ReactElement, ReactNode } from 'react';
+import { useCallback, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAppContext } from '../hooks';
+
 import { PageHeader } from './page_header';
+import { ContactFormModal } from '../app_container/contact_form_modal';
+import { Logo, PageErrorState, PageLoadingState } from '../components';
+import { useAppContext } from '../hooks';
 
 export interface PageProps {
   children: ReactElement | ReactElement[];

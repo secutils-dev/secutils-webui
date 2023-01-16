@@ -8,11 +8,12 @@ import {
   EuiInMemoryTable,
   EuiToolTip,
 } from '@elastic/eui';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageLoadingState } from '../../../../../components';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import type { CspPolicy } from './csp_policy';
 import { CSP_POLICIES_USER_DATA_TYPE } from './csp_policy';
 import { CspPolicyEditFlyout } from './csp_policy_edit_flyout';
+import { PageLoadingState } from '../../../../../components';
 import { setUserData } from '../../../../../model';
 import { useWorkspaceContext } from '../../../hooks';
 

@@ -1,17 +1,18 @@
-import { EuiForm, EuiFormRow, EuiFieldText, EuiSelect, EuiDescribedFormGroup } from '@elastic/eui';
-import type { ChangeEvent } from 'react';
+import { EuiDescribedFormGroup, EuiFieldText, EuiForm, EuiFormRow, EuiSelect } from '@elastic/eui';
 import moment from 'moment/moment';
-import React, { useCallback, useState } from 'react';
-import type { AsyncData } from '../../../../model';
-import { EditorFlyout } from '../../components/editor_flyout';
-import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
+import type { ChangeEvent } from 'react';
+import { useCallback, useState } from 'react';
+
 import { CertificateLifetimeCalendar } from './certificate_lifetime_calendar';
+import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
 import {
   deserializeSelfSignedCertificates,
   SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE,
   serializeSelfSignedCertificate,
 } from './self_signed_certificate';
+import type { AsyncData } from '../../../../model';
 import { setUserData } from '../../../../model';
+import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface SaveSelfSignedCertificatesFlyoutProps {

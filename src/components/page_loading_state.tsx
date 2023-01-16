@@ -1,5 +1,5 @@
-import React from 'react';
 import { EuiEmptyPrompt, EuiFlexGroup, EuiFlexItem, EuiLoadingLogo } from '@elastic/eui';
+
 import { Logo } from './logo';
 
 export interface PageLoadingStateProps {

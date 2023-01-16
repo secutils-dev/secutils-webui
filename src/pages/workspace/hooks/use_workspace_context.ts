@@ -1,6 +1,7 @@
 import { useContext } from 'react';
-import { WorkspaceContext } from '../workspace_context';
+
 import { useAppContext } from '../../../hooks';
+import { WorkspaceContext } from '../workspace_context';
 
 export function useWorkspaceContext() {
   const appContext = useAppContext();
