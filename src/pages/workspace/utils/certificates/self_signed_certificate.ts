@@ -1,5 +1,7 @@
 export const SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE = 'selfSignedCertificates';
 
+export type SerializedSelfSignedCertificates = Record<string, SerializedSelfSignedCertificate>;
+
 export interface SerializedSelfSignedCertificate {
   n: string;
   cn?: string;
@@ -105,6 +107,20 @@ export function deserializeSelfSignedCertificate(
   }
 
   return certificate;
+}
+
+export function deserializeSelfSignedCertificates(
+  serializedCertificates: SerializedSelfSignedCertificates | null,
+): SelfSignedCertificate[] {
+  if (!serializedCertificates) {
+    return [];
+  }
+
+  try {
+    return Object.values(serializedCertificates).map(deserializeSelfSignedCertificate);
+  } catch {
+    return [];
+  }
 }
 
 export function serializeSelfSignedCertificate(certificate: SelfSignedCertificate): SerializedSelfSignedCertificate {

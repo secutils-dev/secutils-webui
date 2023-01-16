@@ -9,16 +9,17 @@ import {
   EuiDescribedFormGroup,
 } from '@elastic/eui';
 import type { ChangeEvent } from 'react';
-import React, { useCallback, useContext, useMemo, useState } from 'react';
-import { PageContext } from '../../../../page_container';
+import React, { useCallback, useMemo, useState } from 'react';
 import type { AsyncData } from '../../../../model';
-import type { Responder } from './responder';
-import { RESPONDERS_USER_DATA_TYPE, serializeResponder, serializeHttpMethod } from './responder';
+import type { Responder, SerializedResponders } from './responder';
+import { RESPONDERS_USER_DATA_TYPE, serializeResponder, serializeHttpMethod, deserializeResponders } from './responder';
 import { EditorFlyout } from '../../components/editor_flyout';
+import { setUserData } from '../../../../model';
+import { useWorkspaceContext } from '../../hooks';
 
 export interface SaveAutoResponderFlyoutProps {
   autoResponder?: Responder;
-  onClose: (hintReload?: boolean) => void;
+  onClose: (responders?: Responder[]) => void;
 }
 
 const HTTP_METHODS = ['ANY', 'GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'CONNECT', 'TRACE', 'PATCH'];
@@ -28,7 +29,7 @@ const isHeaderValid = (header: string) => {
 };
 
 export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResponderFlyoutProps) {
-  const { setUserData, addToast } = useContext(PageContext);
+  const { addToast } = useWorkspaceContext();
 
   const httpMethods = useMemo(
     () => HTTP_METHODS.map((method) => ({ value: serializeHttpMethod(method), text: method })),
@@ -99,7 +100,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
     }
 
     setUpdatingStatus({ status: 'pending' });
-    setUserData(RESPONDERS_USER_DATA_TYPE, {
+    setUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE, {
       [alias]: serializeResponder({
         alias,
         method,
@@ -119,7 +120,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
         delay,
       }),
     }).then(
-      () => {
+      (serializedResponders) => {
         setUpdatingStatus({ status: 'succeeded', data: undefined });
 
         addToast({
@@ -129,7 +130,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
           title: `Successfully saved "${alias}" responder`,
         });
 
-        onClose(true);
+        onClose(deserializeResponders(serializedResponders));
       },
       (err: Error) => {
         setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
@@ -147,7 +148,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
   return (
     <EditorFlyout
       title={`${autoResponder ? 'Edit' : 'Add'} responder`}
-      onClose={onClose}
+      onClose={() => onClose()}
       onSave={onAddAutoResponder}
       canSave={!areHeadersInvalid && alias.trim().length > 0}
       saveInProgress={updatingStatus?.status === 'pending'}

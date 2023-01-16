@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import React, { Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { EuiSideNavItemType } from '@elastic/eui';
+import type { EuiSideNavItemType, EuiSwitchEvent } from '@elastic/eui';
 import {
   EuiButtonIcon,
   EuiContextMenuItem,
@@ -15,16 +15,17 @@ import {
   EuiSpacer,
   EuiSwitch,
 } from '@elastic/eui';
-import { Page, PageContext, SettingsFlyout } from '../../page_container';
-import { usePageMeta } from '../../hooks';
+import { SettingsFlyout } from '../../app_container';
+import { useAppContext, usePageMeta } from '../../hooks';
 import { PageLoadingState } from '../../components';
 import { UtilsComponents } from './utils';
 import type { Util } from '../../model';
 import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
 import { css } from '@emotion/react';
-import { settingsSetShowOnlyFavorites } from '../../model';
 import axios from 'axios';
 import { WorkspaceContext } from './workspace_context';
+import { Page } from '../page';
+import { getApiUrl, USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES } from '../../model';
 
 const DEFAULT_COMPONENT = React.lazy(() => import('../../components/page_under_construction_state'));
 
@@ -32,7 +33,7 @@ export function WorkspacePage() {
   usePageMeta('Workspace');
 
   const navigate = useNavigate();
-  const { settings, uiState, getURL, setSettings, getApiURL, addToast } = useContext(PageContext);
+  const { addToast, uiState, settings, setSettings } = useAppContext();
   const { util: utilIdFromParam = 'home' } = useParams<{ util?: string }>();
 
   const [isSideNavOpenOnMobile, setIsSideNavOpenOnMobile] = useState<boolean>(false);
@@ -40,33 +41,30 @@ export function WorkspacePage() {
     setIsSideNavOpenOnMobile(!isSideNavOpenOnMobile);
   }, [isSideNavOpenOnMobile]);
 
-  const getBreadcrumbs = useCallback(
-    (util: Util, utilsMap: Map<string, Util>) => {
-      const breadcrumbs: EuiBreadcrumbProps[] = [];
-      let utilToBreadcrumb: Util | undefined = util;
-      while (utilToBreadcrumb) {
-        const utilUrl = `/ws/${utilToBreadcrumb.id}`;
-        breadcrumbs.unshift({
-          text: utilToBreadcrumb.name,
-          onClick:
-            utilToBreadcrumb.id !== util.id
-              ? (e) => {
-                  e.preventDefault();
-                  navigate(getURL(utilUrl));
-                }
-              : undefined,
-          href: utilToBreadcrumb.id !== util.id ? utilUrl : undefined,
-        });
+  const getBreadcrumbs = useCallback((util: Util, utilsMap: Map<string, Util>) => {
+    const breadcrumbs: EuiBreadcrumbProps[] = [];
+    let utilToBreadcrumb: Util | undefined = util;
+    while (utilToBreadcrumb) {
+      const utilUrl = `/ws/${utilToBreadcrumb.id}`;
+      breadcrumbs.unshift({
+        text: utilToBreadcrumb.name,
+        onClick:
+          utilToBreadcrumb.id !== util.id
+            ? (e) => {
+                e.preventDefault();
+                navigate(utilUrl);
+              }
+            : undefined,
+        href: utilToBreadcrumb.id !== util.id ? utilUrl : undefined,
+      });
 
-        const utilSeparatorIndex = utilToBreadcrumb.id.lastIndexOf('__');
-        utilToBreadcrumb =
-          utilSeparatorIndex > 0 ? utilsMap.get(utilToBreadcrumb.id.slice(0, utilSeparatorIndex)) : undefined;
-      }
+      const utilSeparatorIndex = utilToBreadcrumb.id.lastIndexOf('__');
+      utilToBreadcrumb =
+        utilSeparatorIndex > 0 ? utilsMap.get(utilToBreadcrumb.id.slice(0, utilSeparatorIndex)) : undefined;
+    }
 
-      return breadcrumbs;
-    },
-    [getURL],
-  );
+    return breadcrumbs;
+  }, []);
 
   const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
 
@@ -89,15 +87,14 @@ export function WorkspacePage() {
           setTitleActions(null);
           setSelectedUtil(util);
           setBreadcrumbs(getBreadcrumbs(util, utilsMap));
-          navigate(getURL(utilUrl));
+          navigate(utilUrl);
         },
-        disabled: settings.showOnlyFavorites,
         items: util.utils?.map((util) => createItem(util)) ?? [],
       };
     };
 
     return [uiState.utils.map(createItem), utilsMap];
-  }, [uiState, getURL, selectedUtil]);
+  }, [uiState, selectedUtil]);
 
   useEffect(() => {
     const newSelectedUtil =
@@ -139,10 +136,8 @@ export function WorkspacePage() {
     setIsSettingsOpen(!isSettingsOpen);
   }, [isSettingsOpen]);
 
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState<boolean>(settings.showOnlyFavorites ?? false);
   const onChangeShowOnlyFavorites = (showOnlyFavoritesValue: boolean) => {
-    setShowOnlyFavorites(showOnlyFavoritesValue);
-    setSettings(settingsSetShowOnlyFavorites(settings, showOnlyFavoritesValue));
+    setSettings({ [USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES]: showOnlyFavoritesValue || null });
   };
 
   const settingsFlyout = isSettingsOpen ? <SettingsFlyout onClose={onToggleSettings} /> : null;
@@ -150,7 +145,7 @@ export function WorkspacePage() {
   const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState<boolean>(false);
   const onLogout = useCallback(() => {
     setIsAccountPopoverOpen(false);
-    axios.post(getApiURL('/api/logout')).then(
+    axios.post(getApiUrl('/api/logout')).then(
       () => {
         window.location.reload();
       },
@@ -196,8 +191,8 @@ export function WorkspacePage() {
         <EuiSwitch
           label="Favorites only"
           compressed
-          checked={showOnlyFavorites}
-          onChange={() => onChangeShowOnlyFavorites(!showOnlyFavorites)}
+          checked={settings?.[USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES] === true}
+          onChange={(ev: EuiSwitchEvent) => onChangeShowOnlyFavorites(ev.target.checked)}
           title="Show only utils that are marked as favorite."
         />,
         <EuiPopover

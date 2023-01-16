@@ -1,18 +1,17 @@
 import type { ChangeEvent, MouseEventHandler } from 'react';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { EuiButton, EuiCallOut, EuiFieldText, EuiForm, EuiFormRow, EuiPanel } from '@elastic/eui';
-import { Page, PageContext } from '../../page_container';
-import { usePageMeta } from '../../hooks';
-import type { AsyncData, SerializedUser } from '../../model';
-import { deserializeUser } from '../../model';
+import { useAppContext, usePageMeta } from '../../hooks';
+import type { AsyncData } from '../../model';
+import { getApiUrl } from '../../model';
+import { Page } from '../page';
 
 export function LoginPage() {
   usePageMeta('Login');
 
-  const navigate = useNavigate();
-  const { getURL, getApiURL, setUser } = useContext(PageContext);
+  const { uiState, refreshUiState } = useAppContext();
 
   const [username, setUsername] = useState<string>('');
   const onUsernameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -34,11 +33,9 @@ export function LoginPage() {
       }
 
       setLoginStatus({ status: 'pending' });
-      axios.post(getApiURL('/api/login'), { username, password }).then(
-        ({ data }: { data: { user: SerializedUser } }) => {
-          setLoginStatus({ status: 'succeeded', data: null });
-          setUser(deserializeUser(data.user));
-          navigate(getURL('/ws'));
+      axios.post(getApiUrl('/api/login'), { username, password }).then(
+        () => {
+          refreshUiState();
         },
         (err: Error) => {
           setLoginStatus({ status: 'failed', error: err?.message ?? err });
@@ -47,6 +44,10 @@ export function LoginPage() {
     },
     [username, password, loginStatus],
   );
+
+  if (uiState.user) {
+    return <Navigate to="/ws" />;
+  }
 
   const loginStatusCallout =
     loginStatus?.status === 'failed' ? (

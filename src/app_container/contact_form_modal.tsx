@@ -15,16 +15,15 @@ import {
 } from '@elastic/eui';
 import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { AsyncData } from '../model';
-import { PageContext } from './page_context';
+import { getApiUrl } from '../model';
 
 export interface ContactFormModalProps {
   onClose: () => void;
 }
 
 export function ContactFormModal({ onClose }: ContactFormModalProps) {
-  const { getApiURL } = useContext(PageContext);
   const [message, setMessage] = useState<string>('');
   const onMessageChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
@@ -45,7 +44,7 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
       }
 
       setSendingStatus({ status: 'pending' });
-      axios.post(getApiURL('/api/send_message'), email ? { message, email } : { message }).then(
+      axios.post(getApiUrl('/api/send_message'), email ? { message, email } : { message }).then(
         () => {
           setSendingStatus({ status: 'succeeded', data: null });
           setMessage('');
@@ -71,7 +70,7 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
     ) : undefined;
 
   return (
-    <EuiModal onClose={onClose}>
+    <EuiModal onClose={() => onClose()}>
       <EuiModalHeader>
         <EuiModalHeaderTitle>
           <EuiTitle size={'s'}>
@@ -95,7 +94,7 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
         </EuiForm>
       </EuiModalBody>
       <EuiModalFooter>
-        <EuiButtonEmpty onClick={onClose}>Cancel</EuiButtonEmpty>
+        <EuiButtonEmpty onClick={() => onClose()}>Cancel</EuiButtonEmpty>
         <EuiButton
           type="submit"
           form="contact-form"

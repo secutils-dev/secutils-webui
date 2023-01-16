@@ -33,7 +33,7 @@ export function EditorFlyout({ title, children, onSave, onClose, canSave, saveIn
       <EuiFlyoutFooter>
         <EuiFlexGroup justifyContent="spaceBetween">
           <EuiFlexItem grow={false}>
-            <EuiButtonEmpty iconType="cross" onClick={() => onClose()} flush="left">
+            <EuiButtonEmpty iconType="cross" onClick={onClose} flush="left">
               Close
             </EuiButtonEmpty>
           </EuiFlexItem>

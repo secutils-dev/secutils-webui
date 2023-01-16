@@ -1,0 +1,1 @@
+export const SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY = 'certificates.doNotShowSelfSignedWarning';

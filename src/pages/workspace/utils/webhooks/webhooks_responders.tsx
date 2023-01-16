@@ -10,33 +10,17 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { PageContext } from '../../../../page_container';
+import React, { useCallback, useEffect, useState } from 'react';
 import type { User } from '../../../../model';
 import { PageLoadingState } from '../../../../components';
-import type { SerializedResponder, Responder } from './responder';
-import { deserializeResponder, RESPONDERS_USER_DATA_TYPE, deserializeHttpMethod } from './responder';
+import type { Responder, SerializedResponders } from './responder';
+import { RESPONDERS_USER_DATA_TYPE, deserializeHttpMethod, deserializeResponders } from './responder';
 import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
-import { WorkspaceContext } from '../../workspace_context';
-
-type AutoRespondersDataType = { [RESPONDERS_USER_DATA_TYPE]: Record<string, SerializedResponder> | null };
-
-function parseAutoResponders(data: AutoRespondersDataType): Responder[] {
-  const autoResponders = data[RESPONDERS_USER_DATA_TYPE];
-  if (!autoResponders) {
-    return [];
-  }
-
-  try {
-    return Object.values(autoResponders).map(deserializeResponder);
-  } catch {
-    return [];
-  }
-}
+import { getUserData, setUserData } from '../../../../model';
+import { useWorkspaceContext } from '../../hooks';
 
 export default function WebhooksResponders() {
-  const { uiState, setUserData, getUserData } = useContext(PageContext);
-  const { setTitleActions } = useContext(WorkspaceContext);
+  const { uiState, setTitleActions } = useWorkspaceContext();
 
   const getResponderUrl = useCallback((autoResponder: Responder, user: User) => {
     return `${location.origin}/api/webhooks/ar/${encodeURIComponent(user.handle)}/${encodeURIComponent(
@@ -44,17 +28,23 @@ export default function WebhooksResponders() {
     )}`;
   }, []);
 
+  const [autoResponders, setAutoResponders] = useState<Responder[] | null>(null);
+  const updateResponders = useCallback((updatedResponders: Responder[]) => {
+    setAutoResponders(updatedResponders);
+    setTitleActions(updatedResponders.length === 0 ? null : createButton);
+  }, []);
+
   const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
     { isOpen: false } | { isOpen: true; responderToEdit?: Responder }
   >({ isOpen: false });
   const onToggleEditFlyout = useCallback(
-    (hintReload?: boolean) => {
-      if (hintReload) {
-        reloadResponders();
+    (updatedResponders?: Responder[]) => {
+      if (updatedResponders) {
+        updateResponders(updatedResponders);
       }
       setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
     },
-    [getUserData],
+    [updateResponders],
   );
 
   const createButton = (
@@ -63,26 +53,21 @@ export default function WebhooksResponders() {
     </EuiButton>
   );
 
-  const [autoResponders, setAutoResponders] = useState<Responder[] | null>(null);
-  const reloadResponders = useCallback(() => {
-    getUserData<AutoRespondersDataType>(RESPONDERS_USER_DATA_TYPE).then(
-      (data) => {
-        const parsedAutoResponders = parseAutoResponders(data);
-        setAutoResponders(parsedAutoResponders);
-        setTitleActions(parsedAutoResponders.length === 0 ? null : createButton);
+  useEffect(() => {
+    if (!uiState.synced || !uiState.user) {
+      return;
+    }
+
+    getUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE).then(
+      (serializedResponders) => {
+        updateResponders(deserializeResponders(serializedResponders));
       },
-      () => {
-        setAutoResponders([]);
-        setTitleActions(null);
+      (err: Error) => {
+        console.error(`Failed to load auto responders: ${err?.message ?? err}`);
+        updateResponders([]);
       },
     );
-  }, [getUserData]);
-
-  useEffect(() => {
-    if (uiState.synced && uiState.user) {
-      reloadResponders();
-    }
-  }, [uiState, reloadResponders]);
+  }, [uiState, updateResponders]);
 
   const editFlyout = isEditFlyoutOpen.isOpen ? (
     <SaveAutoResponderFlyout onClose={onToggleEditFlyout} autoResponder={isEditFlyoutOpen.responderToEdit} />
@@ -90,9 +75,16 @@ export default function WebhooksResponders() {
 
   const onRemoveResponder = useCallback(
     (autoResponder: Responder) => {
-      setUserData(RESPONDERS_USER_DATA_TYPE, { [autoResponder.alias]: null }).then(reloadResponders, reloadResponders);
+      setUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE, {
+        [autoResponder.alias]: null,
+      }).then(
+        (serializedResponders) => updateResponders(deserializeResponders(serializedResponders)),
+        (err: Error) => {
+          console.error(`Failed to remove auto responder: ${err?.message ?? err}`);
+        },
+      );
     },
-    [reloadResponders],
+    [updateResponders],
   );
 
   const onEditResponder = useCallback((responder: Responder) => {

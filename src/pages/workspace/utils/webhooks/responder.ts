@@ -1,5 +1,7 @@
 export const RESPONDERS_USER_DATA_TYPE = 'autoResponders';
 
+export type SerializedResponders = Record<string, SerializedResponder>;
+
 export interface SerializedResponder {
   a: string;
   m: string;
@@ -44,6 +46,18 @@ export function deserializeResponder(serializedResponder: SerializedResponder): 
   }
 
   return responder;
+}
+
+export function deserializeResponders(serializedResponders: SerializedResponders | null): Responder[] {
+  if (!serializedResponders) {
+    return [];
+  }
+
+  try {
+    return Object.values(serializedResponders).map(deserializeResponder);
+  } catch {
+    return [];
+  }
 }
 
 export function serializeResponder(responder: Responder): SerializedResponder {

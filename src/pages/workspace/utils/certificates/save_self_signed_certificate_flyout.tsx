@@ -1,17 +1,22 @@
 import { EuiForm, EuiFormRow, EuiFieldText, EuiSelect, EuiDescribedFormGroup } from '@elastic/eui';
 import type { ChangeEvent } from 'react';
 import moment from 'moment/moment';
-import React, { useCallback, useContext, useState } from 'react';
-import { PageContext } from '../../../../page_container';
+import React, { useCallback, useState } from 'react';
 import type { AsyncData } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
-import type { SelfSignedCertificate } from './self_signed_certificate';
+import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
 import { CertificateLifetimeCalendar } from './certificate_lifetime_calendar';
-import { SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, serializeSelfSignedCertificate } from './self_signed_certificate';
+import {
+  deserializeSelfSignedCertificates,
+  SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE,
+  serializeSelfSignedCertificate,
+} from './self_signed_certificate';
+import { setUserData } from '../../../../model';
+import { useWorkspaceContext } from '../../hooks';
 
 export interface SaveSelfSignedCertificatesFlyoutProps {
   certificate?: SelfSignedCertificate;
-  onClose: (hintReload?: boolean) => void;
+  onClose: (certificates?: SelfSignedCertificate[]) => void;
 }
 
 const SIGNATURE_ALGORITHMS = new Map([
@@ -45,7 +50,7 @@ const SIGNATURE_ALGORITHMS = new Map([
 ]);
 
 export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveSelfSignedCertificatesFlyoutProps) {
-  const { setUserData, addToast } = useContext(PageContext);
+  const { addToast } = useWorkspaceContext();
 
   const [name, setName] = useState<string>(certificate?.name ?? '');
   const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -119,7 +124,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     }
 
     setUpdatingStatus({ status: 'pending' });
-    setUserData(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, {
+    setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, {
       [name]: serializeSelfSignedCertificate({
         name: name,
         publicKeyAlgorithm,
@@ -135,7 +140,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
         notValidAfter,
       }),
     }).then(
-      () => {
+      (serializedCertificates) => {
         setUpdatingStatus({ status: 'succeeded', data: undefined });
 
         addToast({
@@ -145,7 +150,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
           title: `Successfully saved "${name}" self-signed certificate template`,
         });
 
-        onClose(true);
+        onClose(deserializeSelfSignedCertificates(serializedCertificates));
       },
       (err: Error) => {
         setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
@@ -177,7 +182,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
   return (
     <EditorFlyout
       title={`${certificate ? 'Edit' : 'Add'} certificate template`}
-      onClose={onClose}
+      onClose={() => onClose()}
       onSave={onAddCertificate}
       canSave={name.trim().length > 0}
       saveInProgress={updatingStatus?.status === 'pending'}

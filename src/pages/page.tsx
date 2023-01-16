@@ -1,13 +1,11 @@
 import type { MouseEventHandler, ReactElement, ReactNode } from 'react';
-import React, { useCallback, useContext, useState } from 'react';
-import { css } from '@emotion/react';
+import React, { useCallback, useState } from 'react';
 import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
 import {
   EuiHorizontalRule,
   EuiLink,
   EuiPage,
   EuiPageBody,
-  EuiPageHeader,
   EuiText,
   EuiPageSidebar,
   EuiPageSection,
@@ -16,12 +14,13 @@ import {
   EuiHeaderSection,
   EuiHeaderLogo,
   EuiHeaderBreadcrumbs,
-  useEuiTheme,
 } from '@elastic/eui';
-import { Logo } from '../components';
-import { ContactFormModal } from './contact_form_modal';
-import { PageContext } from './page_context';
-import type { EuiPageSectionProps } from '@elastic/eui';
+import { Logo, PageErrorState, PageLoadingState } from '../components';
+import { ContactFormModal } from '../app_container/contact_form_modal';
+import type { EuiPageSectionProps, IconType } from '@elastic/eui';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAppContext } from '../hooks';
+import { PageHeader } from './page_header';
 
 export interface PageProps {
   children: ReactElement | ReactElement[];
@@ -33,6 +32,14 @@ export interface PageProps {
   pageTitle?: ReactNode;
 }
 
+export interface PageToast {
+  id: string;
+  title?: ReactNode;
+  text?: ReactElement;
+  iconType?: IconType;
+  color?: 'primary' | 'success' | 'warning' | 'danger';
+}
+
 export function Page({
   children,
   contentAlignment,
@@ -42,9 +49,8 @@ export function Page({
   headerActions,
   pageTitle,
 }: PageProps) {
-  const theme = useEuiTheme();
-
-  const { getURL } = useContext(PageContext);
+  const { uiState } = useAppContext();
+  const location = useLocation();
 
   const [isContactFormOpen, setIsContactFormOpen] = useState<boolean>(false);
   const onToggleContactForm = useCallback(() => {
@@ -60,18 +66,27 @@ export function Page({
     [onToggleContactForm],
   );
 
-  const header = pageTitle ? (
-    <EuiPageSection
-      paddingSize={'none'}
-      bottomBorder
-      css={css`
-        background-color: ${theme.euiTheme.colors.lightestShade};
-      `}
-    >
-      <EuiPageHeader paddingSize={'m'} pageTitle={pageTitle} />
-    </EuiPageSection>
-  ) : null;
+  if (!uiState.synced) {
+    return <PageLoadingState />;
+  }
 
+  if (uiState?.status?.level === 'unavailable') {
+    return (
+      <PageErrorState
+        title="Cannot connect to the server"
+        content={
+          <p>
+            The <strong>Secutils.dev</strong> server is temporary not available.
+          </p>
+        }
+      />
+    );
+  }
+
+  if (!uiState.user && !location.pathname.startsWith('/login')) {
+    return <Navigate to="/login" />;
+  }
+  const header = pageTitle ? <PageHeader title={pageTitle} /> : null;
   return (
     <EuiPage grow direction={'row'}>
       <header aria-label="Top bar">
@@ -114,15 +129,15 @@ export function Page({
         <EuiPageSection>
           <EuiHorizontalRule size={'half'} margin="m" />
           <EuiText textAlign={'center'} size={'xs'}>
-            <EuiLink target="_blank" href={getURL('/about-us')} color={'success'}>
+            <EuiLink target="_blank" href="/about-us" color={'success'}>
               About Us
             </EuiLink>{' '}
             |{' '}
-            <EuiLink target="_blank" href={getURL('/privacy')} color={'success'}>
+            <EuiLink target="_blank" href="/privacy" color={'success'}>
               Privacy Policy
             </EuiLink>{' '}
             |{' '}
-            <EuiLink target="_blank" href={getURL('/terms')} color={'success'}>
+            <EuiLink target="_blank" href="/terms" color={'success'}>
               Terms of Use
             </EuiLink>{' '}
             |{' '}

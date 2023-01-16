@@ -8,21 +8,20 @@ import {
   EuiInMemoryTable,
   EuiToolTip,
 } from '@elastic/eui';
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { PageContext } from '../../../../../page_container';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageLoadingState } from '../../../../../components';
 import type { CspPolicy } from './csp_policy';
 import { CSP_POLICIES_USER_DATA_TYPE } from './csp_policy';
 import { CspPolicyEditFlyout } from './csp_policy_edit_flyout';
-import { WorkspaceContext } from '../../../workspace_context';
+import { setUserData } from '../../../../../model';
+import { useWorkspaceContext } from '../../../hooks';
 
 function parseCspPolicies(): CspPolicy[] {
   return [];
 }
 
 export default function WebSecurityCspPolicies() {
-  const { uiState, setUserData } = useContext(PageContext);
-  const { setTitleActions } = useContext(WorkspaceContext);
+  const { uiState, setTitleActions } = useWorkspaceContext();
 
   const [isEditCspPolicyPanelOpen, setIsEditCspPolicyPanelOpen] = useState<
     { isOpen: false } | { isOpen: true; policyToEdit?: CspPolicy }

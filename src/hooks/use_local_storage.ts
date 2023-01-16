@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import { useEffect, useState } from 'react';
 
 export function useLocalStorage<TValue>(key: string, defaultValue: TValue) {
   const [storedValue, setStoredValue] = useState<TValue>(() => {
@@ -11,14 +12,17 @@ export function useLocalStorage<TValue>(key: string, defaultValue: TValue) {
     }
   });
 
-  const setValue = (value: TValue) => {
-    setStoredValue(value);
+  useEffect(() => {
     try {
-      window.localStorage.setItem(key, JSON.stringify(value));
+      if (storedValue != null) {
+        window.localStorage.setItem(key, JSON.stringify(storedValue));
+      } else {
+        window.localStorage.removeItem(key);
+      }
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [storedValue]);
 
-  return [storedValue, setValue] as [TValue, (value: TValue) => void];
+  return [storedValue, setStoredValue] as [TValue, Dispatch<SetStateAction<TValue>>];
 }

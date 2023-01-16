@@ -12,13 +12,11 @@ import {
   EuiSpacer,
   EuiLink,
 } from '@elastic/eui';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { PageContext } from '../../../../page_container';
+import React, { useCallback, useEffect, useState } from 'react';
 import { PageLoadingState } from '../../../../components';
-import { WorkspaceContext } from '../../workspace_context';
-import type { SelfSignedCertificate, SerializedSelfSignedCertificate } from './self_signed_certificate';
+import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
 import {
-  deserializeSelfSignedCertificate,
+  deserializeSelfSignedCertificates,
   getDistinguishedNameString,
   publicKeyAlgorithmString,
   SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE,
@@ -27,27 +25,12 @@ import {
 import { SaveSelfSignedCertificatesFlyout } from './save_self_signed_certificate_flyout';
 import moment from 'moment';
 import { CertificateFormatModal } from './certificate_format_modal';
-
-type SelfSignedCertificatesDataType = {
-  [SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE]: Record<string, SerializedSelfSignedCertificate> | null;
-};
-
-function parseSelfSignedCertificates(data: SelfSignedCertificatesDataType): SelfSignedCertificate[] {
-  const certificates = data[SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE];
-  if (!certificates) {
-    return [];
-  }
-
-  try {
-    return Object.values(certificates).map(deserializeSelfSignedCertificate);
-  } catch {
-    return [];
-  }
-}
+import { SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
+import { getUserData, setUserData } from '../../../../model';
+import { useWorkspaceContext } from '../../hooks';
 
 export default function CertificatesSelfSignedCertificates() {
-  const { uiState, setUserData, getUserData } = useContext(PageContext);
-  const { setTitleActions } = useContext(WorkspaceContext);
+  const { uiState, settings, setSettings, setTitleActions } = useWorkspaceContext();
 
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState<
     { isOpen: false } | { isOpen: true; certificate: SelfSignedCertificate }
@@ -60,17 +43,23 @@ export default function CertificatesSelfSignedCertificates() {
     }
   }, []);
 
+  const [certificates, setCertificates] = useState<SelfSignedCertificate[] | null>(null);
+  const updateCertificates = useCallback((updatedCertificates: SelfSignedCertificate[]) => {
+    setCertificates(updatedCertificates);
+    setTitleActions(updatedCertificates.length === 0 ? null : createButton);
+  }, []);
+
   const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
     { isOpen: false } | { isOpen: true; certificate?: SelfSignedCertificate }
   >({ isOpen: false });
   const onToggleEditFlyout = useCallback(
-    (hintReload?: boolean) => {
-      if (hintReload) {
-        reloadCertificates();
+    (updatedCertificates?: SelfSignedCertificate[]) => {
+      if (updatedCertificates) {
+        updateCertificates(updatedCertificates);
       }
       setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
     },
-    [getUserData],
+    [updateCertificates],
   );
 
   const createButton = (
@@ -84,26 +73,19 @@ export default function CertificatesSelfSignedCertificates() {
     </EuiButton>
   );
 
-  const [certificates, setCertificates] = useState<SelfSignedCertificate[] | null>(null);
-  const reloadCertificates = useCallback(() => {
-    getUserData<SelfSignedCertificatesDataType>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE).then(
-      (data) => {
-        const parsedCertificates = parseSelfSignedCertificates(data);
-        setCertificates(parsedCertificates);
-        setTitleActions(parsedCertificates.length === 0 ? null : createButton);
-      },
-      () => {
-        setCertificates([]);
-        setTitleActions(null);
+  useEffect(() => {
+    if (!uiState.synced || !uiState.user) {
+      return;
+    }
+
+    getUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE).then(
+      (serializedCertificates) => updateCertificates(deserializeSelfSignedCertificates(serializedCertificates)),
+      (err: Error) => {
+        console.error(`Failed to load certificate templates: ${err?.message ?? err}`);
+        updateCertificates([]);
       },
     );
-  }, [getUserData]);
-
-  useEffect(() => {
-    if (uiState.synced && uiState.user) {
-      reloadCertificates();
-    }
-  }, [uiState, reloadCertificates]);
+  }, [uiState, updateCertificates]);
 
   const editFlyout = isEditFlyoutOpen.isOpen ? (
     <SaveSelfSignedCertificatesFlyout onClose={onToggleEditFlyout} certificate={isEditFlyoutOpen.certificate} />
@@ -115,12 +97,16 @@ export default function CertificatesSelfSignedCertificates() {
 
   const onRemoveCertificate = useCallback(
     (certificate: SelfSignedCertificate) => {
-      setUserData(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, { [certificate.name]: null }).then(
-        reloadCertificates,
-        reloadCertificates,
+      setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, {
+        [certificate.name]: null,
+      }).then(
+        (serializedCertificates) => updateCertificates(deserializeSelfSignedCertificates(serializedCertificates)),
+        (err: Error) => {
+          console.error(`Failed to remove certificate template: ${err?.message ?? err}`);
+        },
       );
     },
-    [reloadCertificates],
+    [updateCertificates],
   );
 
   const onEditCertificate = useCallback((certificate: SelfSignedCertificate) => {
@@ -153,6 +139,30 @@ export default function CertificatesSelfSignedCertificates() {
     return <PageLoadingState />;
   }
 
+  const selfSignedCertificatesProdWarning =
+    settings?.[SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY] === true ? null : (
+      <div>
+        <EuiCallOut
+          title="Don't use self-signed certificates in production environments"
+          color="warning"
+          iconType="alert"
+        >
+          <p>
+            Self-signed certificates generated through Secutils.dev are intended for use in development and testing
+            environments only. Please do not use these certificates in production environments unless you are running{' '}
+            <EuiLink target="_blank" href="https://github.com/secutils-dev/secutils">
+              your own version
+            </EuiLink>{' '}
+            of the Secutils.dev in a trusted and controlled environment.
+          </p>
+          <EuiButton color="accent" onClick={() => setSettings({ [SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY]: true })}>
+            Do not show again
+          </EuiButton>
+        </EuiCallOut>{' '}
+        <EuiSpacer />
+      </div>
+    );
+
   let content;
   if (certificates.length === 0) {
     content = (
@@ -182,22 +192,7 @@ export default function CertificatesSelfSignedCertificates() {
   } else {
     content = (
       <>
-        <EuiCallOut
-          title="Don't use self-signed certificates in production environments"
-          color="warning"
-          iconType="alert"
-        >
-          <p>
-            Self-signed certificates generated through Secutils.dev are intended for use in development and testing
-            environments only. Please do not use these certificates in production environments unless you are running{' '}
-            <EuiLink target="_blank" href="https://github.com/secutils-dev/secutils">
-              your own version
-            </EuiLink>{' '}
-            of the Secutils.dev in a trusted and controlled environment.
-          </p>
-          <EuiButton color="accent">Do not show again</EuiButton>
-        </EuiCallOut>
-        <EuiSpacer />
+        {selfSignedCertificatesProdWarning}
         <EuiInMemoryTable
           pagination={pagination}
           allowNeutralSort={false}

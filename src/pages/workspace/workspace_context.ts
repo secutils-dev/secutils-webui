@@ -5,8 +5,4 @@ export interface WorkspaceContextValue {
   setTitleActions: (actions: ReactNode) => void;
 }
 
-export const WorkspaceContext = React.createContext<WorkspaceContextValue>({
-  setTitleActions: () => {
-    // Empty impl
-  },
-});
+export const WorkspaceContext = React.createContext<WorkspaceContextValue | undefined>(undefined);

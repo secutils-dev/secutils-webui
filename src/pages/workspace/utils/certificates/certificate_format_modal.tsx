@@ -15,11 +15,11 @@ import {
 } from '@elastic/eui';
 import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { SelfSignedCertificate } from './self_signed_certificate';
-import { PageContext } from '../../../../page_container';
 import type { AsyncData } from '../../../../model';
 import { Downloader } from '../../../../tools/downloader';
+import { getApiUrl } from '../../../../model';
 
 export interface CertificateFormatModalProps {
   certificate: SelfSignedCertificate;
@@ -31,7 +31,6 @@ type GenerationResponse = {
 };
 
 export function CertificateFormatModal({ certificate, onClose }: CertificateFormatModalProps) {
-  const { getApiURL } = useContext(PageContext);
   const [format, setFormat] = useState<string>('pkcs12');
   const onFormatChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setFormat(e.target.value);
@@ -54,7 +53,7 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
       setGeneratingStatus({ status: 'pending' });
 
       axios
-        .post<GenerationResponse>(getApiURL('/api/utils/execute'), {
+        .post<GenerationResponse>(getApiUrl('/api/utils/execute'), {
           request: {
             type: 'certificates',
             value: {

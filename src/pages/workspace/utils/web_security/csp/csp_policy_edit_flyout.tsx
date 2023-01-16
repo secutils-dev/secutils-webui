@@ -17,7 +17,7 @@ export function CspPolicyEditFlyout({ onClose, policy }: Props) {
   }, []);
 
   return (
-    <EditorFlyout title={`${policy ? 'Edit' : 'Add'} policy`} onClose={onClose} onSave={onClose}>
+    <EditorFlyout title={`${policy ? 'Edit' : 'Add'} policy`} onClose={() => onClose()} onSave={() => onClose()}>
       <EuiForm fullWidth>
         <EuiDescribedFormGroup title={<h3>Basic properties</h3>} description={'Basic properties'}>
           <EuiFormRow label="Name" helpText="Arbitrary CSP policy name" fullWidth>

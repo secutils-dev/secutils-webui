@@ -49,7 +49,7 @@ import { icon as EuiIconStarFilled } from '@elastic/eui/es/components/icon/asset
 import { icon as EuiIconUser } from '@elastic/eui/es/components/icon/assets/user';
 
 import { WorkspacePage } from './pages';
-import { PageContainer } from './page_container';
+import { AppContainer } from './app_container';
 import { PageLoadingState } from './components';
 
 const LoginPage = React.lazy(() => import('./pages/login'));
@@ -101,7 +101,7 @@ const IndexPage = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<PageContainer />}>
+        <Route path="/" element={<AppContainer />}>
           <Route index element={<Navigate to="/ws" replace />} />
           <Route path="*" element={<Navigate to="/ws" replace />} />
           <Route path="ws" element={<WorkspacePage />} />
