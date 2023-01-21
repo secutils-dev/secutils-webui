@@ -8,5 +8,5 @@ export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType
     'certificates__self_signed_certificates',
     lazy(() => import('./certificates/certificates_self_signed_certificates')),
   ],
-  ['web_security__csp__policies', lazy(() => import('./web_security/csp/web_security_csp_policies'))],
+  ['web_security__csp__policies', lazy(() => import('./web_security/csp/web_security_content_security_policies'))],
 ]);

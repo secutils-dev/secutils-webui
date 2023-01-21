@@ -119,7 +119,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
   );
 
   const [updatingStatus, setUpdatingStatus] = useState<AsyncData<void>>();
-  const onAddCertificate = useCallback(() => {
+  const onSave = useCallback(() => {
     if (updatingStatus?.status === 'pending') {
       return;
     }
@@ -184,7 +184,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     <EditorFlyout
       title={`${certificate ? 'Edit' : 'Add'} certificate template`}
       onClose={() => onClose()}
-      onSave={onAddCertificate}
+      onSave={onSave}
       canSave={name.trim().length > 0}
       saveInProgress={updatingStatus?.status === 'pending'}
     >
