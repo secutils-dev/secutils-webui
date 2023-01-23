@@ -25,7 +25,7 @@ export default function WebhooksResponders() {
 
   const getResponderUrl = useCallback((autoResponder: Responder, user: User) => {
     return `${location.origin}/api/webhooks/ar/${encodeURIComponent(user.handle)}/${encodeURIComponent(
-      autoResponder.alias,
+      autoResponder.name,
     )}`;
   }, []);
 
@@ -77,7 +77,7 @@ export default function WebhooksResponders() {
   const onRemoveResponder = useCallback(
     (autoResponder: Responder) => {
       setUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE, {
-        [autoResponder.alias]: null,
+        [autoResponder.name]: null,
       }).then(
         (serializedResponders) => updateResponders(deserializeResponders(serializedResponders)),
         (err: Error) => {
@@ -98,7 +98,7 @@ export default function WebhooksResponders() {
     pageSizeOptions: [10, 15, 25, 50, 100],
     totalItemCount: 0,
   });
-  const [sorting, setSorting] = useState<{ sort: PropertySort }>({ sort: { field: 'alias', direction: 'asc' } });
+  const [sorting, setSorting] = useState<{ sort: PropertySort }>({ sort: { field: 'name', direction: 'asc' } });
   const onTableChange = useCallback(
     ({ page, sort }: Criteria<Responder>) => {
       setPagination({
@@ -152,7 +152,7 @@ export default function WebhooksResponders() {
         sorting={sorting}
         onTableChange={onTableChange}
         items={autoResponders}
-        itemId={(autoResponder) => autoResponder.alias}
+        itemId={(autoResponder) => autoResponder.name}
         tableLayout={'auto'}
         columns={[
           {
@@ -206,7 +206,7 @@ export default function WebhooksResponders() {
                 </span>
               </EuiToolTip>
             ),
-            field: 'alias',
+            field: 'name',
             sortable: true,
             render: (_, autoResponder: Responder) => {
               const url = uiState.user ? getResponderUrl(autoResponder, uiState.user) : undefined;

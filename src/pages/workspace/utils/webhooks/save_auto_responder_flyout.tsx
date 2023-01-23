@@ -37,9 +37,9 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
     [],
   );
 
-  const [alias, setAlias] = useState<string>(autoResponder?.alias ?? '');
-  const onAliasChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setAlias(e.target.value);
+  const [name, setName] = useState<string>(autoResponder?.name ?? '');
+  const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
   }, []);
 
   const [trackingRequests, setTrackingRequests] = useState<number>(autoResponder?.trackingRequests ?? 0);
@@ -102,8 +102,8 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
 
     setUpdatingStatus({ status: 'pending' });
     setUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE, {
-      [alias]: serializeResponder({
-        alias,
+      [name]: serializeResponder({
+        name: name,
         method,
         trackingRequests,
         statusCode,
@@ -125,10 +125,10 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
         setUpdatingStatus({ status: 'succeeded', data: undefined });
 
         addToast({
-          id: `success-update-responder-${alias}`,
+          id: `success-update-responder-${name}`,
           iconType: 'check',
           color: 'success',
-          title: `Successfully saved "${alias}" responder`,
+          title: `Successfully saved "${name}" responder`,
         });
 
         onClose(deserializeResponders(serializedResponders));
@@ -137,21 +137,21 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
         setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
 
         addToast({
-          id: `failed-update-responder-${alias}`,
+          id: `failed-update-responder-${name}`,
           iconType: 'alert',
           color: 'danger',
-          title: `Unable to save "${alias}" responder, please try again later`,
+          title: `Unable to save "${name}" responder, please try again later`,
         });
       },
     );
-  }, [method, alias, trackingRequests, statusCode, body, headers, delay, autoResponder, updatingStatus]);
+  }, [method, name, trackingRequests, statusCode, body, headers, delay, autoResponder, updatingStatus]);
 
   return (
     <EditorFlyout
       title={`${autoResponder ? 'Edit' : 'Add'} responder`}
       onClose={() => onClose()}
       onSave={onAddAutoResponder}
-      canSave={!areHeadersInvalid && alias.trim().length > 0}
+      canSave={!areHeadersInvalid && name.trim().length > 0}
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm id="update-form" component="form" fullWidth>
@@ -159,8 +159,8 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
           title={<h3>Request</h3>}
           description={'Properties of the responder related to the HTTP requests it handles'}
         >
-          <EuiFormRow label="Alias" helpText="The last segment of the responder HTTP path" isDisabled={!!autoResponder}>
-            <EuiFieldText value={alias} required type={'text'} onChange={onAliasChange} />
+          <EuiFormRow label="Name" helpText="The last segment of the responder HTTP path" isDisabled={!!autoResponder}>
+            <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
           <EuiFormRow label="Method" helpText="Responder will only respond to requests with the specified HTTP method">
             <EuiSelect options={httpMethods} value={method} onChange={onMethodChange} />

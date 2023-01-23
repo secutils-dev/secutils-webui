@@ -113,7 +113,7 @@ export default function WebSecurityContentSecurityPolicies() {
     pageSizeOptions: [10, 15, 25, 50, 100],
     totalItemCount: 0,
   });
-  const [sorting, setSorting] = useState<{ sort: PropertySort }>({ sort: { field: 'alias', direction: 'asc' } });
+  const [sorting, setSorting] = useState<{ sort: PropertySort }>({ sort: { field: 'name', direction: 'asc' } });
   const onTableChange = useCallback(
     ({ page, sort }: Criteria<ContentSecurityPolicy>) => {
       setPagination({
