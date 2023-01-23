@@ -17,6 +17,7 @@ import {
   deserializeContentSecurityPolicies,
   getContentSecurityPolicyString,
 } from './content_security_policy';
+import { ContentSecurityPolicyCopyModal } from './content_security_policy_copy_modal';
 import { ContentSecurityPolicyEditFlyout } from './content_security_policy_edit_flyout';
 import { PageLoadingState } from '../../../../../components';
 import { getUserData, setUserData } from '../../../../../model';
@@ -24,6 +25,17 @@ import { useWorkspaceContext } from '../../../hooks';
 
 export default function WebSecurityContentSecurityPolicies() {
   const { uiState, setTitleActions } = useWorkspaceContext();
+
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState<
+    { isOpen: false } | { isOpen: true; policy: ContentSecurityPolicy }
+  >({ isOpen: false });
+  const onToggleCopyModal = useCallback((policy?: ContentSecurityPolicy) => {
+    if (policy) {
+      setIsCopyModalOpen({ isOpen: true, policy });
+    } else {
+      setIsCopyModalOpen({ isOpen: false });
+    }
+  }, []);
 
   const [policies, setPolicies] = useState<ContentSecurityPolicy[] | null>(null);
   const updatePolicies = useCallback((updatedPolicies: ContentSecurityPolicy[]) => {
@@ -89,6 +101,10 @@ export default function WebSecurityContentSecurityPolicies() {
 
   const editFlyout = isEditFlyoutOpen.isOpen ? (
     <ContentSecurityPolicyEditFlyout onClose={onToggleEditFlyout} policy={isEditFlyoutOpen.policy} />
+  ) : null;
+
+  const copyModal = isCopyModalOpen.isOpen ? (
+    <ContentSecurityPolicyCopyModal onClose={() => onToggleCopyModal()} policy={isCopyModalOpen.policy} />
   ) : null;
 
   const [pagination, setPagination] = useState<Pagination>({
@@ -186,6 +202,14 @@ export default function WebSecurityContentSecurityPolicies() {
             width: '75px',
             actions: [
               {
+                name: 'Copy policy',
+                description: 'Copy policy',
+                icon: 'copy',
+                type: 'icon',
+                isPrimary: true,
+                onClick: onToggleCopyModal,
+              },
+              {
                 name: 'Edit policy',
                 description: 'Edit policy',
                 icon: 'pencil',
@@ -210,6 +234,7 @@ export default function WebSecurityContentSecurityPolicies() {
     <>
       {content}
       {editFlyout}
+      {copyModal}
     </>
   );
 }

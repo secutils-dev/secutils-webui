@@ -98,6 +98,19 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
     />
   );
 
+  const notSupportedInMetaHint = (
+    <span>
+      This directive{' '}
+      <EuiLink
+        target="_blank"
+        href="https://html.spec.whatwg.org/multipage/semantics.html#attr-meta-http-equiv-content-security-policy"
+      >
+        <b>is not supported</b>
+      </EuiLink>{' '}
+      in the {'<meta>'} element.
+    </span>
+  );
+
   return (
     <EditorFlyout
       title={`${policy ? 'Edit' : 'Add'} policy`}
@@ -266,7 +279,10 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
           <EuiFormRow
             label={'Sandbox (sandbox)'}
             helpText={
-              'Specifies an HTML sandbox policy which the user agent will apply to a resource, just as though it had been included in an iframe with a sandbox property.'
+              <span>
+                Specifies an HTML sandbox policy which the user agent will apply to a resource, just as though it had
+                been included in an iframe with a sandbox property. {notSupportedInMetaHint}
+              </span>
             }
           >
             <ContentSecurityPolicySandboxCombobox
@@ -298,7 +314,12 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
           </EuiFormRow>
           <EuiFormRow
             label={'Frame ancestors (frame-ancestors)'}
-            helpText={'Restricts locations which can embed the resource using frame, iframe, object, or embed.'}
+            helpText={
+              <span>
+                Restricts locations which can embed the resource using frame, iframe, object, or embed.{' '}
+                {notSupportedInMetaHint}
+              </span>
+            }
           >
             <SourcePicker
               directiveName={'frame-ancestors'}
@@ -328,7 +349,11 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
         >
           <EuiFormRow
             label={'Report to (report-to)'}
-            helpText={'Defines a reporting endpoint to which violation reports ought to be sent.'}
+            helpText={
+              <span>
+                Defines a reporting endpoint to which violation reports ought to be sent. {notSupportedInMetaHint}
+              </span>
+            }
           >
             <EuiFieldText
               type="text"
@@ -342,7 +367,7 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
             helpText={
               <span>
                 <b>[DEPRECATED]</b> Defines a set of endpoints to which csp violation reports will be sent when
-                particular behaviors are prevented.
+                particular behaviors are prevented. {notSupportedInMetaHint}
               </span>
             }
           >

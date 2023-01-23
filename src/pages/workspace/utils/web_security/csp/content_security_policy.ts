@@ -4,7 +4,7 @@ export type SerializedContentSecurityPolicies = Record<string, SerializedContent
 
 export interface SerializedContentSecurityPolicy {
   n: string;
-  d: Array<Record<string, string[]>>;
+  d: Array<{ n: string; v: string[] }>;
 }
 
 export interface ContentSecurityPolicy {
@@ -27,8 +27,7 @@ export function deserializeContentSecurityPolicy(
     name: serializedPolicy.n,
     directives: new Map(
       serializedPolicy.d.map((directive) => {
-        const [directiveName, directiveValues] = Object.entries(directive)[0] as [string, string[]];
-        return [directiveName, directiveValues];
+        return [directive.n, directive.v];
       }),
     ),
   };
@@ -52,7 +51,8 @@ export function serializeContentSecurityPolicy(policy: ContentSecurityPolicy): S
   return {
     n: policy.name,
     d: Array.from(policy.directives).map(([directiveName, directiveValues]) => ({
-      [directiveName]: directiveValues,
+      n: directiveName,
+      v: directiveValues,
     })),
   };
 }

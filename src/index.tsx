@@ -21,6 +21,8 @@ import { icon as EuiIconArrowStart } from '@elastic/eui/es/components/icon/asset
 import { icon as EuiIconBoxesHorizontal } from '@elastic/eui/es/components/icon/assets/boxes_horizontal';
 import { icon as EuiIconCalendar } from '@elastic/eui/es/components/icon/assets/calendar';
 import { icon as EuiIconCheck } from '@elastic/eui/es/components/icon/assets/check';
+import { icon as EuiIconCopy } from '@elastic/eui/es/components/icon/assets/copy';
+import { icon as EuiIconCopyClipboard } from '@elastic/eui/es/components/icon/assets/copy_clipboard';
 import { icon as EuiIconCross } from '@elastic/eui/es/components/icon/assets/cross';
 import { icon as EuiIconCut } from '@elastic/eui/es/components/icon/assets/cut';
 import { icon as EuiIconDot } from '@elastic/eui/es/components/icon/assets/dot';
@@ -69,6 +71,8 @@ appendIconComponentCache({
   boxesHorizontal: EuiIconBoxesHorizontal,
   calendar: EuiIconCalendar,
   check: EuiIconCheck,
+  copy: EuiIconCopy,
+  copyClipboard: EuiIconCopyClipboard,
   cross: EuiIconCross,
   cut: EuiIconCut,
   dot: EuiIconDot,
