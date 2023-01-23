@@ -54,8 +54,8 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
       setGeneratingStatus({ status: 'pending' });
 
       axios
-        .post<GenerationResponse>(getApiUrl('/api/utils/execute'), {
-          request: {
+        .post<GenerationResponse>(getApiUrl('/api/utils/action'), {
+          action: {
             type: 'certificates',
             value: {
               type: 'generateSelfSignedCertificate',

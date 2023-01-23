@@ -51,8 +51,8 @@ export function ContentSecurityPolicyCopyModal({ policy, onClose }: ContentSecur
       setSerializingStatus({ status: 'pending' });
 
       axios
-        .post<SerializeResponse>(getApiUrl('/api/utils/execute'), {
-          request: {
+        .post<SerializeResponse>(getApiUrl('/api/utils/action'), {
+          action: {
             type: 'webSecurity',
             value: {
               type: 'serializeContentSecurityPolicy',
