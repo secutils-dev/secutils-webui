@@ -5,7 +5,7 @@ export type SerializedResponders = Record<string, SerializedResponder>;
 export interface SerializedResponder {
   n: string;
   m: string;
-  t?: number;
+  t: number;
   s: number;
   h?: Array<[string, string]>;
   b?: string;
@@ -15,7 +15,7 @@ export interface SerializedResponder {
 export interface Responder {
   name: string;
   method: string;
-  trackingRequests?: number;
+  trackingRequests: number;
   statusCode: number;
   headers?: Array<[string, string]>;
   body?: string;
@@ -27,11 +27,8 @@ export function deserializeResponder(serializedResponder: SerializedResponder): 
     name: serializedResponder.n,
     method: serializedResponder.m,
     statusCode: serializedResponder.s,
+    trackingRequests: serializedResponder.t,
   };
-
-  if (serializedResponder.t) {
-    responder.trackingRequests = serializedResponder.t;
-  }
 
   if (serializedResponder.h) {
     responder.headers = serializedResponder.h;
@@ -66,11 +63,8 @@ export function serializeResponder(responder: Responder): SerializedResponder {
     m: responder.method,
     s: responder.statusCode,
     h: responder.headers,
+    t: responder.trackingRequests,
   };
-
-  if (responder.trackingRequests) {
-    serializedResponder.t = responder.trackingRequests;
-  }
 
   if (responder.headers) {
     serializedResponder.h = responder.headers;

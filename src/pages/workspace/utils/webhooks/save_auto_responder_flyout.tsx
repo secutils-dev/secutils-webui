@@ -42,7 +42,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
     setName(e.target.value);
   }, []);
 
-  const [trackingRequests, setTrackingRequests] = useState<number>(autoResponder?.trackingRequests ?? 10);
+  const [trackingRequests, setTrackingRequests] = useState<number>(autoResponder?.trackingRequests ?? 0);
   const onTrackingRequestsChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setTrackingRequests(+e.target.value);
   }, []);
@@ -151,7 +151,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
       title={`${autoResponder ? 'Edit' : 'Add'} responder`}
       onClose={() => onClose()}
       onSave={onAddAutoResponder}
-      canSave={!areHeadersInvalid && name.trim().length > 0 && trackingRequests > 0 && trackingRequests <= 100}
+      canSave={!areHeadersInvalid && name.trim().length > 0 && trackingRequests >= 0 && trackingRequests <= 100}
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm id="update-form" component="form" fullWidth>
@@ -168,7 +168,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
           <EuiFormRow label="Tracking" helpText="Responder will track only specified number of incoming requests">
             <EuiFieldNumber
               fullWidth
-              min={1}
+              min={0}
               max={100}
               step={1}
               value={trackingRequests}

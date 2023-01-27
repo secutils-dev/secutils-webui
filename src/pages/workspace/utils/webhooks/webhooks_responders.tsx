@@ -1,17 +1,21 @@
 import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
+  EuiButtonIcon,
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
   EuiIcon,
   EuiInMemoryTable,
   EuiLink,
+  EuiScreenReaderOnly,
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
+import type { ReactNode } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { AutoResponderRequestsTable } from './auto_responder_requests_table';
 import type { Responder, SerializedResponders } from './responder';
 import { deserializeHttpMethod, deserializeResponders, RESPONDERS_USER_DATA_TYPE } from './responder';
 import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
@@ -70,6 +74,7 @@ export default function WebhooksResponders() {
     );
   }, [uiState, updateResponders]);
 
+  const [itemIdToExpandedRowMap, setItemIdToExpandedRowMap] = useState<Record<string, ReactNode>>({});
   const editFlyout = isEditFlyoutOpen.isOpen ? (
     <SaveAutoResponderFlyout onClose={onToggleEditFlyout} autoResponder={isEditFlyoutOpen.responderToEdit} />
   ) : null;
@@ -114,6 +119,16 @@ export default function WebhooksResponders() {
     [pagination],
   );
 
+  const toggleResponderRequests = (responder: Responder) => {
+    const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
+    if (itemIdToExpandedRowMapValues[responder.name]) {
+      delete itemIdToExpandedRowMapValues[responder.name];
+    } else {
+      itemIdToExpandedRowMapValues[responder.name] = <AutoResponderRequestsTable responder={responder} />;
+    }
+    setItemIdToExpandedRowMap(itemIdToExpandedRowMapValues);
+  };
+
   if (!uiState.synced || !uiState.user || !autoResponders) {
     return <PageLoadingState />;
   }
@@ -153,6 +168,8 @@ export default function WebhooksResponders() {
         onTableChange={onTableChange}
         items={autoResponders}
         itemId={(autoResponder) => autoResponder.name}
+        isExpandable={true}
+        itemIdToExpandedRowMap={itemIdToExpandedRowMap}
         tableLayout={'auto'}
         columns={[
           {
@@ -239,6 +256,26 @@ export default function WebhooksResponders() {
                 onClick: onRemoveResponder,
               },
             ],
+          },
+          {
+            align: 'right',
+            width: '40px',
+            isExpander: true,
+            name: (
+              <EuiScreenReaderOnly>
+                <span>Show requests</span>
+              </EuiScreenReaderOnly>
+            ),
+            render: (item: Responder) => {
+              const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
+              return (
+                <EuiButtonIcon
+                  onClick={() => toggleResponderRequests(item)}
+                  aria-label={itemIdToExpandedRowMapValues[item.name] ? 'Hide requests' : 'Show requests'}
+                  iconType={itemIdToExpandedRowMapValues[item.name] ? 'arrowDown' : 'arrowRight'}
+                />
+              );
+            },
           },
         ]}
       />

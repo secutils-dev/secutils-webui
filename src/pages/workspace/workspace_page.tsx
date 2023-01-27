@@ -35,28 +35,31 @@ export function WorkspacePage() {
 
   const navigate = useNavigate();
   const { addToast, uiState, settings, setSettings } = useAppContext();
-  const { util: utilIdFromParam = 'home' } = useParams<{ util?: string }>();
+  const { util: utilIdFromParam = 'home', deepLink: deepLinkFromParam } = useParams<{
+    util?: string;
+    deepLink?: string;
+  }>();
 
   const [isSideNavOpenOnMobile, setIsSideNavOpenOnMobile] = useState<boolean>(false);
   const toggleOpenOnMobile = useCallback(() => {
     setIsSideNavOpenOnMobile(!isSideNavOpenOnMobile);
   }, [isSideNavOpenOnMobile]);
 
-  const getBreadcrumbs = useCallback((util: Util, utilsMap: Map<string, Util>) => {
+  const getBreadcrumbs = useCallback((util: Util, utilsMap: Map<string, Util>, deepLink?: string) => {
     const breadcrumbs: EuiBreadcrumbProps[] = [];
     let utilToBreadcrumb: Util | undefined = util;
     while (utilToBreadcrumb) {
       const utilUrl = `/ws/${utilToBreadcrumb.id}`;
+      const shouldIncludeURL = utilToBreadcrumb.id !== util.id || deepLink != null;
       breadcrumbs.unshift({
         text: utilToBreadcrumb.name,
-        onClick:
-          utilToBreadcrumb.id !== util.id
-            ? (e) => {
-                e.preventDefault();
-                navigate(utilUrl);
-              }
-            : undefined,
-        href: utilToBreadcrumb.id !== util.id ? utilUrl : undefined,
+        onClick: shouldIncludeURL
+          ? (e) => {
+              e.preventDefault();
+              navigate(utilUrl);
+            }
+          : undefined,
+        href: shouldIncludeURL ? utilUrl : undefined,
       });
 
       const utilSeparatorIndex = utilToBreadcrumb.id.lastIndexOf('__');
@@ -64,13 +67,17 @@ export function WorkspacePage() {
         utilSeparatorIndex > 0 ? utilsMap.get(utilToBreadcrumb.id.slice(0, utilSeparatorIndex)) : undefined;
     }
 
-    return breadcrumbs;
+    return deepLink ? [...breadcrumbs, { text: deepLink }] : breadcrumbs;
   }, []);
 
   const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
+  const [title, setTitle] = useState<string | null>(null);
 
   const [selectedUtil, setSelectedUtil] = useState<Util | null>(null);
-  const [breadcrumbs, setBreadcrumbs] = useState<EuiBreadcrumbProps[]>([]);
+  const [navigationBar, setNavigationBar] = useState<{ breadcrumbs: EuiBreadcrumbProps[]; deepLink?: string }>({
+    breadcrumbs: [],
+    deepLink: deepLinkFromParam,
+  });
 
   const [sideNavItems, utilsMap] = useMemo(() => {
     const utilsMap = new Map<string, Util>();
@@ -82,12 +89,13 @@ export function WorkspacePage() {
         name: util.name,
         href: utilUrl,
         icon: util.icon ? <EuiIcon type={util.icon} /> : undefined,
-        isSelected: selectedUtil?.id === util.id,
+        isSelected: selectedUtil?.id === util.id && !deepLinkFromParam,
         onClick: (e) => {
           e.preventDefault();
           setTitleActions(null);
           setSelectedUtil(util);
-          setBreadcrumbs(getBreadcrumbs(util, utilsMap));
+          setTitle(util.name);
+          setNavigationBar({ breadcrumbs: getBreadcrumbs(util, utilsMap) });
           navigate(utilUrl);
         },
         items: util.utils?.map((util) => createItem(util)) ?? [],
@@ -95,19 +103,23 @@ export function WorkspacePage() {
     };
 
     return [uiState.utils.map(createItem), utilsMap];
-  }, [uiState, selectedUtil]);
+  }, [uiState, selectedUtil, deepLinkFromParam]);
 
   useEffect(() => {
     const newSelectedUtil =
       utilIdFromParam && utilIdFromParam !== selectedUtil?.id
         ? utilsMap.get(utilIdFromParam) ?? selectedUtil
         : selectedUtil;
-    if (newSelectedUtil && newSelectedUtil !== selectedUtil) {
+    if (newSelectedUtil && (newSelectedUtil !== selectedUtil || navigationBar.deepLink !== deepLinkFromParam)) {
       setSelectedUtil(newSelectedUtil);
-      setBreadcrumbs(getBreadcrumbs(newSelectedUtil, utilsMap));
+      setTitle(newSelectedUtil.name);
+      setNavigationBar({
+        breadcrumbs: getBreadcrumbs(newSelectedUtil, utilsMap, deepLinkFromParam),
+        deepLink: deepLinkFromParam,
+      });
       setTitleActions(null);
     }
-  }, [utilIdFromParam, selectedUtil, utilsMap]);
+  }, [utilIdFromParam, selectedUtil, utilsMap, deepLinkFromParam, navigationBar]);
 
   const content = useMemo(() => {
     const Component = (selectedUtil ? UtilsComponents.get(selectedUtil.id) : undefined) ?? DEFAULT_COMPONENT;
@@ -163,7 +175,7 @@ export function WorkspacePage() {
           <EuiFlexItem>
             <EuiFlexGroup responsive={false} gutterSize="s" alignItems="center">
               <EuiFlexItem grow={false}>{titleIcon}</EuiFlexItem>
-              <EuiFlexItem>{selectedUtil?.name}</EuiFlexItem>
+              <EuiFlexItem>{title}</EuiFlexItem>
             </EuiFlexGroup>
           </EuiFlexItem>
           {titleActions ? <EuiFlexItem grow={false}>{titleActions}</EuiFlexItem> : null}
@@ -187,7 +199,7 @@ export function WorkspacePage() {
           />
         </aside>
       }
-      headerBreadcrumbs={breadcrumbs}
+      headerBreadcrumbs={navigationBar.breadcrumbs}
       headerActions={[
         <EuiSwitch
           label="Favorites only"
@@ -234,7 +246,7 @@ export function WorkspacePage() {
       }}
     >
       <Suspense fallback={<PageLoadingState />}>
-        <WorkspaceContext.Provider value={{ setTitleActions }}>{content}</WorkspaceContext.Provider>
+        <WorkspaceContext.Provider value={{ setTitleActions, setTitle }}>{content}</WorkspaceContext.Provider>
         {settingsFlyout}
       </Suspense>
     </Page>
