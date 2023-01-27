@@ -190,7 +190,14 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
           >
             <EuiComboBox
               fullWidth
-              noSuggestions
+              options={[
+                { label: 'Cache-Control: no-cache, no-store, max-age=0, must-revalidate' },
+                { label: 'Content-Type: application/javascript; charset=utf-8' },
+                { label: 'Content-Type: application/json' },
+                { label: 'Content-Type: text/css; charset=utf-8' },
+                { label: 'Content-Type: text/html; charset=utf-8' },
+                { label: 'Content-Type: text/plain; charset=utf-8' },
+              ]}
               selectedOptions={headers}
               onCreateOption={onCreateHeader}
               onChange={onHeadersChange}
