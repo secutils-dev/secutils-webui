@@ -1,5 +1,5 @@
 import type { EuiDataGridCellValueElementProps, EuiDataGridColumn, Pagination } from '@elastic/eui';
-import { EuiDataGrid, EuiEmptyPrompt, EuiFlexGroup, EuiFlexItem, EuiIcon, EuiListGroup } from '@elastic/eui';
+import { EuiCodeBlock, EuiDataGrid, EuiEmptyPrompt, EuiFlexGroup, EuiFlexItem, EuiIcon } from '@elastic/eui';
 import axios from 'axios';
 import { unix } from 'moment';
 import { useCallback, useEffect, useState } from 'react';
@@ -23,6 +23,20 @@ type GetAutoRespondersRequestsResponse = {
 const TEXT_DECODER = new TextDecoder();
 function binaryToText(binary: number[]) {
   return TEXT_DECODER.decode(new Uint8Array(binary));
+}
+
+function guessBodyContentType(request: ResponderRequest) {
+  for (const [headerName, headerValue] of request.headers ?? []) {
+    if (headerName.toLowerCase() === 'content-type') {
+      const headerTextValue = binaryToText(headerValue).toLowerCase();
+      if (headerTextValue.includes('json') || headerTextValue.includes('csp-report')) {
+        return 'json';
+      }
+
+      break;
+    }
+  }
+  return 'http';
 }
 
 export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsTableProps) {
@@ -129,17 +143,9 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
 
         if (isDetails) {
           return (
-            <EuiListGroup
-              style={{ marginLeft: 0 }}
-              gutterSize={'none'}
-              wrapText={true}
-              size={'s'}
-              listItems={request.headers.map(([name, value]) => {
-                return {
-                  label: `${name}: ${binaryToText(value)}`,
-                };
-              })}
-            />
+            <EuiCodeBlock language="http" fontSize="m" isCopyable overflowHeight={'100%'}>
+              {request.headers.map(([name, value]) => `${name}: ${binaryToText(value)}`).join('\n')}
+            </EuiCodeBlock>
           );
         }
 
@@ -152,7 +158,11 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
         }
 
         if (isDetails) {
-          return binaryToText(request.body);
+          return (
+            <EuiCodeBlock language={guessBodyContentType(request)} fontSize="m" isCopyable overflowHeight={'100%'}>
+              {binaryToText(request.body)}
+            </EuiCodeBlock>
+          );
         }
 
         return `${request.body.length} bytes`;
