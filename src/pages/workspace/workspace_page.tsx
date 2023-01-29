@@ -25,20 +25,47 @@ import { SettingsFlyout } from '../../app_container';
 import { PageLoadingState } from '../../components';
 import { useAppContext, usePageMeta } from '../../hooks';
 import type { Util } from '../../model';
-import { getApiUrl, USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES } from '../../model';
+import {
+  getApiUrl,
+  USER_SETTINGS_KEY_COMMON_FAVORITES,
+  USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES,
+} from '../../model';
 import { Page } from '../page';
 
 const DEFAULT_COMPONENT = lazy(() => import('../../components/page_under_construction_state'));
+const HOME_UTIL_ID = 'home';
+
+function showDisplayUtil(util: Util, favorites: Set<string>) {
+  // Home utility is always enabled.
+  if (util.id === HOME_UTIL_ID || favorites.has(util.id)) {
+    return true;
+  }
+
+  for (const childUtil of util.utils ?? []) {
+    if (showDisplayUtil(childUtil, favorites)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 export function WorkspacePage() {
   usePageMeta('Workspace');
 
   const navigate = useNavigate();
   const { addToast, uiState, settings, setSettings } = useAppContext();
-  const { util: utilIdFromParam = 'home', deepLink: deepLinkFromParam } = useParams<{
+  const { util: utilIdFromParam = HOME_UTIL_ID, deepLink: deepLinkFromParam } = useParams<{
     util?: string;
     deepLink?: string;
   }>();
+
+  const [favorites, showOnlyFavorites] = useMemo(() => {
+    return [
+      new Set<string>((settings?.[USER_SETTINGS_KEY_COMMON_FAVORITES] as string[] | undefined) ?? []),
+      settings?.[USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES] === true,
+    ];
+  }, [settings]);
 
   const [isSideNavOpenOnMobile, setIsSideNavOpenOnMobile] = useState<boolean>(false);
   const toggleOpenOnMobile = useCallback(() => {
@@ -98,12 +125,20 @@ export function WorkspacePage() {
           setNavigationBar({ breadcrumbs: getBreadcrumbs(util, utilsMap) });
           navigate(utilUrl);
         },
-        items: util.utils?.map((util) => createItem(util)) ?? [],
+        items: (showOnlyFavorites && util.utils
+          ? util.utils.filter((util) => showDisplayUtil(util, favorites))
+          : util.utils ?? []
+        ).map((util) => createItem(util)),
       };
     };
 
-    return [uiState.utils.map(createItem), utilsMap];
-  }, [uiState, selectedUtil, deepLinkFromParam]);
+    return [
+      (showOnlyFavorites ? uiState.utils.filter((util) => showDisplayUtil(util, favorites)) : uiState.utils).map(
+        createItem,
+      ),
+      utilsMap,
+    ];
+  }, [uiState, selectedUtil, deepLinkFromParam, favorites, showOnlyFavorites]);
 
   useEffect(() => {
     const newSelectedUtil =
@@ -126,21 +161,6 @@ export function WorkspacePage() {
     return <Component />;
   }, [selectedUtil]);
 
-  const titleIcon = selectedUtil ? (
-    selectedUtil.icon ? (
-      <EuiIcon
-        css={css`
-          margin: 4px;
-          padding: 3px;
-        `}
-        type={selectedUtil.icon}
-        size={'xl'}
-      />
-    ) : (
-      <EuiButtonIcon iconType="starEmpty" iconSize="xl" size="m" aria-label={`Add ${selectedUtil.name} to favorites`} />
-    )
-  ) : null;
-
   const [utilSearchQuery, setUtilSearchQuery] = useState<string>('');
 
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
@@ -152,6 +172,41 @@ export function WorkspacePage() {
   const onChangeShowOnlyFavorites = (showOnlyFavoritesValue: boolean) => {
     setSettings({ [USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES]: showOnlyFavoritesValue || null });
   };
+
+  const onToggleFavorite = (utilId: string) => {
+    if (favorites.has(utilId)) {
+      favorites.delete(utilId);
+    } else {
+      favorites.add(utilId);
+    }
+    setSettings({ [USER_SETTINGS_KEY_COMMON_FAVORITES]: Array.from(favorites) });
+
+    // If user is in favorites-only mode and removes currently active utility from favorite, navigate to the home util.
+    if (showOnlyFavorites && !favorites.has(utilId)) {
+      navigate('/ws');
+    }
+  };
+
+  const titleIcon = selectedUtil ? (
+    selectedUtil.icon ? (
+      <EuiIcon
+        css={css`
+          margin: 4px;
+          padding: 3px;
+        `}
+        type={selectedUtil.icon}
+        size={'xl'}
+      />
+    ) : (
+      <EuiButtonIcon
+        iconType={favorites.has(selectedUtil.id) ? 'starFilled' : 'starEmpty'}
+        iconSize="xl"
+        size="m"
+        aria-label={`Add ${selectedUtil.name} to favorites`}
+        onClick={() => onToggleFavorite(selectedUtil.id)}
+      />
+    )
+  ) : null;
 
   const settingsFlyout = isSettingsOpen ? <SettingsFlyout onClose={onToggleSettings} /> : null;
 
@@ -204,7 +259,7 @@ export function WorkspacePage() {
         <EuiSwitch
           label="Favorites only"
           compressed
-          checked={settings?.[USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES] === true}
+          checked={showOnlyFavorites}
           onChange={(ev: EuiSwitchEvent) => onChangeShowOnlyFavorites(ev.target.checked)}
           title="Show only utils that are marked as favorite."
         />,

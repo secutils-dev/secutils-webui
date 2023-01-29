@@ -8,6 +8,7 @@ export type { Util } from './util';
 export {
   USER_SETTINGS_USER_DATA_TYPE,
   USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES,
+  USER_SETTINGS_KEY_COMMON_FAVORITES,
   USER_SETTINGS_KEY_COMMON_UI_THEME,
 } from './user_settings';
 export type { UserSettings } from './user_settings';
