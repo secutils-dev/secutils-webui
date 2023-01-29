@@ -75,7 +75,7 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
       <EuiModalHeader>
         <EuiModalHeaderTitle>
           <EuiTitle size={'s'}>
-            <h1>Contact Us</h1>
+            <span>Contact Us</span>
           </EuiTitle>
         </EuiModalHeaderTitle>
       </EuiModalHeader>

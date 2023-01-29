@@ -109,7 +109,7 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
       <EuiModalHeader>
         <EuiModalHeaderTitle>
           <EuiTitle size={'s'}>
-            <h1>Generate certificate</h1>
+            <span>Generate certificate</span>
           </EuiTitle>
         </EuiModalHeaderTitle>
       </EuiModalHeader>

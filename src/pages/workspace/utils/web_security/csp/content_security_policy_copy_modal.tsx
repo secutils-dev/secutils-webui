@@ -117,7 +117,7 @@ Content-Security-Policy-Report-Only: ${data.policy}`,
       <EuiModalHeader>
         <EuiModalHeaderTitle>
           <EuiTitle size={'s'}>
-            <h1>Copy policy</h1>
+            <span>Copy policy</span>
           </EuiTitle>
         </EuiModalHeaderTitle>
       </EuiModalHeader>
