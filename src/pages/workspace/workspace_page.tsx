@@ -1,4 +1,4 @@
-import type { EuiSideNavItemType, EuiSwitchEvent } from '@elastic/eui';
+import type { EuiSideNavItemType } from '@elastic/eui';
 import {
   EuiButtonIcon,
   EuiContextMenuItem,
@@ -10,7 +10,7 @@ import {
   EuiPopover,
   EuiSideNav,
   EuiSpacer,
-  EuiSwitch,
+  useEuiTheme,
 } from '@elastic/eui';
 import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
 import { css } from '@emotion/react';
@@ -53,7 +53,9 @@ function showDisplayUtil(util: Util, favorites: Set<string>) {
 export function WorkspacePage() {
   usePageMeta('Workspace');
 
+  const euiTheme = useEuiTheme();
   const navigate = useNavigate();
+
   const { addToast, uiState, settings, setSettings } = useAppContext();
   const { util: utilIdFromParam = HOME_UTIL_ID, deepLink: deepLinkFromParam } = useParams<{
     util?: string;
@@ -171,6 +173,11 @@ export function WorkspacePage() {
 
   const onChangeShowOnlyFavorites = (showOnlyFavoritesValue: boolean) => {
     setSettings({ [USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES]: showOnlyFavoritesValue || null });
+
+    // If user is in favorites-only mode and removes currently active utility from favorite, navigate to the home util.
+    if (showOnlyFavoritesValue && selectedUtil && !favorites.has(selectedUtil.id)) {
+      navigate('/ws');
+    }
   };
 
   const onToggleFavorite = (utilId: string) => {
@@ -256,12 +263,16 @@ export function WorkspacePage() {
       }
       headerBreadcrumbs={navigationBar.breadcrumbs}
       headerActions={[
-        <EuiSwitch
-          label="Favorites only"
-          compressed
-          checked={showOnlyFavorites}
-          onChange={(ev: EuiSwitchEvent) => onChangeShowOnlyFavorites(ev.target.checked)}
-          title="Show only utils that are marked as favorite."
+        <EuiButtonIcon
+          iconType={showOnlyFavorites ? 'starFilled' : 'starEmpty'}
+          css={css`
+            margin-right: ${euiTheme.euiTheme.size.xs};
+          `}
+          iconSize="l"
+          size="m"
+          title={`Only show favorite utilities`}
+          aria-label={`Only show favorite utilities`}
+          onClick={() => onChangeShowOnlyFavorites(!showOnlyFavorites)}
         />,
         <EuiPopover
           anchorClassName="eui-fullWidth"
