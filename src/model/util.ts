@@ -1,6 +1,5 @@
 export interface Util {
-  id: string;
+  handle: string;
   name: string;
-  icon?: string;
   utils?: Util[];
 }

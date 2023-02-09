@@ -3,7 +3,6 @@ import {
   EuiButtonIcon,
   EuiContextMenuItem,
   EuiContextMenuPanel,
-  EuiFieldSearch,
   EuiFlexGroup,
   EuiFlexItem,
   EuiIcon,
@@ -19,7 +18,8 @@ import type { ReactNode } from 'react';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { UtilsComponents } from './utils';
+import { SiteSearchBar } from './components/site_search_bar';
+import { getUtilIcon, HOME_UTIL_HANDLE, UtilsComponents } from './utils';
 import { WorkspaceContext } from './workspace_context';
 import { SettingsFlyout } from '../../app_container';
 import { PageLoadingState } from '../../components';
@@ -33,11 +33,10 @@ import {
 import { Page } from '../page';
 
 const DEFAULT_COMPONENT = lazy(() => import('../../components/page_under_construction_state'));
-const HOME_UTIL_ID = 'home';
 
 function showDisplayUtil(util: Util, favorites: Set<string>) {
   // Home utility is always enabled.
-  if (util.id === HOME_UTIL_ID || favorites.has(util.id)) {
+  if (util.handle === HOME_UTIL_HANDLE || favorites.has(util.handle)) {
     return true;
   }
 
@@ -57,7 +56,7 @@ export function WorkspacePage() {
   const navigate = useNavigate();
 
   const { addToast, uiState, settings, setSettings } = useAppContext();
-  const { util: utilIdFromParam = HOME_UTIL_ID, deepLink: deepLinkFromParam } = useParams<{
+  const { util: utilIdFromParam = HOME_UTIL_HANDLE, deepLink: deepLinkFromParam } = useParams<{
     util?: string;
     deepLink?: string;
   }>();
@@ -78,8 +77,8 @@ export function WorkspacePage() {
     const breadcrumbs: EuiBreadcrumbProps[] = [];
     let utilToBreadcrumb: Util | undefined = util;
     while (utilToBreadcrumb) {
-      const utilUrl = `/ws/${utilToBreadcrumb.id}`;
-      const shouldIncludeURL = utilToBreadcrumb.id !== util.id || deepLink != null;
+      const utilUrl = `/ws/${utilToBreadcrumb.handle}`;
+      const shouldIncludeURL = utilToBreadcrumb.handle !== util.handle || deepLink != null;
       breadcrumbs.unshift({
         text: utilToBreadcrumb.name,
         onClick: shouldIncludeURL
@@ -91,9 +90,9 @@ export function WorkspacePage() {
         href: shouldIncludeURL ? utilUrl : undefined,
       });
 
-      const utilSeparatorIndex = utilToBreadcrumb.id.lastIndexOf('__');
+      const utilSeparatorIndex = utilToBreadcrumb.handle.lastIndexOf('__');
       utilToBreadcrumb =
-        utilSeparatorIndex > 0 ? utilsMap.get(utilToBreadcrumb.id.slice(0, utilSeparatorIndex)) : undefined;
+        utilSeparatorIndex > 0 ? utilsMap.get(utilToBreadcrumb.handle.slice(0, utilSeparatorIndex)) : undefined;
     }
 
     return deepLink ? [...breadcrumbs, { text: deepLink }] : breadcrumbs;
@@ -111,14 +110,15 @@ export function WorkspacePage() {
   const [sideNavItems, utilsMap] = useMemo(() => {
     const utilsMap = new Map<string, Util>();
     const createItem = (util: Util): EuiSideNavItemType<unknown> => {
-      utilsMap.set(util.id, util);
-      const utilUrl = util.id === 'home' ? '/ws' : `/ws/${util.id}`;
+      utilsMap.set(util.handle, util);
+      const utilUrl = util.handle === 'home' ? '/ws' : `/ws/${util.handle}`;
+      const utilIcon = selectedUtil ? getUtilIcon(util.handle, 'navigation') : undefined;
       return {
-        id: util.id,
+        id: util.handle,
         name: util.name,
         href: utilUrl,
-        icon: util.icon ? <EuiIcon type={util.icon} /> : undefined,
-        isSelected: selectedUtil?.id === util.id && !deepLinkFromParam,
+        icon: utilIcon ? <EuiIcon type={utilIcon} /> : undefined,
+        isSelected: selectedUtil?.handle === util.handle && !deepLinkFromParam,
         onClick: (e) => {
           e.preventDefault();
           setTitleActions(null);
@@ -144,7 +144,7 @@ export function WorkspacePage() {
 
   useEffect(() => {
     const newSelectedUtil =
-      utilIdFromParam && utilIdFromParam !== selectedUtil?.id
+      utilIdFromParam && utilIdFromParam !== selectedUtil?.handle
         ? utilsMap.get(utilIdFromParam) ?? selectedUtil
         : selectedUtil;
     if (newSelectedUtil && (newSelectedUtil !== selectedUtil || navigationBar.deepLink !== deepLinkFromParam)) {
@@ -159,11 +159,9 @@ export function WorkspacePage() {
   }, [utilIdFromParam, selectedUtil, utilsMap, deepLinkFromParam, navigationBar]);
 
   const content = useMemo(() => {
-    const Component = (selectedUtil ? UtilsComponents.get(selectedUtil.id) : undefined) ?? DEFAULT_COMPONENT;
+    const Component = (selectedUtil ? UtilsComponents.get(selectedUtil.handle) : undefined) ?? DEFAULT_COMPONENT;
     return <Component />;
   }, [selectedUtil]);
-
-  const [utilSearchQuery, setUtilSearchQuery] = useState<string>('');
 
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const onToggleSettings = useCallback(() => {
@@ -175,7 +173,7 @@ export function WorkspacePage() {
     setSettings({ [USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES]: showOnlyFavoritesValue || null });
 
     // If user is in favorites-only mode and removes currently active utility from favorite, navigate to the home util.
-    if (showOnlyFavoritesValue && selectedUtil && !favorites.has(selectedUtil.id)) {
+    if (showOnlyFavoritesValue && selectedUtil && !favorites.has(selectedUtil.handle)) {
       navigate('/ws');
     }
   };
@@ -194,23 +192,24 @@ export function WorkspacePage() {
     }
   };
 
+  const utilIcon = selectedUtil ? getUtilIcon(selectedUtil.handle, 'navigation') : undefined;
   const titleIcon = selectedUtil ? (
-    selectedUtil.icon ? (
+    utilIcon ? (
       <EuiIcon
         css={css`
           margin: 4px;
           padding: 3px;
         `}
-        type={selectedUtil.icon}
+        type={utilIcon}
         size={'xl'}
       />
     ) : (
       <EuiButtonIcon
-        iconType={favorites.has(selectedUtil.id) ? 'starFilled' : 'starEmpty'}
+        iconType={favorites.has(selectedUtil.handle) ? 'starFilled' : 'starEmpty'}
         iconSize="xl"
         size="m"
         aria-label={`Add ${selectedUtil.name} to favorites`}
-        onClick={() => onToggleFavorite(selectedUtil.id)}
+        onClick={() => onToggleFavorite(selectedUtil?.handle)}
       />
     )
   ) : null;
@@ -245,13 +244,7 @@ export function WorkspacePage() {
       }
       sideBar={
         <aside>
-          <EuiFieldSearch
-            fullWidth
-            placeholder="Search util"
-            value={utilSearchQuery}
-            isClearable
-            onChange={(e) => setUtilSearchQuery(e.target.value)}
-          />
+          <SiteSearchBar />
           <EuiSpacer size="m" />
           <EuiSideNav
             mobileTitle="All Utils"

@@ -117,7 +117,7 @@ export function Page({
       </header>
 
       {sideBar ? (
-        <EuiPageSidebar paddingSize="m" sticky={{ offset: 48 }}>
+        <EuiPageSidebar paddingSize="m" sticky={{ offset: 48 }} minWidth={300}>
           {sideBar}
         </EuiPageSidebar>
       ) : null}
