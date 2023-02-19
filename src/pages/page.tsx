@@ -84,9 +84,10 @@ export function Page({
     );
   }
 
-  if (!uiState.user && !location.pathname.startsWith('/login')) {
+  if (!uiState.user && !location.pathname.startsWith('/login') && !location.pathname.startsWith('/signup')) {
     return <Navigate to="/login" />;
   }
+
   const header = pageTitle ? <PageHeader title={pageTitle} /> : null;
   return (
     <EuiPage grow direction={'row'}>
