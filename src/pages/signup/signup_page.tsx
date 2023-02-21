@@ -224,7 +224,9 @@ export function SignupPage() {
               fullWidth
               onClick={onSignupWithPassword}
               isLoading={signupStatus?.status === 'pending' && signupStatus?.state?.isPasskey !== true}
-              isDisabled={email.trim().length === 0 || password.trim().length === 0}
+              isDisabled={
+                email.trim().length === 0 || password.trim().length === 0 || signupStatus?.status === 'pending'
+              }
             >
               Signup
             </EuiButton>
@@ -242,7 +244,7 @@ export function SignupPage() {
                   fullWidth
                   onClick={onSignupWithPasskey}
                   isLoading={signupStatus?.status === 'pending' && signupStatus?.state?.isPasskey === true}
-                  isDisabled={email.trim().length === 0}
+                  isDisabled={email.trim().length === 0 || signupStatus?.status === 'pending'}
                 >
                   Signup with passkey
                 </EuiButton>

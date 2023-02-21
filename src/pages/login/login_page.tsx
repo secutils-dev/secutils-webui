@@ -212,7 +212,9 @@ export function LoginPage() {
               fullWidth
               onClick={onLogin}
               isLoading={loginStatus?.status === 'pending' && loginStatus?.state?.isPasskey !== true}
-              isDisabled={email.trim().length === 0 || password.trim().length === 0}
+              isDisabled={
+                email.trim().length === 0 || password.trim().length === 0 || loginStatus?.status === 'pending'
+              }
             >
               Log in
             </EuiButton>
@@ -230,7 +232,7 @@ export function LoginPage() {
                   fullWidth
                   onClick={onLoginWithPasskey}
                   isLoading={loginStatus?.status === 'pending' && loginStatus?.state?.isPasskey === true}
-                  isDisabled={email.trim().length === 0}
+                  isDisabled={email.trim().length === 0 || loginStatus?.status === 'pending'}
                 >
                   Log in with passkey
                 </EuiButton>
