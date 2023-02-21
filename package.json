@@ -17,6 +17,7 @@
   "alias": {
     "process": false
   },
+  "source": ["src/index.html", "src/favicon.ico"],
   "dependencies": {
     "@babel/runtime": "^7.20.13",
     "@elastic/datemath": "^5.0.3",
@@ -63,8 +64,8 @@
   },
   "scripts": {
     "prebuild": "eslint . && rm -rf dist",
-    "build": "parcel build src/index.html src/favicon.ico",
-    "watch": "parcel src/index.html src/favicon.ico",
-    "perf": "parcel build --reporter @parcel/reporter-bundle-buddy src/index.html src/favicon.ico"
+    "build": "parcel build",
+    "watch": "parcel",
+    "perf": "parcel build --reporter @parcel/reporter-bundle-buddy"
   }
 }
