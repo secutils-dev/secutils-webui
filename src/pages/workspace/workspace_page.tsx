@@ -221,7 +221,7 @@ export function WorkspacePage() {
     setIsAccountPopoverOpen(false);
     axios.post(getApiUrl('/api/logout')).then(
       () => {
-        window.location.reload();
+        window.location.replace('/');
       },
       () => {
         addToast({ id: 'logout-error', title: 'Failed to logout' });
