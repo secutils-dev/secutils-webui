@@ -1,6 +1,5 @@
 import {
   EuiButton,
-  EuiCallOut,
   EuiFieldText,
   EuiForm,
   EuiFormRow,
@@ -18,77 +17,15 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext, usePageMeta } from '../../hooks';
 import type { AsyncData } from '../../model';
 import { getApiUrl } from '../../model';
-import { arrayBufferToSafeBase64Url, isWebAuthnSupported, safeBase64UrlToArrayBuffer } from '../../tools/webauthn';
+import { signupWithPasskey } from '../../model/webauthn';
+import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';
-
-interface SerializedPublicKeyCredentialDescriptor extends Omit<PublicKeyCredentialDescriptor, 'id'> {
-  id: string;
-}
-
-interface SerializedPublicKeyCredentialUserEntity extends Omit<PublicKeyCredentialUserEntity, 'id'> {
-  id: string;
-}
-
-interface SerializedPublicKeyCredentialCreationOptions
-  extends Omit<PublicKeyCredentialCreationOptions, 'challenge' | 'excludeCredentials' | 'user'> {
-  challenge: string;
-  excludeCredentials?: SerializedPublicKeyCredentialDescriptor[];
-  user: SerializedPublicKeyCredentialUserEntity;
-}
-
-interface SerializedPublicKeyCredential {
-  id: string;
-  rawId: string;
-  type: string;
-  extensions: AuthenticationExtensionsClientOutputs;
-  response: {
-    attestationObject: string;
-    clientDataJSON: string;
-    transports?: string[];
-  };
-}
-
-function deserializePublicKeyCredentialCreationOptions(
-  serializedOptions: SerializedPublicKeyCredentialCreationOptions,
-): PublicKeyCredentialCreationOptions {
-  return {
-    ...serializedOptions,
-    challenge: safeBase64UrlToArrayBuffer(serializedOptions.challenge),
-    excludeCredentials: serializedOptions.excludeCredentials
-      ? serializedOptions.excludeCredentials.map((serializedCredential) => ({
-          ...serializedCredential,
-          id: safeBase64UrlToArrayBuffer(serializedCredential.id),
-        }))
-      : undefined,
-    user: {
-      ...serializedOptions.user,
-      id: safeBase64UrlToArrayBuffer(serializedOptions.user.id),
-    },
-  };
-}
-
-function serializeCredential(credential: PublicKeyCredential): SerializedPublicKeyCredential {
-  const attestationResponse = credential.response as AuthenticatorAttestationResponse;
-
-  return {
-    id: credential.id,
-    rawId: arrayBufferToSafeBase64Url(credential.rawId),
-    type: credential.type,
-    extensions: credential.getClientExtensionResults(),
-    response: {
-      attestationObject: arrayBufferToSafeBase64Url(attestationResponse.attestationObject),
-      clientDataJSON: arrayBufferToSafeBase64Url(attestationResponse.clientDataJSON),
-      transports:
-        typeof attestationResponse.getTransports === 'function' ? attestationResponse.getTransports() : undefined,
-    },
-  };
-}
 
 export function SignupPage() {
   usePageMeta('Signup');
 
   const navigate = useNavigate();
-  const { uiState, refreshUiState } = useAppContext();
+  const { uiState, refreshUiState, addToast } = useAppContext();
 
   const [email, setEmail] = useState<string>('');
   const onEmailChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -119,9 +56,26 @@ export function SignupPage() {
             status: 'failed',
             error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
           });
+
+          addToast({
+            id: 'signup-password',
+            color: 'danger',
+            title: 'Failed to signup',
+            text: (
+              <>
+                {isPasskeySupported
+                  ? 'We were unable to sign you up with a password, please contact us or signup with a passkey instead.'
+                  : 'We were unable to sign you up, please try again later or contact us.'}
+              </>
+            ),
+          });
+          setSignupStatus({
+            status: 'failed',
+            error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
+          });
         });
     },
-    [email, password, signupStatus],
+    [email, password, signupStatus, isPasskeySupported],
   );
 
   const onSignupWithPasskey: MouseEventHandler<HTMLButtonElement> = useCallback(
@@ -133,44 +87,23 @@ export function SignupPage() {
       }
 
       setSignupStatus({ status: 'pending', state: { isPasskey: true } });
-      axios
-        .post<{ publicKey: SerializedPublicKeyCredentialCreationOptions }>(getApiUrl('/api/webauthn/signup/start'), {
-          email,
-        })
-        .then(
-          (res) => {
-            navigator.credentials
-              .create({ publicKey: deserializePublicKeyCredentialCreationOptions(res.data.publicKey) })
-              .then(
-                (credential) => {
-                  if (credential) {
-                    axios
-                      .post(
-                        getApiUrl('/api/webauthn/signup/finish'),
-                        serializeCredential(credential as PublicKeyCredential),
-                      )
-                      .then(refreshUiState, (err: AxiosError<{ message: string }>) => {
-                        setSignupStatus({
-                          status: 'failed',
-                          error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
-                        });
-                      });
-                  } else {
-                    setSignupStatus({ status: 'failed', error: 'Failed to create passkey credentials.' });
-                  }
-                },
-                () => {
-                  setSignupStatus({ status: 'failed', error: 'Failed to create passkey credentials.' });
-                },
-              );
-          },
-          (err: AxiosError<{ message: string }>) => {
-            setSignupStatus({
-              status: 'failed',
-              error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
-            });
-          },
-        );
+      signupWithPasskey(email).then(refreshUiState, (err: AxiosError<{ message: string }>) => {
+        setSignupStatus({
+          status: 'failed',
+          error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
+        });
+
+        addToast({
+          id: 'signup-passkey',
+          color: 'danger',
+          title: 'Failed to signup with a passkey',
+          text: (
+            <>
+              We were unable to retrieve or validate your passkey, please contact us or signup with a password instead.
+            </>
+          ),
+        });
+      });
     },
     [email, signupStatus],
   );
@@ -179,23 +112,10 @@ export function SignupPage() {
     return <Navigate to="/ws" />;
   }
 
-  const loginStatusCallout =
-    signupStatus?.status === 'failed' ? (
-      <EuiFormRow>
-        <EuiCallOut
-          size="s"
-          title={signupStatus.error ?? 'An error occurred, please try again later'}
-          color="danger"
-          iconType="alert"
-        />
-      </EuiFormRow>
-    ) : undefined;
-
   return (
     <Page contentAlignment={'center'}>
       <EuiPanel>
         <EuiForm id="signup-form" component="form" autoComplete="off">
-          {loginStatusCallout}
           <EuiFormRow>
             <EuiFieldText
               placeholder="Email"
