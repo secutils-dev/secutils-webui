@@ -1,6 +1,5 @@
 import {
   EuiButton,
-  EuiCallOut,
   EuiFieldText,
   EuiForm,
   EuiFormRow,
@@ -9,7 +8,6 @@ import {
   EuiPanel,
   EuiText,
 } from '@elastic/eui';
-import type { AxiosError } from 'axios';
 import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useState } from 'react';
@@ -18,76 +16,16 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext, usePageMeta } from '../../hooks';
 import type { AsyncData } from '../../model';
 import { getApiUrl } from '../../model';
-import { arrayBufferToSafeBase64Url, isWebAuthnSupported, safeBase64UrlToArrayBuffer } from '../../tools/webauthn';
+import { getErrorMessage, isClientError } from '../../model/errors';
+import { loginWithPasskey } from '../../model/webauthn';
+import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';
-
-interface SerializedPublicKeyCredentialRequestOptions
-  extends Omit<PublicKeyCredentialRequestOptions, 'challenge' | 'allowCredentials'> {
-  challenge: string;
-  allowCredentials?: SerializedPublicKeyCredentialDescriptor[];
-}
-
-interface SerializedCredentialsRequestOptions extends Omit<CredentialRequestOptions, 'publicKey'> {
-  publicKey: SerializedPublicKeyCredentialRequestOptions;
-}
-
-interface SerializedPublicKeyCredentialDescriptor extends Omit<PublicKeyCredentialDescriptor, 'id'> {
-  id: string;
-}
-
-interface SerializedPublicKeyCredential {
-  id: string;
-  rawId: string;
-  type: string;
-  extensions: AuthenticationExtensionsClientOutputs;
-  response: {
-    authenticatorData: string;
-    clientDataJSON: string;
-    signature: string;
-    userHandle?: string;
-  };
-}
-
-function deserializeCredentialRequestOptions(
-  serializedOptions: SerializedCredentialsRequestOptions,
-): CredentialRequestOptions {
-  return {
-    ...serializedOptions,
-    publicKey: {
-      ...serializedOptions.publicKey,
-      challenge: safeBase64UrlToArrayBuffer(serializedOptions.publicKey.challenge),
-      allowCredentials: serializedOptions.publicKey.allowCredentials
-        ? serializedOptions.publicKey.allowCredentials.map((serializedCredential) => ({
-            ...serializedCredential,
-            id: safeBase64UrlToArrayBuffer(serializedCredential.id),
-          }))
-        : undefined,
-    },
-  };
-}
-
-function serializeCredential(credential: PublicKeyCredential): SerializedPublicKeyCredential {
-  const assertionResponse = credential.response as AuthenticatorAssertionResponse;
-
-  return {
-    id: credential.id,
-    rawId: arrayBufferToSafeBase64Url(credential.rawId),
-    type: credential.type,
-    extensions: credential.getClientExtensionResults(),
-    response: {
-      authenticatorData: arrayBufferToSafeBase64Url(assertionResponse.authenticatorData),
-      clientDataJSON: arrayBufferToSafeBase64Url(assertionResponse.clientDataJSON),
-      signature: arrayBufferToSafeBase64Url(assertionResponse.signature),
-      userHandle: assertionResponse.userHandle ? arrayBufferToSafeBase64Url(assertionResponse.userHandle) : undefined,
-    },
-  };
-}
 
 export function LoginPage() {
   usePageMeta('Login');
 
   const navigate = useNavigate();
-  const { uiState, refreshUiState } = useAppContext();
+  const { uiState, refreshUiState, addToast } = useAppContext();
 
   const [email, setEmail] = useState<string>('');
   const onEmailChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -111,14 +49,26 @@ export function LoginPage() {
       }
 
       setLoginStatus({ status: 'pending', state: { isPasskey: false } });
-      axios
-        .post(getApiUrl('/api/login'), { email, password })
-        .then(refreshUiState, (err: AxiosError<{ message: string }>) => {
-          setLoginStatus({
-            status: 'failed',
-            error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
-          });
+      axios.post(getApiUrl('/api/login'), { email, password }).then(refreshUiState, (err: Error) => {
+        const originalErrorMessage = getErrorMessage(err);
+        setLoginStatus({
+          status: 'failed',
+          error: originalErrorMessage,
         });
+
+        addToast({
+          id: 'login-password',
+          color: 'danger',
+          title: 'Failed to login',
+          text: (
+            <>
+              {isClientError(err)
+                ? originalErrorMessage
+                : 'We were unable to log you in, please try again later or contact us.'}
+            </>
+          ),
+        });
+      });
     },
     [email, password, loginStatus],
   );
@@ -132,35 +82,26 @@ export function LoginPage() {
       }
 
       setLoginStatus({ status: 'pending', state: { isPasskey: true } });
-      axios.post<SerializedCredentialsRequestOptions>(getApiUrl('/api/webauthn/login/start'), { email }).then(
-        (res) => {
-          navigator.credentials.get(deserializeCredentialRequestOptions(res.data)).then(
-            (credential) => {
-              if (credential) {
-                axios
-                  .post(getApiUrl('/api/webauthn/login/finish'), serializeCredential(credential as PublicKeyCredential))
-                  .then(refreshUiState, (err: AxiosError<{ message: string }>) => {
-                    setLoginStatus({
-                      status: 'failed',
-                      error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
-                    });
-                  });
-              } else {
-                setLoginStatus({ status: 'failed', error: 'Failed to retrieve passkey credentials.' });
-              }
-            },
-            () => {
-              setLoginStatus({ status: 'failed', error: 'Failed to retrieve passkey credentials.' });
-            },
-          );
-        },
-        (err: AxiosError<{ message: string }>) => {
-          setLoginStatus({
-            status: 'failed',
-            error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
-          });
-        },
-      );
+      loginWithPasskey(email).then(refreshUiState, (err: Error) => {
+        const originalErrorMessage = getErrorMessage(err);
+        setLoginStatus({
+          status: 'failed',
+          error: originalErrorMessage,
+        });
+
+        addToast({
+          id: 'login-passkey',
+          color: 'danger',
+          title: 'Failed to log in with a passkey',
+          text: (
+            <>
+              {isClientError(err)
+                ? originalErrorMessage
+                : 'We were unable to sign you in, please try again later or contact us.'}
+            </>
+          ),
+        });
+      });
     },
     [email, loginStatus],
   );
@@ -169,27 +110,15 @@ export function LoginPage() {
     return <Navigate to="/ws" />;
   }
 
-  const loginStatusCallout =
-    loginStatus?.status === 'failed' ? (
-      <EuiFormRow>
-        <EuiCallOut
-          size="s"
-          title={loginStatus.error ?? 'An error occurred, please try again later'}
-          color="danger"
-          iconType="alert"
-        />
-      </EuiFormRow>
-    ) : undefined;
-
   return (
     <Page contentAlignment={'center'}>
       <EuiPanel>
         <EuiForm id="login-form" component="form">
-          {loginStatusCallout}
           <EuiFormRow>
             <EuiFieldText
               placeholder="Email"
               value={email}
+              autoComplete={'username webauthn'}
               type={'email'}
               disabled={loginStatus?.status === 'pending'}
               onChange={onEmailChange}
@@ -213,7 +142,11 @@ export function LoginPage() {
               onClick={onLogin}
               isLoading={loginStatus?.status === 'pending' && loginStatus?.state?.isPasskey !== true}
               isDisabled={
-                email.trim().length === 0 || password.trim().length === 0 || loginStatus?.status === 'pending'
+                email.trim().length === 0 ||
+                email.includes(' ') ||
+                !email.includes('@') ||
+                password.trim().length === 0 ||
+                loginStatus?.status === 'pending'
               }
             >
               Log in

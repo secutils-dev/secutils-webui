@@ -8,7 +8,6 @@ import {
   EuiPanel,
   EuiText,
 } from '@elastic/eui';
-import type { AxiosError } from 'axios';
 import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useState } from 'react';
@@ -17,6 +16,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext, usePageMeta } from '../../hooks';
 import type { AsyncData } from '../../model';
 import { getApiUrl } from '../../model';
+import { getErrorMessage, isClientError } from '../../model/errors';
 import { signupWithPasskey } from '../../model/webauthn';
 import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';
@@ -49,33 +49,28 @@ export function SignupPage() {
       }
 
       setSignupStatus({ status: 'pending', state: { isPasskey: false } });
-      axios
-        .post(getApiUrl('/api/signup'), { email, password })
-        .then(refreshUiState, (err: AxiosError<{ message: string }>) => {
-          setSignupStatus({
-            status: 'failed',
-            error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
-          });
-
-          addToast({
-            id: 'signup-password',
-            color: 'danger',
-            title: 'Failed to signup',
-            text: (
-              <>
-                {isPasskeySupported
-                  ? 'We were unable to sign you up with a password, please contact us or signup with a passkey instead.'
-                  : 'We were unable to sign you up, please try again later or contact us.'}
-              </>
-            ),
-          });
-          setSignupStatus({
-            status: 'failed',
-            error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
-          });
+      axios.post(getApiUrl('/api/signup'), { email, password }).then(refreshUiState, (err: Error) => {
+        const originalErrorMessage = getErrorMessage(err);
+        setSignupStatus({
+          status: 'failed',
+          error: originalErrorMessage,
         });
+
+        addToast({
+          id: 'signup-password',
+          color: 'danger',
+          title: 'Failed to signup',
+          text: (
+            <>
+              {isClientError(err)
+                ? originalErrorMessage
+                : 'We were unable to sign you up, please try again later or contact us.'}
+            </>
+          ),
+        });
+      });
     },
-    [email, password, signupStatus, isPasskeySupported],
+    [email, password, signupStatus],
   );
 
   const onSignupWithPasskey: MouseEventHandler<HTMLButtonElement> = useCallback(
@@ -87,10 +82,11 @@ export function SignupPage() {
       }
 
       setSignupStatus({ status: 'pending', state: { isPasskey: true } });
-      signupWithPasskey(email).then(refreshUiState, (err: AxiosError<{ message: string }>) => {
+      signupWithPasskey(email).then(refreshUiState, (err: Error) => {
+        const originalErrorMessage = getErrorMessage(err);
         setSignupStatus({
           status: 'failed',
-          error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
+          error: originalErrorMessage,
         });
 
         addToast({
@@ -99,7 +95,9 @@ export function SignupPage() {
           title: 'Failed to signup with a passkey',
           text: (
             <>
-              We were unable to retrieve or validate your passkey, please contact us or signup with a password instead.
+              {isClientError(err)
+                ? originalErrorMessage
+                : 'We were unable to sign you up, please try again later or contact us.'}
             </>
           ),
         });
