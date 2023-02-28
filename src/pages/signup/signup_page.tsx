@@ -1,5 +1,6 @@
 import {
   EuiButton,
+  euiCanAnimate,
   EuiFieldText,
   EuiForm,
   EuiFormRow,
@@ -7,7 +8,9 @@ import {
   EuiLink,
   EuiPanel,
   EuiText,
+  useEuiTheme,
 } from '@elastic/eui';
+import { css } from '@emotion/react';
 import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useState } from 'react';
@@ -21,11 +24,19 @@ import { signupWithPasskey } from '../../model/webauthn';
 import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';
 
+enum FormState {
+  Default,
+  WithPassword,
+}
+
 export function SignupPage() {
   usePageMeta('Signup');
 
   const navigate = useNavigate();
   const { uiState, refreshUiState, addToast } = useAppContext();
+  const theme = useEuiTheme();
+
+  const [formState, setFormState] = useState(FormState.Default);
 
   const [email, setEmail] = useState<string>('');
   const onEmailChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -35,6 +46,11 @@ export function SignupPage() {
   const [password, setPassword] = useState<string>('');
   const onPasswordChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
+  }, []);
+
+  const [repeatPassword, setRepeatPassword] = useState<string>('');
+  const onRepeatPasswordChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setRepeatPassword(e.target.value);
   }, []);
 
   const [isPasskeySupported] = useState<boolean>(isWebAuthnSupported());
@@ -73,6 +89,12 @@ export function SignupPage() {
     [email, password, signupStatus],
   );
 
+  const onContinueWithPassword: MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
+    e.preventDefault();
+
+    setFormState(FormState.WithPassword);
+  }, []);
+
   const onSignupWithPasskey: MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
       e.preventDefault();
@@ -110,21 +132,61 @@ export function SignupPage() {
     return <Navigate to="/ws" />;
   }
 
+  const signupWithPasswordButton =
+    formState === FormState.Default && isPasskeySupported ? (
+      <EuiButton
+        type="button"
+        fill
+        fullWidth
+        onClick={onContinueWithPassword}
+        isDisabled={email.trim().length === 0 || signupStatus?.status === 'pending'}
+      >
+        Continue with password
+      </EuiButton>
+    ) : (
+      <EuiButton
+        type="submit"
+        form="signup-form"
+        fill
+        fullWidth
+        onClick={onSignupWithPassword}
+        isLoading={signupStatus?.status === 'pending' && signupStatus?.state?.isPasskey !== true}
+        isDisabled={
+          email.trim().length === 0 ||
+          password.trim().length === 0 ||
+          password !== repeatPassword ||
+          signupStatus?.status === 'pending'
+        }
+      >
+        Signup
+      </EuiButton>
+    );
+
+  // Use transition to show password fields, and workaround fixed margin-top for the hidden fields.
+  const passwordFieldStyles = css`
+    max-height: ${formState === FormState.Default && isPasskeySupported ? 0 : theme.euiTheme.size.xxl};
+    margin-top: ${formState === FormState.Default && isPasskeySupported ? '0 !important' : 'unset'};
+    overflow: hidden;
+    ${euiCanAnimate} {
+      transition: max-height 1s ${theme.euiTheme.animation.bounce};
+    }
+  `;
+
   return (
     <Page contentAlignment={'center'}>
       <EuiPanel>
-        <EuiForm id="signup-form" component="form" autoComplete="off">
+        <EuiForm id="signup-form" component="form" autoComplete="off" fullWidth>
           <EuiFormRow>
             <EuiFieldText
               placeholder="Email"
               value={email}
               type={'email'}
-              autoComplete="off"
+              autoComplete="email"
               disabled={signupStatus?.status === 'pending'}
               onChange={onEmailChange}
             />
           </EuiFormRow>
-          <EuiFormRow>
+          <EuiFormRow css={passwordFieldStyles}>
             <EuiFieldText
               placeholder="Password"
               value={password}
@@ -134,21 +196,17 @@ export function SignupPage() {
               onChange={onPasswordChange}
             />
           </EuiFormRow>
-          <EuiFormRow>
-            <EuiButton
-              type="submit"
-              form="signup-form"
-              fill
-              fullWidth
-              onClick={onSignupWithPassword}
-              isLoading={signupStatus?.status === 'pending' && signupStatus?.state?.isPasskey !== true}
-              isDisabled={
-                email.trim().length === 0 || password.trim().length === 0 || signupStatus?.status === 'pending'
-              }
-            >
-              Signup
-            </EuiButton>
+          <EuiFormRow css={passwordFieldStyles}>
+            <EuiFieldText
+              placeholder="Repeat password"
+              value={repeatPassword}
+              type={'password'}
+              autoComplete="new-password"
+              disabled={signupStatus?.status === 'pending'}
+              onChange={onRepeatPasswordChange}
+            />
           </EuiFormRow>
+          <EuiFormRow>{signupWithPasswordButton}</EuiFormRow>
           {isPasskeySupported ? (
             <>
               <EuiFormRow>

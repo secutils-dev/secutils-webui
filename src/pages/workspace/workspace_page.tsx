@@ -222,6 +222,7 @@ export function WorkspacePage() {
     axios.post(getApiUrl('/api/logout')).then(
       () => {
         window.location.replace('/');
+        setTimeout(() => window.location.reload(), 500);
       },
       () => {
         addToast({ id: 'logout-error', title: 'Failed to logout' });
