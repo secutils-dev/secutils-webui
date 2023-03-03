@@ -28,16 +28,16 @@ export function deserializeUser(serializedUser: SerializedUser): User {
   };
 }
 
-export function getUserData<RType>(dataType: string): Promise<RType | null> {
+export function getUserData<RType>(dataNamespace: string): Promise<RType | null> {
   return axios
-    .get<{ [dataType: string]: unknown }>(getApiUrl(`/api/user/data?dataType=${dataType}`))
-    .then((response) => response.data[dataType] as RType | null);
+    .get<{ [namespace: string]: unknown }>(getApiUrl(`/api/user/data?namespace=${dataNamespace}`))
+    .then((response) => response.data[dataNamespace] as RType | null);
 }
 
-export function setUserData<RType>(dataType: string, dataValue: unknown): Promise<RType | null> {
+export function setUserData<RType>(dataNamespace: string, dataValue: unknown): Promise<RType | null> {
   return axios
-    .post<{ [dataType: string]: unknown }>(getApiUrl(`/api/user/data?dataType=${dataType}`), {
+    .post<{ [namespace: string]: unknown }>(getApiUrl(`/api/user/data?namespace=${dataNamespace}`), {
       dataValue: JSON.stringify(dataValue),
     })
-    .then((response) => response.data[dataType] as RType | null);
+    .then((response) => response.data[dataNamespace] as RType | null);
 }
