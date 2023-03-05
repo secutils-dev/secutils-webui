@@ -74,6 +74,7 @@ import { WorkspacePage } from './pages';
 
 const LoginPage = lazy(() => import('./pages/login'));
 const SignupPage = lazy(() => import('./pages/signup'));
+const ActivatePage = lazy(() => import('./pages/activate'));
 
 appendIconComponentCache({
   alert: EuiIconAlert,
@@ -157,6 +158,14 @@ const IndexPage = () => {
             element={
               <Suspense fallback={<PageLoadingState />}>
                 <SignupPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="activate"
+            element={
+              <Suspense fallback={<PageLoadingState />}>
+                <ActivatePage />
               </Suspense>
             }
           />

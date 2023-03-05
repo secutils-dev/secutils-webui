@@ -41,6 +41,12 @@ export interface PageToast {
   color?: 'primary' | 'success' | 'warning' | 'danger';
 }
 
+function isUnauthenticatedPage(pathname: string) {
+  return ['/login', '/signup', '/activate'].some((unauthenticatedPagePathname) =>
+    pathname.startsWith(unauthenticatedPagePathname),
+  );
+}
+
 export function Page({
   children,
   contentAlignment,
@@ -84,7 +90,7 @@ export function Page({
     );
   }
 
-  if (!uiState.user && !location.pathname.startsWith('/login') && !location.pathname.startsWith('/signup')) {
+  if (!uiState.user && !isUnauthenticatedPage(location.pathname)) {
     return <Navigate to="/login" />;
   }
 

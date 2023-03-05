@@ -167,6 +167,40 @@ export function SettingsFlyout({ onClose }: Props) {
     );
   }, []);
 
+  const [sendActivationLinkStatus, setSendActivationLinkStatus] = useState<AsyncData<null> | null>(null);
+  const onSendActivationLink = useCallback(() => {
+    if (sendActivationLinkStatus?.status === 'pending') {
+      return;
+    }
+
+    setSendActivationLinkStatus({ status: 'pending' });
+    axios.post(getApiUrl('/api/activation/send_link')).then(
+      () => {
+        setSendActivationLinkStatus({ status: 'succeeded', data: null });
+        addToast({
+          id: 'send-activation-link',
+          color: 'success',
+          title: 'Activation link sent',
+          text: <>Activation link on its way to your email. If you don't see it soon, please check your spam folder.</>,
+        });
+
+        refreshUiState();
+      },
+      (err: AxiosError<{ message: string }>) => {
+        setSendActivationLinkStatus({
+          status: 'failed',
+          error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
+        });
+        addToast({
+          id: 'send-activation-link',
+          color: 'danger',
+          title: 'Failed to send activation link',
+          text: <>We were unable to send activation link, please try again later.</>,
+        });
+      },
+    );
+  }, []);
+
   const changeInProgress =
     removeCredentialsStatus?.status === 'pending' ||
     updatePasswordStatus?.status === 'pending' ||
@@ -269,8 +303,19 @@ export function SettingsFlyout({ onClose }: Props) {
         </EuiDescribedFormGroup>
         <EuiDescribedFormGroup title={<h3>Account</h3>} description={'Manage your Secutils.dev account'}>
           {uiState.user?.activated ? null : (
-            <EuiFormRow fullWidth isDisabled={true} title={'The action is not supported yet'}>
-              <EuiButton fullWidth>Send activation link</EuiButton>
+            <EuiFormRow
+              fullWidth
+              isDisabled={sendActivationLinkStatus?.status === 'pending'}
+              title={'Resend account activation link'}
+            >
+              <EuiButton
+                fullWidth
+                disabled={sendActivationLinkStatus?.status === 'pending'}
+                isLoading={sendActivationLinkStatus?.status === 'pending'}
+                onClick={onSendActivationLink}
+              >
+                Send activation link
+              </EuiButton>
             </EuiFormRow>
           )}
           <EuiFormRow fullWidth>

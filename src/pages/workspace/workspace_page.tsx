@@ -55,7 +55,7 @@ export function WorkspacePage() {
   const euiTheme = useEuiTheme();
   const navigate = useNavigate();
 
-  const { addToast, uiState, settings, setSettings } = useAppContext();
+  const { addToast, uiState, refreshUiState, settings, setSettings } = useAppContext();
   const { util: utilIdFromParam = HOME_UTIL_HANDLE, deepLink: deepLinkFromParam } = useParams<{
     util?: string;
     deepLink?: string;
@@ -165,6 +165,11 @@ export function WorkspacePage() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const onToggleSettings = useCallback(() => {
+    // Refresh UI state every time settings are opened.
+    if (!isSettingsOpen) {
+      refreshUiState();
+    }
+
     setIsAccountPopoverOpen(false);
     setIsSettingsOpen(!isSettingsOpen);
   }, [isSettingsOpen]);
