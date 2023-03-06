@@ -64,38 +64,41 @@ export function SettingsFlyout({ onClose }: Props) {
     null,
     'password' | 'passkey'
   > | null>(null);
-  const onRemoveCredentials = useCallback((credentials: 'password' | 'passkey') => {
-    if (removeCredentialsStatus?.status === 'pending') {
-      return;
-    }
+  const onRemoveCredentials = useCallback(
+    (credentials: 'password' | 'passkey') => {
+      if (removeCredentialsStatus?.status === 'pending') {
+        return;
+      }
 
-    setRemoveCredentialsStatus({ status: 'pending', state: credentials });
-    axios.delete(getApiUrl(`/api/credentials/${credentials}`)).then(
-      () => {
-        setRemoveCredentialsStatus({ status: 'succeeded', data: null });
+      setRemoveCredentialsStatus({ status: 'pending', state: credentials });
+      axios.delete(getApiUrl(`/api/credentials/${credentials}`)).then(
+        () => {
+          setRemoveCredentialsStatus({ status: 'succeeded', data: null });
 
-        addToast({
-          id: 'remove-credentials',
-          color: 'success',
-          title: `${credentials === 'password' ? 'Password' : 'Passkey'} has been removed.`,
-        });
+          addToast({
+            id: 'remove-credentials',
+            color: 'success',
+            title: `${credentials === 'password' ? 'Password' : 'Passkey'} has been removed.`,
+          });
 
-        refreshUiState();
-      },
-      (err: AxiosError<{ message: string }>) => {
-        setRemoveCredentialsStatus({
-          status: 'failed',
-          error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
-        });
-        addToast({
-          id: 'remove-credentials',
-          color: 'danger',
-          title: `Failed to remove ${credentials}`,
-          text: <>We were unable to delete your ${credentials}, please try again later.</>,
-        });
-      },
-    );
-  }, []);
+          refreshUiState();
+        },
+        (err: AxiosError<{ message: string }>) => {
+          setRemoveCredentialsStatus({
+            status: 'failed',
+            error: err.response?.data?.message ?? err.response?.data?.toString() ?? err.message,
+          });
+          addToast({
+            id: 'remove-credentials',
+            color: 'danger',
+            title: `Failed to remove ${credentials}`,
+            text: <>We were unable to delete your ${credentials}, please try again later.</>,
+          });
+        },
+      );
+    },
+    [refreshUiState],
+  );
 
   const [updatePasswordStatus, setUpdatePasswordStatus] = useState<AsyncData<null> | null>(null);
   const onUpdatePassword = useCallback(() => {
@@ -131,7 +134,7 @@ export function SettingsFlyout({ onClose }: Props) {
         });
       },
     );
-  }, [password, repeatPassword]);
+  }, [password, repeatPassword, refreshUiState]);
 
   const [updatePasskeyStatus, setUpdatePasskeyStatus] = useState<AsyncData<null> | null>(null);
   const onUpdatePasskey = useCallback(() => {
@@ -165,7 +168,7 @@ export function SettingsFlyout({ onClose }: Props) {
         });
       },
     );
-  }, []);
+  }, [refreshUiState]);
 
   const [sendActivationLinkStatus, setSendActivationLinkStatus] = useState<AsyncData<null> | null>(null);
   const onSendActivationLink = useCallback(() => {
@@ -199,7 +202,7 @@ export function SettingsFlyout({ onClose }: Props) {
         });
       },
     );
-  }, []);
+  }, [refreshUiState]);
 
   const changeInProgress =
     removeCredentialsStatus?.status === 'pending' ||
@@ -319,7 +322,12 @@ export function SettingsFlyout({ onClose }: Props) {
             </EuiFormRow>
           )}
           <EuiFormRow fullWidth>
-            <EuiButton color={'danger'} fullWidth isDisabled={true} title={'The action is not supported yet'}>
+            <EuiButton
+              color={'danger'}
+              fullWidth
+              isDisabled={true}
+              title={'The action is not supported yet. Please, contact us instead.'}
+            >
               Delete account
             </EuiButton>
           </EuiFormRow>
@@ -339,7 +347,7 @@ export function SettingsFlyout({ onClose }: Props) {
       confirmButtonText="Remove"
       buttonColor="danger"
     >
-      You will not be able to login with {isRemoveCredentialsModalVisible.credentials} anymore.
+      You will not be able to sign in with {isRemoveCredentialsModalVisible.credentials} anymore.
     </EuiConfirmModal>
   ) : null;
 

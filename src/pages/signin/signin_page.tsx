@@ -1,28 +1,28 @@
 import {
   EuiButton,
+  EuiButtonEmpty,
   EuiFieldText,
   EuiForm,
   EuiFormRow,
   EuiHorizontalRule,
-  EuiLink,
   EuiPanel,
-  EuiText,
 } from '@elastic/eui';
 import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
+import { ResetCredentialsModal } from './reset_credentials_modal';
 import { useAppContext, usePageMeta } from '../../hooks';
 import type { AsyncData } from '../../model';
 import { getApiUrl } from '../../model';
 import { getErrorMessage, isClientError } from '../../model/errors';
-import { loginWithPasskey } from '../../model/webauthn';
+import { signinWithPasskey } from '../../model/webauthn';
 import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';
 
-export function LoginPage() {
-  usePageMeta('Login');
+export function SigninPage() {
+  usePageMeta('Sign-in');
 
   const navigate = useNavigate();
   const { uiState, refreshUiState, addToast } = useAppContext();
@@ -39,60 +39,27 @@ export function LoginPage() {
 
   const [isPasskeySupported] = useState<boolean>(isWebAuthnSupported());
 
-  const [loginStatus, setLoginStatus] = useState<AsyncData<null, { isPasskey: boolean }> | null>(null);
-  const onLogin: MouseEventHandler<HTMLButtonElement> = useCallback(
+  const [signinStatus, setSigninStatus] = useState<AsyncData<null, { isPasskey: boolean }> | null>(null);
+  const onSignin: MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
       e.preventDefault();
 
-      if (loginStatus?.status === 'pending') {
+      if (signinStatus?.status === 'pending') {
         return;
       }
 
-      setLoginStatus({ status: 'pending', state: { isPasskey: false } });
-      axios.post(getApiUrl('/api/login'), { email, password }).then(refreshUiState, (err: Error) => {
+      setSigninStatus({ status: 'pending', state: { isPasskey: false } });
+      axios.post(getApiUrl('/api/signin'), { email, password }).then(refreshUiState, (err: Error) => {
         const originalErrorMessage = getErrorMessage(err);
-        setLoginStatus({
+        setSigninStatus({
           status: 'failed',
           error: originalErrorMessage,
         });
 
         addToast({
-          id: 'login-password',
+          id: 'signin-password',
           color: 'danger',
-          title: 'Failed to login',
-          text: (
-            <>
-              {isClientError(err)
-                ? originalErrorMessage
-                : 'We were unable to log you in, please try again later or contact us.'}
-            </>
-          ),
-        });
-      });
-    },
-    [email, password, loginStatus],
-  );
-
-  const onLoginWithPasskey: MouseEventHandler<HTMLButtonElement> = useCallback(
-    (e) => {
-      e.preventDefault();
-
-      if (loginStatus?.status === 'pending') {
-        return;
-      }
-
-      setLoginStatus({ status: 'pending', state: { isPasskey: true } });
-      loginWithPasskey(email).then(refreshUiState, (err: Error) => {
-        const originalErrorMessage = getErrorMessage(err);
-        setLoginStatus({
-          status: 'failed',
-          error: originalErrorMessage,
-        });
-
-        addToast({
-          id: 'login-passkey',
-          color: 'danger',
-          title: 'Failed to log in with a passkey',
+          title: 'Failed to sign in',
           text: (
             <>
               {isClientError(err)
@@ -103,8 +70,50 @@ export function LoginPage() {
         });
       });
     },
-    [email, loginStatus],
+    [email, password, signinStatus, refreshUiState],
   );
+
+  const onSigninWithPasskey: MouseEventHandler<HTMLButtonElement> = useCallback(
+    (e) => {
+      e.preventDefault();
+
+      if (signinStatus?.status === 'pending') {
+        return;
+      }
+
+      setSigninStatus({ status: 'pending', state: { isPasskey: true } });
+      signinWithPasskey(email).then(refreshUiState, (err: Error) => {
+        const originalErrorMessage = getErrorMessage(err);
+        setSigninStatus({
+          status: 'failed',
+          error: originalErrorMessage,
+        });
+
+        addToast({
+          id: 'signin-passkey',
+          color: 'danger',
+          title: 'Failed to sign in with a passkey',
+          text: (
+            <>
+              {isClientError(err)
+                ? originalErrorMessage
+                : 'We were unable to sign you in, please try again later or contact us.'}
+            </>
+          ),
+        });
+      });
+    },
+    [email, signinStatus, refreshUiState],
+  );
+
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+  const onToggleResetPasswordModal = useCallback(() => {
+    setIsResetPasswordModalOpen((isOpen) => !isOpen);
+  }, []);
+
+  const resetPasswordModal = isResetPasswordModalOpen ? (
+    <ResetCredentialsModal onClose={onToggleResetPasswordModal} email={email} />
+  ) : null;
 
   if (uiState.user) {
     return <Navigate to="/ws" />;
@@ -113,14 +122,14 @@ export function LoginPage() {
   return (
     <Page contentAlignment={'center'}>
       <EuiPanel>
-        <EuiForm id="login-form" component="form">
+        <EuiForm id="signin-form" component="form" className="signin-form">
           <EuiFormRow>
             <EuiFieldText
               placeholder="Email"
               value={email}
-              autoComplete={'username webauthn'}
+              autoComplete={'email'}
               type={'email'}
-              disabled={loginStatus?.status === 'pending'}
+              disabled={signinStatus?.status === 'pending'}
               onChange={onEmailChange}
             />
           </EuiFormRow>
@@ -129,62 +138,72 @@ export function LoginPage() {
               placeholder="Password"
               value={password}
               type={'password'}
-              disabled={loginStatus?.status === 'pending'}
+              disabled={signinStatus?.status === 'pending'}
               onChange={onPasswordChange}
             />
           </EuiFormRow>
           <EuiFormRow>
             <EuiButton
               type="submit"
-              form="login-form"
+              form="signin-form"
               fill
               fullWidth
-              onClick={onLogin}
-              isLoading={loginStatus?.status === 'pending' && loginStatus?.state?.isPasskey !== true}
+              onClick={onSignin}
+              isLoading={signinStatus?.status === 'pending' && signinStatus?.state?.isPasskey !== true}
               isDisabled={
                 email.trim().length === 0 ||
                 email.includes(' ') ||
                 !email.includes('@') ||
                 password.trim().length === 0 ||
-                loginStatus?.status === 'pending'
+                signinStatus?.status === 'pending'
               }
             >
-              Log in
+              Sign in
             </EuiButton>
           </EuiFormRow>
           {isPasskeySupported ? (
             <>
               <EuiFormRow>
-                <EuiHorizontalRule size={'half'} margin="m" />
+                <EuiHorizontalRule size={'half'} margin="xs" />
               </EuiFormRow>
               <EuiFormRow>
                 <EuiButton
                   type="submit"
-                  form="login-form"
+                  form="signin-form"
                   fill
                   fullWidth
-                  onClick={onLoginWithPasskey}
-                  isLoading={loginStatus?.status === 'pending' && loginStatus?.state?.isPasskey === true}
-                  isDisabled={email.trim().length === 0 || loginStatus?.status === 'pending'}
+                  onClick={onSigninWithPasskey}
+                  isLoading={signinStatus?.status === 'pending' && signinStatus?.state?.isPasskey === true}
+                  isDisabled={email.trim().length === 0 || signinStatus?.status === 'pending'}
                 >
-                  Log in with passkey
+                  Sign in with passkey
                 </EuiButton>
               </EuiFormRow>
             </>
           ) : null}
-          <EuiFormRow>
-            <EuiLink
-              className="eui-textCenter"
-              href="/signup"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/signup');
-              }}
-            >
-              <EuiText size="s">Don't have an account?</EuiText>
-            </EuiLink>
+
+          <EuiFormRow className="eui-textCenter">
+            <>
+              <EuiButtonEmpty
+                size={'xs'}
+                onClick={() => {
+                  navigate('/signup');
+                }}
+              >
+                Create account
+              </EuiButtonEmpty>
+              <EuiButtonEmpty
+                size={'xs'}
+                onClick={() => {
+                  setIsResetPasswordModalOpen(true);
+                }}
+              >
+                Forgot password?
+              </EuiButtonEmpty>
+            </>
           </EuiFormRow>
         </EuiForm>
+        {resetPasswordModal}
       </EuiPanel>
     </Page>
   );

@@ -76,7 +76,7 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
 
         addToast({
           id: `failed-update-certificate-${name}`,
-          iconType: 'alert',
+          iconType: 'warning',
           color: 'danger',
           title: `Unable to save "${name}" self-signed certificate template, please try again later`,
         });

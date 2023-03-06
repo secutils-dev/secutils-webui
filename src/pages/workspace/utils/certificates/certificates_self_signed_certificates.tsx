@@ -146,7 +146,7 @@ export default function CertificatesSelfSignedCertificates() {
         <EuiCallOut
           title="Don't use self-signed certificates in production environments"
           color="warning"
-          iconType="alert"
+          iconType="warning"
         >
           <p>
             Self-signed certificates generated through Secutils.dev are intended for use in development and testing

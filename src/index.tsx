@@ -9,7 +9,6 @@ import './index.css';
 
 // eslint-disable-next-line
 import { appendIconComponentCache } from '@elastic/eui/es/components/icon/icon';
-import { icon as EuiIconAlert } from '@elastic/eui/es/components/icon/assets/alert';
 import { icon as EuiIconSecurityApp } from '@elastic/eui/es/components/icon/assets/app_security';
 import { icon as EuiIconApps } from '@elastic/eui/es/components/icon/assets/apps';
 import { icon as EuiIconArrowDown } from '@elastic/eui/es/components/icon/assets/arrow_down';
@@ -66,18 +65,19 @@ import { icon as EuiIconTableDensityNormal } from '@elastic/eui/es/components/ic
 import { icon as EuiIconTokenNumber } from '@elastic/eui/es/components/icon/assets/tokenNumber';
 import { icon as EuiIconTokenString } from '@elastic/eui/es/components/icon/assets/tokenString';
 import { icon as EuiIconUser } from '@elastic/eui/es/components/icon/assets/user';
+import { icon as EuiIconWarning } from '@elastic/eui/es/components/icon/assets/warning';
 /* eslint-enable */
 
 import { AppContainer } from './app_container';
 import { PageLoadingState } from './components';
 import { WorkspacePage } from './pages';
 
-const LoginPage = lazy(() => import('./pages/login'));
+const SigninPage = lazy(() => import('./pages/signin'));
 const SignupPage = lazy(() => import('./pages/signup'));
 const ActivatePage = lazy(() => import('./pages/activate'));
+const ResetCredentialsPage = lazy(() => import('./pages/reset_credentials'));
 
 appendIconComponentCache({
-  alert: EuiIconAlert,
   apps: EuiIconApps,
   arrowDown: EuiIconArrowDown,
   arrowLeft: EuiIconArrowLeft,
@@ -134,6 +134,7 @@ appendIconComponentCache({
   tokenNumber: EuiIconTokenNumber,
   tokenString: EuiIconTokenString,
   user: EuiIconUser,
+  warning: EuiIconWarning,
 });
 
 const IndexPage = () => {
@@ -146,10 +147,10 @@ const IndexPage = () => {
           <Route path="ws" element={<WorkspacePage />} />
           <Route path="ws/:util/:deepLink?" element={<WorkspacePage />} />
           <Route
-            path="login"
+            path="signin"
             element={
               <Suspense fallback={<PageLoadingState />}>
-                <LoginPage />
+                <SigninPage />
               </Suspense>
             }
           />
@@ -166,6 +167,14 @@ const IndexPage = () => {
             element={
               <Suspense fallback={<PageLoadingState />}>
                 <ActivatePage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="reset_credentials"
+            element={
+              <Suspense fallback={<PageLoadingState />}>
+                <ResetCredentialsPage />
               </Suspense>
             }
           />

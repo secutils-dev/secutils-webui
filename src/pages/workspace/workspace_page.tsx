@@ -172,7 +172,7 @@ export function WorkspacePage() {
 
     setIsAccountPopoverOpen(false);
     setIsSettingsOpen(!isSettingsOpen);
-  }, [isSettingsOpen]);
+  }, [isSettingsOpen, refreshUiState]);
 
   const onChangeShowOnlyFavorites = (showOnlyFavoritesValue: boolean) => {
     setSettings({ [USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES]: showOnlyFavoritesValue || null });
@@ -222,15 +222,15 @@ export function WorkspacePage() {
   const settingsFlyout = isSettingsOpen ? <SettingsFlyout onClose={onToggleSettings} /> : null;
 
   const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState<boolean>(false);
-  const onLogout = useCallback(() => {
+  const onSignout = useCallback(() => {
     setIsAccountPopoverOpen(false);
-    axios.post(getApiUrl('/api/logout')).then(
+    axios.post(getApiUrl('/api/signout')).then(
       () => {
         window.location.replace('/');
         setTimeout(() => window.location.reload(), 500);
       },
       () => {
-        addToast({ id: 'logout-error', title: 'Failed to logout' });
+        addToast({ id: 'signout-error', title: 'Failed to sign out' });
       },
     );
   }, []);
@@ -297,8 +297,8 @@ export function WorkspacePage() {
               <EuiContextMenuItem key="settings" icon="gear" onClick={onToggleSettings}>
                 Settings
               </EuiContextMenuItem>,
-              <EuiContextMenuItem key="logout" icon="exit" onClick={onLogout}>
-                Logout
+              <EuiContextMenuItem key="signout" icon="exit" onClick={onSignout}>
+                Sign out
               </EuiContextMenuItem>,
             ]}
           />

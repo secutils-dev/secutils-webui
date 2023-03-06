@@ -165,10 +165,10 @@ export async function signupWithPasskey(email: string) {
   );
 }
 
-export async function loginWithPasskey(email: string) {
+export async function signinWithPasskey(email: string) {
   // First, retrieve a registration challenge.
   const { data: challenge } = await axios.post<{ publicKey: SerializedPublicKeyCredentialRequestOptions }>(
-    getApiUrl('/api/webauthn/login/start'),
+    getApiUrl('/api/webauthn/signin/start'),
     { email },
   );
 
@@ -178,5 +178,5 @@ export async function loginWithPasskey(email: string) {
     throw new Error('Browser could not get credentials.');
   }
 
-  await axios.post(getApiUrl('/api/webauthn/login/finish'), serializeCredential(credentials as PublicKeyCredential));
+  await axios.post(getApiUrl('/api/webauthn/signin/finish'), serializeCredential(credentials as PublicKeyCredential));
 }

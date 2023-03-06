@@ -66,7 +66,7 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
       </EuiFormRow>
     ) : sendingStatus?.status === 'failed' ? (
       <EuiFormRow>
-        <EuiCallOut size="s" title="An error occurred, please try again later" color="danger" iconType="alert" />
+        <EuiCallOut size="s" title="An error occurred, please try again later" color="danger" iconType="warning" />
       </EuiFormRow>
     ) : undefined;
 

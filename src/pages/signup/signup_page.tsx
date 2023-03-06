@@ -1,13 +1,12 @@
 import {
   EuiButton,
+  EuiButtonEmpty,
   euiCanAnimate,
   EuiFieldText,
   EuiForm,
   EuiFormRow,
   EuiHorizontalRule,
-  EuiLink,
   EuiPanel,
-  EuiText,
   useEuiTheme,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
@@ -30,7 +29,7 @@ enum FormState {
 }
 
 export function SignupPage() {
-  usePageMeta('Signup');
+  usePageMeta('Sign-up');
 
   const navigate = useNavigate();
   const { uiState, refreshUiState, addToast } = useAppContext();
@@ -75,7 +74,7 @@ export function SignupPage() {
         addToast({
           id: 'signup-password',
           color: 'danger',
-          title: 'Failed to signup',
+          title: 'Failed to sign up',
           text: (
             <>
               {isClientError(err)
@@ -86,7 +85,7 @@ export function SignupPage() {
         });
       });
     },
-    [email, password, signupStatus],
+    [email, password, signupStatus, refreshUiState],
   );
 
   const onContinueWithPassword: MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
@@ -114,7 +113,7 @@ export function SignupPage() {
         addToast({
           id: 'signup-passkey',
           color: 'danger',
-          title: 'Failed to signup with a passkey',
+          title: 'Failed to sign up with a passkey',
           text: (
             <>
               {isClientError(err)
@@ -125,7 +124,7 @@ export function SignupPage() {
         });
       });
     },
-    [email, signupStatus],
+    [email, signupStatus, refreshUiState],
   );
 
   if (uiState.user) {
@@ -158,7 +157,7 @@ export function SignupPage() {
           signupStatus?.status === 'pending'
         }
       >
-        Signup
+        Sign up
       </EuiButton>
     );
 
@@ -175,7 +174,7 @@ export function SignupPage() {
   return (
     <Page contentAlignment={'center'}>
       <EuiPanel>
-        <EuiForm id="signup-form" component="form" autoComplete="off" fullWidth>
+        <EuiForm id="signup-form" component="form" autoComplete="off" fullWidth className="signup-form">
           <EuiFormRow>
             <EuiFieldText
               placeholder="Email"
@@ -202,6 +201,7 @@ export function SignupPage() {
               value={repeatPassword}
               type={'password'}
               autoComplete="new-password"
+              isInvalid={!!repeatPassword && !!password && repeatPassword !== password}
               disabled={signupStatus?.status === 'pending'}
               onChange={onRepeatPasswordChange}
             />
@@ -222,22 +222,20 @@ export function SignupPage() {
                   isLoading={signupStatus?.status === 'pending' && signupStatus?.state?.isPasskey === true}
                   isDisabled={email.trim().length === 0 || signupStatus?.status === 'pending'}
                 >
-                  Signup with passkey
+                  Sign up with passkey
                 </EuiButton>
               </EuiFormRow>
             </>
           ) : null}
-          <EuiFormRow>
-            <EuiLink
-              className="eui-textCenter"
-              href="/login"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/login');
+          <EuiFormRow className="eui-textCenter">
+            <EuiButtonEmpty
+              size={'xs'}
+              onClick={() => {
+                navigate('/signin');
               }}
             >
-              <EuiText size="s">Have an account already?</EuiText>
-            </EuiLink>
+              Sign in instead
+            </EuiButtonEmpty>
           </EuiFormRow>
         </EuiForm>
       </EuiPanel>

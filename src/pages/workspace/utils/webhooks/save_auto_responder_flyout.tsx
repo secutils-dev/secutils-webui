@@ -138,7 +138,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
 
         addToast({
           id: `failed-update-responder-${name}`,
-          iconType: 'alert',
+          iconType: 'warning',
           color: 'danger',
           title: `Unable to save "${name}" responder, please try again later`,
         });

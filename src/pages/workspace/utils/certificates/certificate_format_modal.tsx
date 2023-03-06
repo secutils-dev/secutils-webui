@@ -100,7 +100,7 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
       </EuiFormRow>
     ) : generatingStatus?.status === 'failed' ? (
       <EuiFormRow>
-        <EuiCallOut size="s" title="An error occurred, please try again later" color="danger" iconType="alert" />
+        <EuiCallOut size="s" title="An error occurred, please try again later" color="danger" iconType="warning" />
       </EuiFormRow>
     ) : undefined;
 

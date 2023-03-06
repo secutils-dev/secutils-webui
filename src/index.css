@@ -13,3 +13,7 @@
 .euiOverlayMask[data-relative-to-header='below'] {
     top: 0;
 }
+
+.signin-form, .signup-form, .password-form {
+    width: 280px;
+}

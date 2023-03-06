@@ -42,7 +42,7 @@ export interface PageToast {
 }
 
 function isUnauthenticatedPage(pathname: string) {
-  return ['/login', '/signup', '/activate'].some((unauthenticatedPagePathname) =>
+  return ['/signin', '/signup', '/activate', '/reset_credentials'].some((unauthenticatedPagePathname) =>
     pathname.startsWith(unauthenticatedPagePathname),
   );
 }
@@ -91,7 +91,7 @@ export function Page({
   }
 
   if (!uiState.user && !isUnauthenticatedPage(location.pathname)) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/signin" />;
   }
 
   const header = pageTitle ? <PageHeader title={pageTitle} /> : null;

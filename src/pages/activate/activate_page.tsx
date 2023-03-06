@@ -42,16 +42,16 @@ export function ActivatePage() {
     );
   }, [location.search]);
 
-  const loginLink = (
+  const signinLink = (
     <p>
       <EuiLink
-        href={'/login'}
+        href={'/signin'}
         onClick={(e) => {
           e.preventDefault();
-          navigate('/login');
+          navigate('/signin');
         }}
       >
-        Go to the login page
+        Sign in
       </EuiLink>
     </p>
   );
@@ -60,12 +60,12 @@ export function ActivatePage() {
     activationStatus.status === 'pending' ? (
       <PageLoadingState title={'Activating your account…'} />
     ) : activationStatus.status === 'failed' ? (
-      <PageErrorState title="Cannot activate account" content={<p>{activationStatus.error}</p>} action={loginLink} />
+      <PageErrorState title="Cannot activate account" content={<p>{activationStatus.error}</p>} action={signinLink} />
     ) : (
       <PageSuccessState
         title="Successfully activated account"
         content={<p>Your account has been successfully activated!</p>}
-        action={loginLink}
+        action={signinLink}
       />
     );
 
