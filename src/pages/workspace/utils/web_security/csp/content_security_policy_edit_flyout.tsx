@@ -1,3 +1,6 @@
+import type { ChangeEvent } from 'react';
+import { useCallback, useState } from 'react';
+
 import {
   EuiAccordion,
   EuiDescribedFormGroup,
@@ -7,8 +10,6 @@ import {
   EuiLink,
   EuiSpacer,
 } from '@elastic/eui';
-import type { ChangeEvent } from 'react';
-import { useCallback, useState } from 'react';
 
 import type { ContentSecurityPolicy, SerializedContentSecurityPolicies } from './content_security_policy';
 import {

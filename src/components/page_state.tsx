@@ -1,6 +1,7 @@
+import type { ReactNode } from 'react';
+
 import type { BACKGROUND_COLORS } from '@elastic/eui';
 import { EuiEmptyPrompt, EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
-import type { ReactNode } from 'react';
 
 export interface PageStateProps {
   title: string;

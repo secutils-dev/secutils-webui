@@ -1,3 +1,6 @@
+import type { ChangeEvent, MouseEventHandler } from 'react';
+import { useCallback, useState } from 'react';
+
 import {
   EuiButton,
   EuiButtonEmpty,
@@ -14,8 +17,6 @@ import {
   EuiTitle,
 } from '@elastic/eui';
 import axios from 'axios';
-import type { ChangeEvent, MouseEventHandler } from 'react';
-import { useCallback, useState } from 'react';
 
 import type { SelfSignedCertificate } from './self_signed_certificate';
 import type { AsyncData } from '../../../../model';

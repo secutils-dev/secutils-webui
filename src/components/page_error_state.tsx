@@ -1,5 +1,6 @@
-import { EuiIcon, EuiLink } from '@elastic/eui';
 import { useCallback } from 'react';
+
+import { EuiIcon, EuiLink } from '@elastic/eui';
 
 import { PageState, type PageStateProps } from './page_state';
 

@@ -1,9 +1,10 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Outlet } from 'react-router-dom';
+
 import type { EuiThemeColorMode } from '@elastic/eui';
 import { EuiGlobalToastList, EuiProvider } from '@elastic/eui';
 import type { Toast } from '@elastic/eui/src/components/toast/global_toast_list';
 import axios from 'axios';
-import { useCallback, useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
 
 import { AppContext } from './app_context';
 import { useLocalStorage } from '../hooks';

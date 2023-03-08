@@ -1,9 +1,16 @@
 import type { ComponentType, LazyExoticComponent } from 'react';
 import { lazy } from 'react';
 
-export const HOME_UTIL_HANDLE = 'home';
+export const UTIL_HANDLES = Object.freeze({
+  home: 'home',
+  gettingStarted: 'home__getting_started',
+  whatsNew: 'home__whats_new',
+});
 
 export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType>>([
+  [UTIL_HANDLES.home, lazy(() => import('./home/home'))],
+  [UTIL_HANDLES.gettingStarted, lazy(() => import('./home/home_getting_started'))],
+  [UTIL_HANDLES.whatsNew, lazy(() => import('./home/home_whats_new'))],
   ['webhooks', lazy(() => import('./webhooks/webhooks'))],
   ['webhooks__responders', lazy(() => import('./webhooks/webhooks_responders'))],
   [
@@ -13,12 +20,16 @@ export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType
   ['web_security__csp__policies', lazy(() => import('./web_security/csp/web_security_content_security_policies'))],
 ]);
 
+export function getUtilPath(utilHandle: string) {
+  return `/ws/${utilHandle}`;
+}
+
 export function getUtilIcon(utilHandle: string, purpose: 'navigation' | 'search' = 'navigation') {
   switch (utilHandle) {
-    case HOME_UTIL_HANDLE:
+    case UTIL_HANDLES.home:
       return 'home';
-    case 'home__getting_started':
-    case 'home__whats_new':
+    case UTIL_HANDLES.gettingStarted:
+    case UTIL_HANDLES.whatsNew:
       return purpose === 'search' ? 'home' : undefined;
     case 'webhooks':
       return 'node';

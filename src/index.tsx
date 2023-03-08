@@ -1,14 +1,11 @@
 import { lazy, Suspense } from 'react';
-import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-/* eslint-disable import/no-duplicates */
-import 'regenerator-runtime/runtime';
+import { createRoot } from 'react-dom/client';
+
 import '@elastic/eui/dist/eui_theme_light.min.css';
 import './index.css';
 
-// eslint-disable-next-line
-import { appendIconComponentCache } from '@elastic/eui/es/components/icon/icon';
 import { icon as EuiIconSecurityApp } from '@elastic/eui/es/components/icon/assets/app_security';
 import { icon as EuiIconApps } from '@elastic/eui/es/components/icon/assets/apps';
 import { icon as EuiIconArrowDown } from '@elastic/eui/es/components/icon/assets/arrow_down';
@@ -20,11 +17,13 @@ import { icon as EuiIconArrowStart } from '@elastic/eui/es/components/icon/asset
 import { icon as EuiIconBoxesHorizontal } from '@elastic/eui/es/components/icon/assets/boxes_horizontal';
 import { icon as EuiIconCalendar } from '@elastic/eui/es/components/icon/assets/calendar';
 import { icon as EuiIconCheck } from '@elastic/eui/es/components/icon/assets/check';
+import { icon as EuiIconCheer } from '@elastic/eui/es/components/icon/assets/cheer';
 import { icon as EuiIconClock } from '@elastic/eui/es/components/icon/assets/clock';
 import { icon as EuiIconCopy } from '@elastic/eui/es/components/icon/assets/copy';
 import { icon as EuiIconCopyClipboard } from '@elastic/eui/es/components/icon/assets/copy_clipboard';
 import { icon as EuiIconCross } from '@elastic/eui/es/components/icon/assets/cross';
 import { icon as EuiIconCut } from '@elastic/eui/es/components/icon/assets/cut';
+import { icon as EuiIconDiscuss } from '@elastic/eui/es/components/icon/assets/discuss';
 import { icon as EuiIconDot } from '@elastic/eui/es/components/icon/assets/dot';
 import { icon as EuiIconDownload } from '@elastic/eui/es/components/icon/assets/download';
 import { icon as EuiIconEmpty } from '@elastic/eui/es/components/icon/assets/empty';
@@ -64,9 +63,10 @@ import { icon as EuiIconTableDensityExpanded } from '@elastic/eui/es/components/
 import { icon as EuiIconTableDensityNormal } from '@elastic/eui/es/components/icon/assets/table_density_normal';
 import { icon as EuiIconTokenNumber } from '@elastic/eui/es/components/icon/assets/tokenNumber';
 import { icon as EuiIconTokenString } from '@elastic/eui/es/components/icon/assets/tokenString';
+import { icon as EuiIconTraining } from '@elastic/eui/es/components/icon/assets/training';
 import { icon as EuiIconUser } from '@elastic/eui/es/components/icon/assets/user';
 import { icon as EuiIconWarning } from '@elastic/eui/es/components/icon/assets/warning';
-/* eslint-enable */
+import { appendIconComponentCache } from '@elastic/eui/es/components/icon/icon';
 
 import { AppContainer } from './app_container';
 import { PageLoadingState } from './components';
@@ -88,11 +88,13 @@ appendIconComponentCache({
   boxesHorizontal: EuiIconBoxesHorizontal,
   calendar: EuiIconCalendar,
   check: EuiIconCheck,
+  cheer: EuiIconCheer,
   clock: EuiIconClock,
   copy: EuiIconCopy,
   copyClipboard: EuiIconCopyClipboard,
   cross: EuiIconCross,
   cut: EuiIconCut,
+  discuss: EuiIconDiscuss,
   dot: EuiIconDot,
   download: EuiIconDownload,
   empty: EuiIconEmpty,
@@ -133,6 +135,7 @@ appendIconComponentCache({
   tableDensityNormal: EuiIconTableDensityNormal,
   tokenNumber: EuiIconTokenNumber,
   tokenString: EuiIconTokenString,
+  training: EuiIconTraining,
   user: EuiIconUser,
   warning: EuiIconWarning,
 });

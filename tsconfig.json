@@ -13,10 +13,7 @@
       "es2015",
       "es2019"
     ],
-    "paths": {
-      "@elastic/eui/es/components/icon/*": ["./src/assets.d.ts"],
-      "@elastic/eui/dist/*": ["./src/assets.d.ts"]
-    }
+    "typeRoots": ["./src/assets.d.ts"]
   },
   "include": [
     "src/**/*"

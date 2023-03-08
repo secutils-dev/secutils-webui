@@ -1,3 +1,6 @@
+import { useCallback, useState } from 'react';
+import type { ChangeEvent } from 'react';
+
 import type { EuiThemeColorMode } from '@elastic/eui';
 import {
   EuiButton,
@@ -18,8 +21,6 @@ import {
 } from '@elastic/eui';
 import type { AxiosError } from 'axios';
 import axios from 'axios';
-import type { ChangeEvent } from 'react';
-import { useCallback, useState } from 'react';
 
 import { useAppContext } from '../hooks';
 import type { AsyncData } from '../model';

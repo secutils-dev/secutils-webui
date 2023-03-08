@@ -1,3 +1,7 @@
+import type { KeyboardEvent } from 'react';
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import {
   EuiBadge,
@@ -8,9 +12,6 @@ import {
   useIsWithinMaxBreakpoint,
 } from '@elastic/eui';
 import axios from 'axios';
-import type { KeyboardEvent } from 'react';
-import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import type { AsyncData, SearchItem, SerializedSearchItem } from '../../../model';
 import { deserializeSearchItem, getApiUrl } from '../../../model';

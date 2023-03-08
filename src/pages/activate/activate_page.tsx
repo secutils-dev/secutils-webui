@@ -1,7 +1,8 @@
-import { EuiLink } from '@elastic/eui';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+
+import { EuiLink } from '@elastic/eui';
+import axios from 'axios';
 
 import { PageErrorState, PageLoadingState, PageSuccessState } from '../../components';
 import { usePageMeta } from '../../hooks';

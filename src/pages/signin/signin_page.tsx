@@ -1,3 +1,7 @@
+import type { ChangeEvent, MouseEventHandler } from 'react';
+import { useCallback, useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+
 import {
   EuiButton,
   EuiButtonEmpty,
@@ -8,9 +12,6 @@ import {
   EuiPanel,
 } from '@elastic/eui';
 import axios from 'axios';
-import type { ChangeEvent, MouseEventHandler } from 'react';
-import { useCallback, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
 
 import { ResetCredentialsModal } from './reset_credentials_modal';
 import { useAppContext, usePageMeta } from '../../hooks';

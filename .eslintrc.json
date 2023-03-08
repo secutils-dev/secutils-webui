@@ -27,12 +27,24 @@
     "import/order": [
       "error", {
         "groups": [
-          "unknown",
-          ["builtin", "external"],
+          "builtin",
+          "external",
           "internal",
           ["parent", "sibling", "index"]
         ],
-        "pathGroupsExcludedImportTypes": [],
+        "pathGroups": [
+          {
+            "pattern": "react*",
+            "group": "external",
+            "position": "before"
+          },
+          {
+            "pattern": "react-dom/*",
+            "group": "external",
+            "position": "before"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["react*"],
         "alphabetize": { "order": "asc", "caseInsensitive": true },
         "newlines-between": "always"
       }

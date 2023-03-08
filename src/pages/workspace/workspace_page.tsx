@@ -1,3 +1,7 @@
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
 import type { EuiSideNavItemType } from '@elastic/eui';
 import {
   EuiButtonIcon,
@@ -14,12 +18,9 @@ import {
 import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
 import { css } from '@emotion/react';
 import axios from 'axios';
-import type { ReactNode } from 'react';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 
 import { SiteSearchBar } from './components/site_search_bar';
-import { getUtilIcon, HOME_UTIL_HANDLE, UtilsComponents } from './utils';
+import { getUtilIcon, UTIL_HANDLES, UtilsComponents } from './utils';
 import { WorkspaceContext } from './workspace_context';
 import { SettingsFlyout } from '../../app_container';
 import { PageLoadingState } from '../../components';
@@ -36,7 +37,7 @@ const DEFAULT_COMPONENT = lazy(() => import('../../components/page_under_constru
 
 function showDisplayUtil(util: Util, favorites: Set<string>) {
   // Home utility is always enabled.
-  if (util.handle === HOME_UTIL_HANDLE || favorites.has(util.handle)) {
+  if (util.handle === UTIL_HANDLES.home || favorites.has(util.handle)) {
     return true;
   }
 
@@ -56,7 +57,7 @@ export function WorkspacePage() {
   const navigate = useNavigate();
 
   const { addToast, uiState, refreshUiState, settings, setSettings } = useAppContext();
-  const { util: utilIdFromParam = HOME_UTIL_HANDLE, deepLink: deepLinkFromParam } = useParams<{
+  const { util: utilIdFromParam = UTIL_HANDLES.home, deepLink: deepLinkFromParam } = useParams<{
     util?: string;
     deepLink?: string;
   }>();

@@ -1,7 +1,8 @@
-import { EuiDescribedFormGroup, EuiFieldText, EuiForm, EuiFormRow, EuiSelect } from '@elastic/eui';
-import moment from 'moment/moment';
 import type { ChangeEvent } from 'react';
 import { useCallback, useState } from 'react';
+
+import { EuiDescribedFormGroup, EuiFieldText, EuiForm, EuiFormRow, EuiSelect } from '@elastic/eui';
+import moment from 'moment/moment';
 
 import { CertificateLifetimeCalendar } from './certificate_lifetime_calendar';
 import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';

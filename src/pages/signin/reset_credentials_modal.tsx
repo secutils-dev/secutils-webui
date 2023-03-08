@@ -1,3 +1,6 @@
+import type { ChangeEvent, MouseEventHandler } from 'react';
+import { useCallback, useState } from 'react';
+
 import {
   EuiButton,
   EuiButtonEmpty,
@@ -12,8 +15,6 @@ import {
   EuiTitle,
 } from '@elastic/eui';
 import axios from 'axios';
-import type { ChangeEvent, MouseEventHandler } from 'react';
-import { useCallback, useState } from 'react';
 
 import { useAppContext } from '../../hooks';
 import type { AsyncData } from '../../model';

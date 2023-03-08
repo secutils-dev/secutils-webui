@@ -1,3 +1,6 @@
+import type { ChangeEvent } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+
 import {
   EuiComboBox,
   EuiDescribedFormGroup,
@@ -8,8 +11,6 @@ import {
   EuiSelect,
   EuiTextArea,
 } from '@elastic/eui';
-import type { ChangeEvent } from 'react';
-import { useCallback, useMemo, useState } from 'react';
 
 import type { Responder, SerializedResponders } from './responder';
 import { deserializeResponders, RESPONDERS_USER_DATA_TYPE, serializeHttpMethod, serializeResponder } from './responder';

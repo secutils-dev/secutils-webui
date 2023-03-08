@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useState } from 'react';
+
 import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
@@ -9,7 +11,6 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
-import { useCallback, useEffect, useState } from 'react';
 
 import type { ContentSecurityPolicy, SerializedContentSecurityPolicies } from './content_security_policy';
 import {

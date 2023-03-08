@@ -1,3 +1,7 @@
+import type { ChangeEvent, MouseEventHandler } from 'react';
+import { useCallback, useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+
 import {
   EuiButton,
   EuiButtonEmpty,
@@ -11,9 +15,6 @@ import {
 } from '@elastic/eui';
 import { css } from '@emotion/react';
 import axios from 'axios';
-import type { ChangeEvent, MouseEventHandler } from 'react';
-import { useCallback, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
 
 import { useAppContext, usePageMeta } from '../../hooks';
 import type { AsyncData } from '../../model';

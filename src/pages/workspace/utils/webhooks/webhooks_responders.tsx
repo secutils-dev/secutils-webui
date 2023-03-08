@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
 import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
@@ -12,8 +15,6 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
-import type { ReactNode } from 'react';
-import { useCallback, useEffect, useState } from 'react';
 
 import { AutoResponderRequestsTable } from './auto_responder_requests_table';
 import type { Responder, SerializedResponders } from './responder';

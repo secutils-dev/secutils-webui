@@ -1,8 +1,9 @@
-import { EuiButton, EuiButtonEmpty, EuiFieldText, EuiForm, EuiFormRow, EuiLink, EuiPanel } from '@elastic/eui';
-import axios from 'axios';
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+
+import { EuiButton, EuiButtonEmpty, EuiFieldText, EuiForm, EuiFormRow, EuiLink, EuiPanel } from '@elastic/eui';
+import axios from 'axios';
 
 import { PageErrorState, PageSuccessState } from '../../components';
 import { useAppContext, usePageMeta } from '../../hooks';
