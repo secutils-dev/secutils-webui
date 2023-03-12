@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { createRoot } from 'react-dom/client';
 
+import 'regenerator-runtime/runtime';
 import '@elastic/eui/dist/eui_theme_light.min.css';
 import './index.css';
 
