@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <HelpPageContent>
       <EuiText size="relative">
-        <h3>Welcome</h3>
+        <h2>Welcome</h2>
         <p>
           Secutils.dev is an{' '}
           <EuiLink href="https://github.com/secutils-dev" target="_blank">
@@ -45,7 +45,7 @@ export default function Home() {
           </EuiLink>
           . If you need to contact us for anything else, feel free to do so using the "Contact Us" button.
         </p>
-        <h3>Learn and get help</h3>
+        <h2>Learn and get help</h2>
         <p>
           Whether you're a new or experienced user, these links will help you get the most out of Secutils.dev: learn
           how to use it, see what's new, and connect with other users and contributors.

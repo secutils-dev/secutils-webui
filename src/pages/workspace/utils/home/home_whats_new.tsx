@@ -17,13 +17,13 @@ export default function HomeGettingStarted() {
       >
         <EuiFlexItem>
           <EuiText size="relative">
-            <h3>
+            <h2>
               2023.03{' '}
               <EuiText size="s" color="subdued">
                 2023-03-20
               </EuiText>
-            </h3>
-            <h4>Features</h4>
+            </h2>
+            <h3>Features</h3>
             <ul>
               <li>
                 This is a new feature{' '}
@@ -32,7 +32,7 @@ export default function HomeGettingStarted() {
                 </EuiLink>
               </li>
             </ul>
-            <h4>Enhancements</h4>
+            <h3>Enhancements</h3>
             <ul>
               <li>
                 This is a new enhancement{' '}
@@ -41,7 +41,7 @@ export default function HomeGettingStarted() {
                 </EuiLink>
               </li>
             </ul>
-            <h4>Fixes</h4>
+            <h3>Fixes</h3>
             <ul>
               <li>
                 This is a fix{' '}

@@ -1,15 +1,18 @@
 import type { ReactNode } from 'react';
 
-import { EuiFlexGroup, useEuiFontSize } from '@elastic/eui';
+import { EuiFlexGroup } from '@elastic/eui';
 import { css } from '@emotion/react';
+
+import { useFontSizes } from '../hooks';
 
 export interface Props {
   children: ReactNode;
 }
 
 export default function HelpPageContent({ children }: Props) {
+  const fontSizes = useFontSizes();
   const pageStyle = css`
-    ${useEuiFontSize('l')}
+    ${fontSizes.text}
     width: 100%;
     height: 100%;
     padding: 1% 5% 0;
