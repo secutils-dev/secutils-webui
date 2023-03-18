@@ -51,6 +51,8 @@ const SIGNATURE_ALGORITHMS = new Map([
   ['ed25519', [{ value: 'ed25519', text: 'Ed25519' }]],
 ]);
 
+type CertificateType = 'ca' | 'endEntity';
+
 export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveSelfSignedCertificatesFlyoutProps) {
   const { addToast } = useWorkspaceContext();
 
@@ -62,6 +64,11 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
   const [version, setVersion] = useState<number>(certificate?.version ?? 3);
   const onVersionChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setVersion(+e.target.value);
+  }, []);
+
+  const [type, setType] = useState<CertificateType>('endEntity');
+  const onTypeChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+    setType(e.target.value as CertificateType);
   }, []);
 
   const [signatureAlgorithms, setSignatureAlgorithms] = useState(
@@ -140,6 +147,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
         organizationalUnit,
         notValidBefore,
         notValidAfter,
+        isCA: type === 'ca',
       }),
     }).then(
       (serializedCertificates) => {
@@ -179,6 +187,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     notValidBefore,
     notValidAfter,
     updatingStatus,
+    type,
   ]);
 
   return (
@@ -200,6 +209,19 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
             isDisabled={!!certificate}
           >
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
+          </EuiFormRow>
+          <EuiFormRow
+            label="Type"
+            helpText="Specifies whether the certificate can be used to sign other certificates (Certification Authority) or not."
+          >
+            <EuiSelect
+              value={type}
+              onChange={onTypeChange}
+              options={[
+                { value: 'ca', text: 'Certification Authority' },
+                { value: 'endEntity', text: 'End Entity' },
+              ]}
+            />
           </EuiFormRow>
           <EuiFormRow label="Version" helpText="Version of the certificate request or CRL.">
             <EuiSelect

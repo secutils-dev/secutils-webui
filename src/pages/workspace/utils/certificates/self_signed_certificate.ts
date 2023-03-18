@@ -15,6 +15,7 @@ export interface SerializedSelfSignedCertificate {
   nb: number;
   na: number;
   v: number;
+  ca: boolean;
 }
 
 export interface SelfSignedCertificate {
@@ -30,6 +31,7 @@ export interface SelfSignedCertificate {
   notValidBefore: number;
   notValidAfter: number;
   version: number;
+  isCA: boolean;
 }
 
 export function getDistinguishedNameString(certificate: SelfSignedCertificate) {
@@ -80,6 +82,7 @@ export function deserializeSelfSignedCertificate(
     notValidBefore: serializedCertificate.nb,
     notValidAfter: serializedCertificate.na,
     version: serializedCertificate.v,
+    isCA: serializedCertificate.ca,
   };
 
   if (serializedCertificate.cn) {
@@ -131,6 +134,7 @@ export function serializeSelfSignedCertificate(certificate: SelfSignedCertificat
     nb: certificate.notValidBefore,
     na: certificate.notValidAfter,
     v: certificate.version,
+    ca: certificate.isCA,
   };
 
   if (certificate.commonName) {
