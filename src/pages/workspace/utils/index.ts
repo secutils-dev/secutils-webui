@@ -8,6 +8,7 @@ export const UTIL_HANDLES = Object.freeze({
   webhooks: 'webhooks',
   webhooksResponders: 'webhooks__responders',
   certificates: 'certificates',
+  certificatesSelfSignedCertificates: 'certificates__self_signed_certificates',
 });
 
 export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType>>([
@@ -18,7 +19,7 @@ export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType
   [UTIL_HANDLES.webhooksResponders, lazy(() => import('./webhooks/webhooks_responders'))],
   [UTIL_HANDLES.certificates, lazy(() => import('./certificates/certificates'))],
   [
-    'certificates__self_signed_certificates',
+    UTIL_HANDLES.certificatesSelfSignedCertificates,
     lazy(() => import('./certificates/certificates_self_signed_certificates')),
   ],
   ['web_security__csp__policies', lazy(() => import('./web_security/csp/web_security_content_security_policies'))],
@@ -41,7 +42,7 @@ export function getUtilIcon(utilHandle: string, purpose: 'navigation' | 'search'
       return purpose === 'search' ? 'node' : undefined;
     case UTIL_HANDLES.certificates:
       return 'securityApp';
-    case 'certificates__self_signed_certificates':
+    case UTIL_HANDLES.certificatesSelfSignedCertificates:
       return purpose === 'search' ? 'securityApp' : undefined;
     case 'web_security':
       return 'globe';
