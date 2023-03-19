@@ -51,6 +51,14 @@ export function getDistinguishedNameString(certificate: SelfSignedCertificate) {
     .join(',');
 }
 
+export function certificateTypeString(certificate: SelfSignedCertificate) {
+  if (certificate.isCA) {
+    return 'Certification Authority';
+  }
+
+  return 'End Entity';
+}
+
 export function keyAlgorithmString(certificate: SelfSignedCertificate) {
   switch (certificate.keyAlgorithm) {
     case 'rsa':

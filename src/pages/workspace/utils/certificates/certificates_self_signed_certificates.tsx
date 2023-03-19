@@ -20,6 +20,7 @@ import { CertificateFormatModal } from './certificate_format_modal';
 import { SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
 import { SaveSelfSignedCertificatesFlyout } from './save_self_signed_certificate_flyout';
 import {
+  certificateTypeString,
   deserializeSelfSignedCertificates,
   getDistinguishedNameString,
   keyAlgorithmString,
@@ -216,6 +217,21 @@ export default function CertificatesSelfSignedCertificates() {
               textOnly: true,
               sortable: true,
               render: (_, certificate: SelfSignedCertificate) => <EuiText>{certificate.name}</EuiText>,
+            },
+            {
+              name: (
+                <EuiToolTip content="Specifies whether the certificate can be used to sign other certificates (Certification Authority) or not.">
+                  <span>
+                    Type <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
+                  </span>
+                </EuiToolTip>
+              ),
+              field: 'isCA',
+              textOnly: true,
+              sortable: true,
+              render: (_, certificate: SelfSignedCertificate) => (
+                <EuiText>{certificateTypeString(certificate)}</EuiText>
+              ),
             },
             {
               name: 'Distinguished name (DN)',
