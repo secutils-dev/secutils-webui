@@ -74,7 +74,7 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
               );
             } else {
               Downloader.download(
-                `${certificate.name}.p12`,
+                `${certificate.name}.pfx`,
                 new Uint8Array(response.data.value.value.certificate),
                 'application/x-pkcs12',
               );
