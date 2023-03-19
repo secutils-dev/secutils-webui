@@ -1,7 +1,15 @@
 import type { ChangeEvent } from 'react';
 import { useCallback, useState } from 'react';
 
-import { EuiDescribedFormGroup, EuiFieldText, EuiForm, EuiFormRow, EuiSelect } from '@elastic/eui';
+import {
+  EuiComboBox,
+  EuiDescribedFormGroup,
+  EuiFieldText,
+  EuiForm,
+  EuiFormRow,
+  EuiLink,
+  EuiSelect,
+} from '@elastic/eui';
 import moment from 'moment/moment';
 
 import { CertificateLifetimeCalendar } from './certificate_lifetime_calendar';
@@ -51,6 +59,26 @@ const SIGNATURE_ALGORITHMS = new Map([
   ['ed25519', [{ value: 'ed25519', text: 'Ed25519' }]],
 ]);
 
+const KEY_USAGE = new Map([
+  ['crlSigning', { label: 'CRL signing', value: 'crlSigning' }],
+  ['dataEncipherment', { label: 'Data encipherment', value: 'dataEncipherment' }],
+  ['decipherOnly', { label: 'Decipher only', value: 'decipherOnly' }],
+  ['digitalSignature', { label: 'Digital signature', value: 'digitalSignature' }],
+  ['encipherOnly', { label: 'Encipher only', value: 'encipherOnly' }],
+  ['keyAgreement', { label: 'Key agreement', value: 'keyAgreement' }],
+  ['keyCertificateSigning', { label: 'Certificate signing', value: 'keyCertificateSigning' }],
+  ['keyEncipherment', { label: 'Key encipherment', value: 'keyEncipherment' }],
+  ['nonRepudiation', { label: 'Non-repudiation', value: 'nonRepudiation' }],
+]);
+
+const EXTENDED_KEY_USAGE = new Map([
+  ['codeSigning', { label: 'Sign code', value: 'codeSigning' }],
+  ['emailProtection', { label: 'Email protection', value: 'emailProtection' }],
+  ['timeStamping', { label: 'Timestamping', value: 'timeStamping' }],
+  ['tlsWebClientAuthentication', { label: 'TLS Web client authentication', value: 'tlsWebClientAuthentication' }],
+  ['tlsWebServerAuthentication', { label: 'TLS Web server authentication', value: 'tlsWebServerAuthentication' }],
+]);
+
 type CertificateType = 'ca' | 'endEntity';
 
 export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveSelfSignedCertificatesFlyoutProps) {
@@ -66,18 +94,13 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     setVersion(+e.target.value);
   }, []);
 
-  const [type, setType] = useState<CertificateType>('endEntity');
-  const onTypeChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-    setType(e.target.value as CertificateType);
-  }, []);
-
   const [signatureAlgorithms, setSignatureAlgorithms] = useState(
-    SIGNATURE_ALGORITHMS.get(certificate?.publicKeyAlgorithm ?? 'rsa')!,
+    SIGNATURE_ALGORITHMS.get(certificate?.keyAlgorithm ?? 'rsa')!,
   );
 
-  const [publicKeyAlgorithm, setPublicKeyAlgorithm] = useState<string>(certificate?.publicKeyAlgorithm ?? 'rsa');
-  const onPublicKeyAlgorithmChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-    setPublicKeyAlgorithm(e.target.value);
+  const [keyAlgorithm, setKeyAlgorithm] = useState<string>(certificate?.keyAlgorithm ?? 'rsa');
+  const onKeyAlgorithmChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+    setKeyAlgorithm(e.target.value);
 
     const newSignatureAlgorithms = SIGNATURE_ALGORITHMS.get(e.target.value)!;
     setSignatureAlgorithms(newSignatureAlgorithms);
@@ -90,6 +113,25 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
   const onSignatureAlgorithmChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setSignatureAlgorithm(e.target.value);
   }, []);
+
+  const [type, setType] = useState<CertificateType>(certificate?.isCA ? 'ca' : 'endEntity');
+  const onTypeChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+    setType(e.target.value as CertificateType);
+  }, []);
+
+  const [keyUsage, setKeyUsage] = useState<Array<{ label: string; value: string }>>(
+    certificate?.keyUsage?.map((usage) => KEY_USAGE.get(usage)!) ?? [],
+  );
+  const onKeyUsageChange = (selectedKeyUsage: Array<{ label: string; value?: string }>) => {
+    setKeyUsage(selectedKeyUsage as Array<{ label: string; value: string }>);
+  };
+
+  const [extendedKeyUsage, setExtendedKeyUsage] = useState<Array<{ label: string; value: string }>>(
+    certificate?.extendedKeyUsage?.map((usage) => EXTENDED_KEY_USAGE.get(usage)!) ?? [],
+  );
+  const onExtendedKeyUsageChange = (selectedKeyUsage: Array<{ label: string; value?: string }>) => {
+    setExtendedKeyUsage(selectedKeyUsage as Array<{ label: string; value: string }>);
+  };
 
   const [commonName, setCommonName] = useState<string>(certificate?.commonName ?? 'CA Issuer');
   const onCommonNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -136,7 +178,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, {
       [name]: serializeSelfSignedCertificate({
         name: name,
-        publicKeyAlgorithm,
+        keyAlgorithm,
         signatureAlgorithm,
         version,
         commonName,
@@ -148,6 +190,8 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
         notValidBefore,
         notValidAfter,
         isCA: type === 'ca',
+        keyUsage: keyUsage.map(({ value }) => value),
+        extendedKeyUsage: extendedKeyUsage.map(({ value }) => value),
       }),
     }).then(
       (serializedCertificates) => {
@@ -175,7 +219,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     );
   }, [
     name,
-    publicKeyAlgorithm,
+    keyAlgorithm,
     signatureAlgorithm,
     version,
     commonName,
@@ -188,6 +232,8 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     notValidAfter,
     updatingStatus,
     type,
+    keyUsage,
+    extendedKeyUsage,
   ]);
 
   return (
@@ -210,19 +256,6 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
           >
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
-          <EuiFormRow
-            label="Type"
-            helpText="Specifies whether the certificate can be used to sign other certificates (Certification Authority) or not."
-          >
-            <EuiSelect
-              value={type}
-              onChange={onTypeChange}
-              options={[
-                { value: 'ca', text: 'Certification Authority' },
-                { value: 'endEntity', text: 'End Entity' },
-              ]}
-            />
-          </EuiFormRow>
           <EuiFormRow label="Version" helpText="Version of the certificate request or CRL.">
             <EuiSelect
               value={version}
@@ -234,7 +267,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
               ]}
             />
           </EuiFormRow>
-          <EuiFormRow label="Public key algorithm" helpText="Public key algorithm of the self-signed certificate">
+          <EuiFormRow label="Key algorithm" helpText="Private key algorithm.">
             <EuiSelect
               options={[
                 { value: 'rsa', text: 'RSA' },
@@ -242,16 +275,65 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
                 { value: 'ecdsa', text: 'ECDSA' },
                 { value: 'ed25519', text: 'Ed25519' },
               ]}
-              value={publicKeyAlgorithm}
-              onChange={onPublicKeyAlgorithmChange}
+              value={keyAlgorithm}
+              onChange={onKeyAlgorithmChange}
             />
           </EuiFormRow>
-          <EuiFormRow label="Signature algorithm" helpText="Public key algorithm.">
+          <EuiFormRow label="Signature algorithm" helpText="Public key signature algorithm.">
             <EuiSelect
               options={signatureAlgorithms}
               value={signatureAlgorithm}
               disabled={signatureAlgorithms.length === 1}
               onChange={onSignatureAlgorithmChange}
+            />
+          </EuiFormRow>
+        </EuiDescribedFormGroup>
+        <EuiDescribedFormGroup
+          title={<h3>Extensions</h3>}
+          description={
+            <span>
+              Properties defined by the{' '}
+              <EuiLink target="_blank" href="https://www.ietf.org/rfc/rfc3280.html">
+                X.509 extensions
+              </EuiLink>
+            </span>
+          }
+        >
+          <EuiFormRow
+            label="Certificate type"
+            helpText="Specifies whether the certificate can be used to sign other certificates (Certification Authority) or not."
+          >
+            <EuiSelect
+              value={type}
+              onChange={onTypeChange}
+              options={[
+                { value: 'ca', text: 'Certification Authority' },
+                { value: 'endEntity', text: 'End Entity' },
+              ]}
+            />
+          </EuiFormRow>
+          <EuiFormRow
+            label="Key usage"
+            helpText="Defines the purpose of the public key contained in the certificate."
+            fullWidth
+          >
+            <EuiComboBox
+              fullWidth
+              options={Array.from(KEY_USAGE.values())}
+              selectedOptions={keyUsage}
+              onChange={onKeyUsageChange}
+            />
+          </EuiFormRow>
+          <EuiFormRow
+            label="Extended key usage"
+            helpText="Defines the purpose of the public key contained in the certificate, in addition to or in place of the basic purposes indicated in the key usage property."
+            fullWidth
+          >
+            <EuiComboBox
+              fullWidth
+              options={Array.from(EXTENDED_KEY_USAGE.values())}
+              selectedOptions={extendedKeyUsage}
+              onChange={onExtendedKeyUsageChange}
             />
           </EuiFormRow>
         </EuiDescribedFormGroup>

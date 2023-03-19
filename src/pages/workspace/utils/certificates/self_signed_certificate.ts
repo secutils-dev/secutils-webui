@@ -10,12 +10,14 @@ export interface SerializedSelfSignedCertificate {
   l?: string;
   o?: string;
   ou?: string;
-  pka: string;
+  ka: string;
   sa: string;
   nb: number;
   na: number;
   v: number;
   ca: boolean;
+  ku?: string[];
+  eku?: string[];
 }
 
 export interface SelfSignedCertificate {
@@ -26,12 +28,14 @@ export interface SelfSignedCertificate {
   locality?: string;
   organization?: string;
   organizationalUnit?: string;
-  publicKeyAlgorithm: string;
+  keyAlgorithm: string;
   signatureAlgorithm: string;
   notValidBefore: number;
   notValidAfter: number;
   version: number;
   isCA: boolean;
+  keyUsage?: string[];
+  extendedKeyUsage?: string[];
 }
 
 export function getDistinguishedNameString(certificate: SelfSignedCertificate) {
@@ -47,12 +51,12 @@ export function getDistinguishedNameString(certificate: SelfSignedCertificate) {
     .join(',');
 }
 
-export function publicKeyAlgorithmString(certificate: SelfSignedCertificate) {
-  switch (certificate.publicKeyAlgorithm) {
+export function keyAlgorithmString(certificate: SelfSignedCertificate) {
+  switch (certificate.keyAlgorithm) {
     case 'rsa':
     case 'dsa':
     case 'ecdsa':
-      return certificate.publicKeyAlgorithm.toUpperCase();
+      return certificate.keyAlgorithm.toUpperCase();
     default:
       return 'Ed25519';
   }
@@ -77,7 +81,7 @@ export function deserializeSelfSignedCertificate(
 ): SelfSignedCertificate {
   const certificate: SelfSignedCertificate = {
     name: serializedCertificate.n,
-    publicKeyAlgorithm: serializedCertificate.pka,
+    keyAlgorithm: serializedCertificate.ka,
     signatureAlgorithm: serializedCertificate.sa,
     notValidBefore: serializedCertificate.nb,
     notValidAfter: serializedCertificate.na,
@@ -109,6 +113,14 @@ export function deserializeSelfSignedCertificate(
     certificate.organizationalUnit = serializedCertificate.ou;
   }
 
+  if (serializedCertificate.ku && serializedCertificate.ku.length > 0) {
+    certificate.keyUsage = serializedCertificate.ku;
+  }
+
+  if (serializedCertificate.eku && serializedCertificate.eku.length > 0) {
+    certificate.extendedKeyUsage = serializedCertificate.eku;
+  }
+
   return certificate;
 }
 
@@ -127,9 +139,9 @@ export function deserializeSelfSignedCertificates(
 }
 
 export function serializeSelfSignedCertificate(certificate: SelfSignedCertificate): SerializedSelfSignedCertificate {
-  const serializedResponder: SerializedSelfSignedCertificate = {
+  const serializedCertificate: SerializedSelfSignedCertificate = {
     n: certificate.name,
-    pka: certificate.publicKeyAlgorithm,
+    ka: certificate.keyAlgorithm,
     sa: certificate.signatureAlgorithm,
     nb: certificate.notValidBefore,
     na: certificate.notValidAfter,
@@ -138,28 +150,36 @@ export function serializeSelfSignedCertificate(certificate: SelfSignedCertificat
   };
 
   if (certificate.commonName) {
-    serializedResponder.cn = certificate.commonName;
+    serializedCertificate.cn = certificate.commonName;
   }
 
   if (certificate.country) {
-    serializedResponder.c = certificate.country;
+    serializedCertificate.c = certificate.country;
   }
 
   if (certificate.state) {
-    serializedResponder.s = certificate.state;
+    serializedCertificate.s = certificate.state;
   }
 
   if (certificate.locality) {
-    serializedResponder.l = certificate.locality;
+    serializedCertificate.l = certificate.locality;
   }
 
   if (certificate.organization) {
-    serializedResponder.o = certificate.organization;
+    serializedCertificate.o = certificate.organization;
   }
 
   if (certificate.organizationalUnit) {
-    serializedResponder.ou = certificate.organizationalUnit;
+    serializedCertificate.ou = certificate.organizationalUnit;
   }
 
-  return serializedResponder;
+  if (certificate.keyUsage && certificate.keyUsage.length > 0) {
+    serializedCertificate.ku = certificate.keyUsage;
+  }
+
+  if (certificate.extendedKeyUsage && certificate.extendedKeyUsage.length > 0) {
+    serializedCertificate.eku = certificate.extendedKeyUsage;
+  }
+
+  return serializedCertificate;
 }

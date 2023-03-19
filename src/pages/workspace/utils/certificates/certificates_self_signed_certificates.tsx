@@ -22,7 +22,7 @@ import { SaveSelfSignedCertificatesFlyout } from './save_self_signed_certificate
 import {
   deserializeSelfSignedCertificates,
   getDistinguishedNameString,
-  publicKeyAlgorithmString,
+  keyAlgorithmString,
   SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE,
   signatureAlgorithmString,
 } from './self_signed_certificate';
@@ -244,9 +244,7 @@ export default function CertificatesSelfSignedCertificates() {
               name: 'Public key algorithm',
               field: 'publicKeyAlgorithm',
               mobileOptions: { only: true },
-              render: (_, certificate: SelfSignedCertificate) => (
-                <EuiText>{publicKeyAlgorithmString(certificate)}</EuiText>
-              ),
+              render: (_, certificate: SelfSignedCertificate) => <EuiText>{keyAlgorithmString(certificate)}</EuiText>,
             },
             {
               name: 'Signature algorithm',
