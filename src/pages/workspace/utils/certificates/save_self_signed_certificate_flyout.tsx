@@ -89,11 +89,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     setName(e.target.value);
   }, []);
 
-  const [version, setVersion] = useState<number>(certificate?.version ?? 3);
-  const onVersionChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-    setVersion(+e.target.value);
-  }, []);
-
+  const [version] = useState<number>(certificate?.version ?? 3);
   const [signatureAlgorithms, setSignatureAlgorithms] = useState(
     SIGNATURE_ALGORITHMS.get(certificate?.keyAlgorithm ?? 'rsa')!,
   );
@@ -255,17 +251,6 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
             isDisabled={!!certificate}
           >
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
-          </EuiFormRow>
-          <EuiFormRow label="Version" helpText="Version of the certificate request or CRL.">
-            <EuiSelect
-              value={version}
-              onChange={onVersionChange}
-              options={[
-                { value: 1, text: '1' },
-                { value: 2, text: '2' },
-                { value: 3, text: '3' },
-              ]}
-            />
           </EuiFormRow>
           <EuiFormRow label="Key algorithm" helpText="Private key algorithm.">
             <EuiSelect
