@@ -6,7 +6,7 @@ import { css } from '@emotion/react';
 
 import { getUtilPath, UTIL_HANDLES } from '..';
 import imageDigitalCertificatesCustom from '../../../../assets/img/getting_started_digital_certificates_custom.png';
-import imageDigitalCertificatesSimple from '../../../../assets/img/getting_started_digital_certificates_simple.png';
+import imageDigitalCertificatesHttpsServer from '../../../../assets/img/getting_started_digital_certificates_https.png';
 import imageWebhooksHtmlResponder from '../../../../assets/img/getting_started_webhooks_html_responder.png';
 import imageWebhooksJsonResponder from '../../../../assets/img/getting_started_webhooks_json_responder.png';
 import imageWebhooksTrackingResponder from '../../../../assets/img/getting_started_webhooks_tracking_responder.png';
@@ -77,13 +77,15 @@ export default function HomeGettingStarted() {
       <EuiFlexGroup wrap justifyContent={'center'} gutterSize={'l'}>
         <EuiCard
           css={cardStyle}
+          href={`${getUtilPath(UTIL_HANDLES.certificates)}#https-server`}
+          onClick={onClick}
           image={
             <div>
-              <img src={imageDigitalCertificatesSimple} alt="Simple self-signed certificate guide" />
+              <img src={imageDigitalCertificatesHttpsServer} alt="Simple self-signed certificate guide" />
             </div>
           }
-          title="Simple self-signed certificate"
-          description="Create a template for generating simple self-signed certificates"
+          title="Generate a key pair for a HTTPS server"
+          description="Create a template for generating a private key and self-signed certificate for a HTTPS server"
         />
         <EuiCard
           css={cardStyle}

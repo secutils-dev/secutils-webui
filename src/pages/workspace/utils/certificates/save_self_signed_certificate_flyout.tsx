@@ -357,7 +357,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
             <EuiFieldText value={organizationalUnit} type={'text'} onChange={onOrganizationalUnitChange} />
           </EuiFormRow>
           <EuiFormRow
-            label="Common Name (CN)"
+            label="Common name (CN)"
             helpText="List of common name (CN) of issuing certificate authority. The field can contain an array of values. Example: CA Issuer"
           >
             <EuiFieldText value={commonName} type={'text'} onChange={onCommonNameChange} />
