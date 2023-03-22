@@ -276,8 +276,8 @@ export default function CertificatesSelfSignedCertificates() {
               width: '75px',
               actions: [
                 {
-                  name: 'Generate certificate',
-                  description: 'Generate certificate',
+                  name: 'Generate',
+                  description: 'Generate',
                   icon: 'download',
                   type: 'icon',
                   isPrimary: true,

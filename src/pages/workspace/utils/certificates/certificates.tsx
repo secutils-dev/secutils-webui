@@ -139,7 +139,7 @@ Hello World
           </li>
           <li>Once the template is set up, it will appear in the templates grid</li>
           <li>
-            Click on the template's <b>Generate certificate</b> button and use the following values for generation:
+            Click on the template's <b>Generate</b> button and use the following values for generation:
             <dl>
               <dt>Format</dt>
               <dd>

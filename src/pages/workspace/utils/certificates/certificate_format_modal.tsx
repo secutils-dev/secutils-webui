@@ -72,6 +72,12 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
                 new Uint8Array(response.data.value.value.certificate),
                 'application/zip',
               );
+            } else if (format === 'pkcs8') {
+              Downloader.download(
+                `${certificate.name}.p8`,
+                new Uint8Array(response.data.value.value.certificate),
+                'application/pkcs8',
+              );
             } else {
               Downloader.download(
                 `${certificate.name}.pfx`,
@@ -110,7 +116,7 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
       <EuiModalHeader>
         <EuiModalHeaderTitle>
           <EuiTitle size={'s'}>
-            <span>Generate certificate</span>
+            <span>Generate</span>
           </EuiTitle>
         </EuiModalHeaderTitle>
       </EuiModalHeader>
@@ -121,6 +127,7 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
             <EuiSelect
               options={[
                 { value: 'pem', text: 'PEM' },
+                { value: 'pkcs8', text: 'PKCS#8 (private key only)' },
                 { value: 'pkcs12', text: 'PKCS#12' },
               ]}
               value={format}
