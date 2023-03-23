@@ -5,7 +5,7 @@ import { EuiCard, EuiFlexGroup, EuiSpacer, EuiText } from '@elastic/eui';
 import { css } from '@emotion/react';
 
 import { getUtilPath, UTIL_HANDLES } from '..';
-import imageDigitalCertificatesCustom from '../../../../assets/img/getting_started_digital_certificates_custom.png';
+import imageDigitalCertificatesExport from '../../../../assets/img/getting_started_digital_certificates_export.png';
 import imageDigitalCertificatesHttpsServer from '../../../../assets/img/getting_started_digital_certificates_https.png';
 import imageWebhooksHtmlResponder from '../../../../assets/img/getting_started_webhooks_html_responder.png';
 import imageWebhooksJsonResponder from '../../../../assets/img/getting_started_webhooks_json_responder.png';
@@ -81,7 +81,7 @@ export default function HomeGettingStarted() {
           onClick={onClick}
           image={
             <div>
-              <img src={imageDigitalCertificatesHttpsServer} alt="Simple self-signed certificate guide" />
+              <img src={imageDigitalCertificatesHttpsServer} alt="Generate a key pair for a HTTPS server" />
             </div>
           }
           title="Generate a key pair for a HTTPS server"
@@ -89,13 +89,15 @@ export default function HomeGettingStarted() {
         />
         <EuiCard
           css={cardStyle}
-          title="Self-signed certificate with custom parameters"
+          title="Export a private key as a JSON Web Key (JWK)"
+          href={`${getUtilPath(UTIL_HANDLES.certificates)}#export-jwk`}
+          onClick={onClick}
           image={
             <div>
-              <img src={imageDigitalCertificatesCustom} alt="Self-signed certificate with custom parameters guide" />
+              <img src={imageDigitalCertificatesExport} alt="Export a private key as a JSON Web Key (JWK)" />
             </div>
           }
-          description="Configure a self-signed certificate template with custom validity dates, signature algorithm, and other parameters"
+          description="Export a private key as a JSON Web Key (JWK) using a custom responder and the browser's built-in Web Crypto API"
         />
       </EuiFlexGroup>
     </HelpPageContent>
