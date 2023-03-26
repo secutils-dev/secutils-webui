@@ -9,11 +9,14 @@ import jsonResponderDemoMp4 from '../../../../assets/video/guides/webhooks_json_
 import jsonResponderDemoWebM from '../../../../assets/video/guides/webhooks_json_responder.webm';
 import trackingResponderDemoMp4 from '../../../../assets/video/guides/webhooks_tracking_responder.mp4';
 import trackingResponderDemoWebM from '../../../../assets/video/guides/webhooks_tracking_responder.webm';
+import { usePageMeta } from '../../../../hooks';
 import HelpPageContent from '../../components/help_page_content';
 import { useFontSizes, useScrollToHash } from '../../hooks';
 import { getUtilPath, UTIL_HANDLES } from '../index';
 
 export default function Webhooks() {
+  usePageMeta('Webhooks');
+
   const navigate = useNavigate();
   const fontSizes = useFontSizes();
 

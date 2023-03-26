@@ -70,11 +70,7 @@ export function ContentSecurityPolicyCopyModal({ policy, onClose }: ContentSecur
               const endpointGroup = policy.directives.get('report-to')?.[0];
               const reportToHeader = endpointGroup
                 ? `## Define reporting endpoints
-Report-To: {
-  "group": "${endpointGroup}",
-  "max_age": 1234,
-  "endpoints": [{ "url": "https://xxx" }]
-}
+Reporting-Endpoints: default="https://secutils.dev/csp_reports/default
 
 `
                 : '';

@@ -14,7 +14,6 @@ export default function HelpPageContent({ children }: Props) {
   const pageStyle = css`
     ${fontSizes.text}
     width: 100%;
-    height: 100%;
     padding: 1% 5% 0;
   `;
   return (

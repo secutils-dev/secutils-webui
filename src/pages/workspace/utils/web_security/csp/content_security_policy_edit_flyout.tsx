@@ -359,7 +359,7 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
             <EuiFieldText
               type="text"
               value={directives.get('report-to') ?? ''}
-              onChange={(e) => onDirectiveChange('report-to', [e.target.value])}
+              onChange={(e) => onDirectiveChange('report-to', e.target.value ? [e.target.value] : [])}
               placeholder={'Enter endpoint name'}
             />
           </EuiFormRow>

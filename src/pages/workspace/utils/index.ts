@@ -9,6 +9,9 @@ export const UTIL_HANDLES = Object.freeze({
   webhooksResponders: 'webhooks__responders',
   certificates: 'certificates',
   certificatesSelfSignedCertificates: 'certificates__self_signed_certificates',
+  webSecurity: 'web_security',
+  webSecurityCsp: 'web_security__csp',
+  webSecurityCspPolicies: 'web_security__csp__policies',
 });
 
 export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType>>([
@@ -22,7 +25,11 @@ export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType
     UTIL_HANDLES.certificatesSelfSignedCertificates,
     lazy(() => import('./certificates/certificates_self_signed_certificates')),
   ],
-  ['web_security__csp__policies', lazy(() => import('./web_security/csp/web_security_content_security_policies'))],
+  [UTIL_HANDLES.webSecurity, lazy(() => import('./web_security/web_security'))],
+  [
+    UTIL_HANDLES.webSecurityCspPolicies,
+    lazy(() => import('./web_security/csp/web_security_content_security_policies')),
+  ],
 ]);
 
 export function getUtilPath(utilHandle: string) {
@@ -38,16 +45,16 @@ export function getUtilIcon(utilHandle: string, purpose: 'navigation' | 'search'
       return purpose === 'search' ? 'home' : undefined;
     case UTIL_HANDLES.webhooks:
       return 'node';
-    case 'webhooks__responders':
+    case UTIL_HANDLES.webhooksResponders:
       return purpose === 'search' ? 'node' : undefined;
     case UTIL_HANDLES.certificates:
       return 'securityApp';
     case UTIL_HANDLES.certificatesSelfSignedCertificates:
       return purpose === 'search' ? 'securityApp' : undefined;
-    case 'web_security':
+    case UTIL_HANDLES.webSecurity:
       return 'globe';
-    case 'web_security__csp':
-    case 'web_security__csp__policies':
+    case UTIL_HANDLES.webSecurityCsp:
+    case UTIL_HANDLES.webSecurityCspPolicies:
       return purpose === 'search' ? 'globe' : undefined;
     case 'web_scrapping':
       return 'cut';

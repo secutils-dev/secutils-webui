@@ -5,6 +5,7 @@ import { EuiCard, EuiFlexGroup, EuiFlexItem, EuiIcon, EuiLink, EuiText } from '@
 import { getUtilPath, UTIL_HANDLES } from '..';
 import { usePageMeta } from '../../../../hooks';
 import HelpPageContent from '../../components/help_page_content';
+import { GUIDE_CARD_STYLE } from '../../components/styles';
 
 export default function Home() {
   usePageMeta('Welcome to Secutils.dev');
@@ -51,9 +52,10 @@ export default function Home() {
           how to use it, see what's new, and connect with other users and contributors.
         </p>
       </EuiText>
-      <EuiFlexGroup gutterSize="xl" justifyContent={'center'} alignItems={'center'}>
+      <EuiFlexGroup gutterSize="xl" justifyContent={'center'} wrap alignItems={'center'}>
         <EuiFlexItem>
           <EuiCard
+            css={GUIDE_CARD_STYLE}
             icon={<EuiIcon size="xxl" type={`training`} />}
             title="Getting Started"
             paddingSize="xl"
@@ -63,6 +65,7 @@ export default function Home() {
         </EuiFlexItem>
         <EuiFlexItem>
           <EuiCard
+            css={GUIDE_CARD_STYLE}
             icon={<EuiIcon size="xxl" type={`cheer`} />}
             title="What's New"
             paddingSize="xl"
@@ -72,6 +75,7 @@ export default function Home() {
         </EuiFlexItem>
         <EuiFlexItem>
           <EuiCard
+            css={GUIDE_CARD_STYLE}
             icon={<EuiIcon size="xxl" type={`discuss`} />}
             title="Contribute"
             paddingSize="xl"
