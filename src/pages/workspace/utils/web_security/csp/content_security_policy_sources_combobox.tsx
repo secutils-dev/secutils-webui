@@ -58,7 +58,6 @@ export function ContentSecurityPolicySourcesCombobox({
   const [selectedSources, setSelectedSources] = useState<Array<{ label: string; color?: string }>>(
     value?.map((source) => ({ label: source, color: isSourceSafe(source) ? undefined : 'red' })) ?? [],
   );
-  const [areSourcesInvalid, setAreSourcesInvalid] = useState(!!value);
 
   const onCreateSource = (headerValue: string) => {
     if (!isSourceValid(headerValue)) {
@@ -75,7 +74,6 @@ export function ContentSecurityPolicySourcesCombobox({
         : selectedSources.filter((source) => source.label !== NONE_KEYWORD_SOURCE);
 
     setSelectedSources(sanitizedSelectedSources);
-    setAreSourcesInvalid(false);
     onChange(sanitizedSelectedSources.map(({ label }) => label));
   };
 
@@ -90,7 +88,6 @@ export function ContentSecurityPolicySourcesCombobox({
       options={knownSources}
       onChange={onSourcesChange}
       isClearable
-      isInvalid={areSourcesInvalid}
     />
   );
 }

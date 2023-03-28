@@ -5,6 +5,8 @@ import { EuiCode, EuiCodeBlock, EuiLink, EuiText } from '@elastic/eui';
 
 import newPolicyDemoMp4 from '../../../../../assets/video/guides/web_security_csp_new_policy.mp4';
 import newPolicyDemoWebM from '../../../../../assets/video/guides/web_security_csp_new_policy.webm';
+import reportPolicyViolationsDemoMp4 from '../../../../../assets/video/guides/web_security_csp_report_policy_violations.mp4';
+import reportPolicyViolationsDemoWebM from '../../../../../assets/video/guides/web_security_csp_report_policy_violations.webm';
 import testPolicyDemoMp4 from '../../../../../assets/video/guides/web_security_csp_test_policy.mp4';
 import testPolicyDemoWebM from '../../../../../assets/video/guides/web_security_csp_test_policy.webm';
 import { usePageMeta } from '../../../../../hooks';
@@ -227,6 +229,122 @@ export default function Web_security_csp() {
         <video controls preload="metadata" width="100%">
           <source src={testPolicyDemoWebM} type="video/webm" />
           <source src={testPolicyDemoMp4} type="video/mp4" />
+        </video>
+        <h3 id="report-policy-violations">Report Content Security Policy violations</h3>
+        <p>
+          In this guide, you will create a Content Security Policy and collect its violation reports using a custom
+          tracking responder:
+        </p>
+        <ol>
+          <li>
+            Navigate to{' '}
+            <EuiLink href={getUtilPath(UTIL_HANDLES.webSecurityCspPolicies)} onClick={goToPolicies}>
+              Web Security {'->'} CSP {'->'} Policies
+            </EuiLink>{' '}
+            and click <b>Create policy</b> button
+          </li>
+          <li>
+            Configure a new policy with the following values:
+            <dl>
+              <dt>Name</dt>
+              <dd>
+                <EuiCode>csp</EuiCode>
+              </dd>
+              <dt>Script source (script-src)</dt>
+              <dd>
+                <EuiCode>'self', 'unsafe-inline', 'report-sample'</EuiCode>
+              </dd>
+              <dt>Report to (report-to)</dt>
+              <dd>
+                <EuiCode>default</EuiCode>
+              </dd>
+            </dl>
+          </li>
+          <li>
+            Click on the <b>Save</b> button to save the policy
+          </li>
+          <li>Once the policy is set up, it will appear in the policies grid</li>
+          <li>
+            Click on the policy's <b>Copy policy</b> button, switch <b>Policy source</b> to <b>HTTP header</b> and copy
+            generated policy header
+          </li>
+          <li>
+            Now, navigate to{' '}
+            <EuiLink href={getUtilPath(UTIL_HANDLES.webhooksResponders)} onClick={goToResponders}>
+              Webhooks {'->'} Responders
+            </EuiLink>{' '}
+            and click <b>Create responder</b> button
+          </li>
+          <li>
+            Configure a new responder with the following values to collect CSP violation reports:
+            <dl>
+              <dt>Name</dt>
+              <dd>
+                <EuiCode>csp-reporting</EuiCode>
+              </dd>
+              <dt>Method</dt>
+              <dd>
+                <EuiCode>POST</EuiCode>
+              </dd>
+              <dt>Tracking</dt>
+              <dd>
+                <EuiCode>10</EuiCode>
+              </dd>
+            </dl>
+          </li>
+          <li>
+            Click on the <b>Save</b> button and copy responder's URL
+          </li>
+          <li>
+            Click <b>Create responder</b> button once again
+          </li>
+          <li>
+            Configure another responder with the following values to respond with a simple HTML page that will try to
+            use <b>eval()</b> function to evaluate JavaScript code represented as a string:
+            <dl>
+              <dt>Name</dt>
+              <dd>
+                <EuiCode>csp-test</EuiCode>
+              </dd>
+              <dt>Method</dt>
+              <dd>
+                <EuiCode>GET</EuiCode>
+              </dd>
+              <dt>Headers</dt>
+              <dd>
+                <EuiCode>
+                  Reporting-Endpoints: default="[`csp-reporting` responder URL]", Content-Security-Policy: [`csp` policy
+                  content], Content-Type: text/html; charset=utf-8
+                </EuiCode>
+                <EuiCode>Content-Type: text/html; charset=utf-8</EuiCode>
+              </dd>
+              <dt>Body</dt>
+              <dd>
+                <EuiCodeBlock language={'html'} fontSize={fontSizes.codeSample} paddingSize="m" isCopyable>
+                  {cspTestHtmlSnippet.trim()}
+                </EuiCodeBlock>
+              </dd>
+            </dl>
+          </li>
+          <li>
+            Click on the <b>Save</b> button to save the responder
+          </li>
+          <li>Once the responder is set up, it will appear in the responders grid along with its unique URL</li>
+          <li>Click on the responder's URL to navigate to the test page</li>
+          <li>
+            On the test page, click on the <b>Eval</b> button and notice that nothing happens except that browser logs
+            an error message in its console meaning that you have successfully forbidden <b>eval()</b> with the Content
+            Security Policy
+          </li>
+          <li>
+            Go back to the responder's grid and expand the <b>csp-reporting</b> responder to view the CSP violation
+            report that browser has sent when you tried to use <b>eval()</b>
+          </li>
+        </ol>
+        <p>Watch the video demo below to see all the steps mentioned earlier in action:</p>
+        <video controls preload="metadata" width="100%">
+          <source src={reportPolicyViolationsDemoWebM} type="video/webm" />
+          <source src={reportPolicyViolationsDemoMp4} type="video/mp4" />
         </video>
       </EuiText>
     </HelpPageContent>

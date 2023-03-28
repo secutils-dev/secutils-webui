@@ -85,20 +85,6 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
     );
   }, [name, directives, updatingStatus]);
 
-  const SourcePicker = ({
-    directiveName,
-    omitKeywordSources,
-  }: {
-    directiveName: string;
-    omitKeywordSources?: string[];
-  }) => (
-    <ContentSecurityPolicySourcesCombobox
-      value={directives.get(directiveName)}
-      onChange={(sources) => onDirectiveChange(directiveName, sources)}
-      omitKeywordSources={omitKeywordSources}
-    />
-  );
-
   const notSupportedInMetaHint = (
     <span>
       This directive{' '}
@@ -143,31 +129,46 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
             label={'Default source (default-src)'}
             helpText={<span>Serves as a fallback for the other fetch directives.</span>}
           >
-            <SourcePicker directiveName={'default-src'} />
+            <ContentSecurityPolicySourcesCombobox
+              value={directives.get('default-src')}
+              onChange={(sources) => onDirectiveChange('default-src', sources)}
+            />
           </EuiFormRow>
           <EuiFormRow
             label={'Script source (script-src)'}
             helpText={<span>Restricts locations from which scripts may be executed.</span>}
           >
-            <SourcePicker directiveName={'script-src'} />
+            <ContentSecurityPolicySourcesCombobox
+              value={directives.get('script-src')}
+              onChange={(sources) => onDirectiveChange('script-src', sources)}
+            />
           </EuiFormRow>
           <EuiFormRow
             label={'Style source (style-src)'}
             helpText={<span>Restricts locations from which styles may be applied to a document.</span>}
           >
-            <SourcePicker directiveName={'style-src'} />
+            <ContentSecurityPolicySourcesCombobox
+              value={directives.get('style-src')}
+              onChange={(sources) => onDirectiveChange('style-src', sources)}
+            />
           </EuiFormRow>
           <EuiFormRow
             label={'Image source (img-src)'}
             helpText={<span>Restricts locations from which image resources may be loaded.</span>}
           >
-            <SourcePicker directiveName={'img-src'} />
+            <ContentSecurityPolicySourcesCombobox
+              value={directives.get('img-src')}
+              onChange={(sources) => onDirectiveChange('img-src', sources)}
+            />
           </EuiFormRow>
           <EuiFormRow
             label={'Font source (font-src)'}
             helpText={<span>Restricts locations from which font resources may be loaded.</span>}
           >
-            <SourcePicker directiveName={'font-src'} />
+            <ContentSecurityPolicySourcesCombobox
+              value={directives.get('font-src')}
+              onChange={(sources) => onDirectiveChange('font-src', sources)}
+            />
           </EuiFormRow>
           <EuiSpacer />
           <EuiAccordion id={'other-fetch-directives'} buttonContent="Other fetch directives" paddingSize="none">
@@ -176,25 +177,37 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
               label={'Child source (child-src)'}
               helpText={'Governs creation of child navigables (e.g. iframe navigations) and worker execution contexts.'}
             >
-              <SourcePicker directiveName={'child-src'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('child-src')}
+                onChange={(sources) => onDirectiveChange('child-src', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Connect source (connect-src)'}
               helpText={'Restricts locations which can be loaded using script interfaces.'}
             >
-              <SourcePicker directiveName={'connect-src'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('connect-src')}
+                onChange={(sources) => onDirectiveChange('connect-src', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Frame source (frame-src)'}
               helpText={'Restricts locations which may be loaded into child navigables.'}
             >
-              <SourcePicker directiveName={'frame-src'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('frame-src')}
+                onChange={(sources) => onDirectiveChange('frame-src', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Manifest source (manifest-src)'}
               helpText={'Restricts locations from which application manifests may be loaded.'}
             >
-              <SourcePicker directiveName={'manifest-src'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('manifest-src')}
+                onChange={(sources) => onDirectiveChange('manifest-src', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Media source (media-src)'}
@@ -202,13 +215,19 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
                 'Restricts locations from which video, audio, and associated text track resources may be loaded.'
               }
             >
-              <SourcePicker directiveName={'media-src'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('media-src')}
+                onChange={(sources) => onDirectiveChange('media-src', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Object source (object-src)'}
               helpText={'Restricts locations from which plugin content may be loaded.'}
             >
-              <SourcePicker directiveName={'object-src'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('object-src')}
+                onChange={(sources) => onDirectiveChange('object-src', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Script element source (script-src-elem)'}
@@ -216,13 +235,19 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
                 'Restricts locations from which scripts may be executed. Applies to all script requests and script blocks.'
               }
             >
-              <SourcePicker directiveName={'script-src-elem'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('script-src-elem')}
+                onChange={(sources) => onDirectiveChange('script-src-elem', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Script attribute source (script-src-attr)'}
               helpText={'Restricts locations from which scripts may be executed. Applies to event handlers only.'}
             >
-              <SourcePicker directiveName={'script-src-attr'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('script-src-attr')}
+                onChange={(sources) => onDirectiveChange('script-src-attr', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Style element source (style-src-elem)'}
@@ -230,7 +255,10 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
                 'Restricts locations from which styles may be applied to a document. Applies to everything except for inline attributes.'
               }
             >
-              <SourcePicker directiveName={'style-src-elem'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('style-src-elem')}
+                onChange={(sources) => onDirectiveChange('style-src-elem', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Style attribute source (style-src-attr)'}
@@ -238,13 +266,19 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
                 'Restricts locations from which styles may be applied to a document. Applies to styles attributes only.'
               }
             >
-              <SourcePicker directiveName={'style-src-attr'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('style-src-attr')}
+                onChange={(sources) => onDirectiveChange('style-src-attr', sources)}
+              />
             </EuiFormRow>
             <EuiFormRow
               label={'Worker source (worker-src)'}
               helpText={'Restricts locations which may be loaded as a Worker, SharedWorker, or ServiceWorker.'}
             >
-              <SourcePicker directiveName={'worker-src'} />
+              <ContentSecurityPolicySourcesCombobox
+                value={directives.get('worker-src')}
+                onChange={(sources) => onDirectiveChange('worker-src', sources)}
+              />
             </EuiFormRow>
           </EuiAccordion>
         </EuiDescribedFormGroup>
@@ -265,8 +299,9 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
             label={'Base URI (base-uri)'}
             helpText={"Restricts locations which can be used in a document's base element."}
           >
-            <SourcePicker
-              directiveName={'base-uri'}
+            <ContentSecurityPolicySourcesCombobox
+              value={directives.get('base-uri')}
+              onChange={(sources) => onDirectiveChange('base-uri', sources)}
               omitKeywordSources={[
                 "'strict-dynamic'",
                 "'unsafe-inline'",
@@ -311,7 +346,10 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
             label={'Form action (form-action)'}
             helpText={'Restricts locations which can be used as the target of a form submissions from a given context.'}
           >
-            <SourcePicker directiveName={'form-action'} />
+            <ContentSecurityPolicySourcesCombobox
+              value={directives.get('form-action')}
+              onChange={(sources) => onDirectiveChange('form-action', sources)}
+            />
           </EuiFormRow>
           <EuiFormRow
             label={'Frame ancestors (frame-ancestors)'}
@@ -322,8 +360,9 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
               </span>
             }
           >
-            <SourcePicker
-              directiveName={'frame-ancestors'}
+            <ContentSecurityPolicySourcesCombobox
+              value={directives.get('frame-ancestors')}
+              onChange={(sources) => onDirectiveChange('frame-ancestors', sources)}
               omitKeywordSources={[
                 "'strict-dynamic'",
                 "'unsafe-inline'",
@@ -375,7 +414,7 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
             <EuiFieldText
               type="url"
               value={directives.get('report-uri') ?? ''}
-              onChange={(e) => onDirectiveChange('report-uri', [e.target.value])}
+              onChange={(e) => onDirectiveChange('report-uri', e.target.value ? [e.target.value] : [])}
               placeholder={'Enter endpoint URL'}
             />
           </EuiFormRow>
