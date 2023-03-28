@@ -26,10 +26,8 @@ export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType
     lazy(() => import('./certificates/certificates_self_signed_certificates')),
   ],
   [UTIL_HANDLES.webSecurity, lazy(() => import('./web_security/web_security'))],
-  [
-    UTIL_HANDLES.webSecurityCspPolicies,
-    lazy(() => import('./web_security/csp/web_security_content_security_policies')),
-  ],
+  [UTIL_HANDLES.webSecurityCsp, lazy(() => import('./web_security/csp/web_security_csp'))],
+  [UTIL_HANDLES.webSecurityCspPolicies, lazy(() => import('./web_security/csp/web_security_csp_policies'))],
 ]);
 
 export function getUtilPath(utilHandle: string) {

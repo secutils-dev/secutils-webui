@@ -7,11 +7,14 @@ import httpsServerDemoMp4 from '../../../../assets/video/guides/certificates_htt
 import httpsServerDemoWebM from '../../../../assets/video/guides/certificates_https_server.webm';
 import jwkExportDemoMp4 from '../../../../assets/video/guides/certificates_jwk_export.mp4';
 import jwkExportDemoWebM from '../../../../assets/video/guides/certificates_jwk_export.webm';
+import { usePageMeta } from '../../../../hooks';
 import HelpPageContent from '../../components/help_page_content';
 import { useFontSizes, useScrollToHash } from '../../hooks';
 import { getUtilPath, UTIL_HANDLES } from '../index';
 
 export default function Certificates() {
+  usePageMeta('Digital Certificates');
+
   const navigate = useNavigate();
   const fontSizes = useFontSizes();
 

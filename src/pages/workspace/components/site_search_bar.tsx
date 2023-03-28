@@ -22,7 +22,7 @@ function debounce(callback: (searchQuery: string) => void) {
   return (e: KeyboardEvent<HTMLInputElement>) => {
     const searchQuery = e.currentTarget.value;
     window.clearTimeout(timeout);
-    timeout = window.setTimeout(() => callback(searchQuery), 300);
+    timeout = window.setTimeout(() => callback(searchQuery), 100);
   };
 }
 

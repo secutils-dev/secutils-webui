@@ -8,7 +8,7 @@ import imageDigitalCertificatesExport from '../../../../assets/img/getting_start
 import imageDigitalCertificatesHttpsServer from '../../../../assets/img/getting_started_digital_certificates_https.png';
 import imageWebSecurityCspNewPolicy from '../../../../assets/img/getting_started_web_security_csp_new_policy.png';
 import imageWebSecurityCspReportPolicyViolations from '../../../../assets/img/getting_started_web_security_csp_report_policy_violations.png';
-import imageWebSecurityCspValidatePolicy from '../../../../assets/img/getting_started_web_security_csp_validate_policy.png';
+import imageWebSecurityCspTestPolicy from '../../../../assets/img/getting_started_web_security_csp_test_policy.png';
 import imageWebhooksHtmlResponder from '../../../../assets/img/getting_started_webhooks_html_responder.png';
 import imageWebhooksJsonResponder from '../../../../assets/img/getting_started_webhooks_json_responder.png';
 import imageWebhooksTrackingResponder from '../../../../assets/img/getting_started_webhooks_tracking_responder.png';
@@ -120,15 +120,15 @@ export default function HomeGettingStarted() {
         />
         <EuiCard
           css={GUIDE_CARD_STYLE}
-          href={`${getUtilPath(UTIL_HANDLES.webSecurityCsp)}#validate-policy`}
+          href={`${getUtilPath(UTIL_HANDLES.webSecurityCsp)}#test-policy`}
           onClick={onClick}
           image={
             <div>
-              <img src={imageWebSecurityCspValidatePolicy} alt="Validate a Content Security Policy" />
+              <img src={imageWebSecurityCspTestPolicy} alt="Test a Content Security Policy" />
             </div>
           }
-          title="Validate a Content Security Policy"
-          description="Generate a Content Security Policy and validate it using a custom HTML responder"
+          title="Test a Content Security Policy"
+          description="Create a Content Security Policy and test it using a custom HTML responder"
         />
         <EuiCard
           css={GUIDE_CARD_STYLE}
