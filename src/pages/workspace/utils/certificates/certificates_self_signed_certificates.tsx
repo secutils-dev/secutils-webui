@@ -4,6 +4,7 @@ import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
   EuiCallOut,
+  EuiConfirmModal,
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
@@ -98,19 +99,29 @@ export default function CertificatesSelfSignedCertificates() {
     <CertificateFormatModal onClose={() => onToggleGenerateModal()} certificate={isGenerateModalOpen.certificate} />
   ) : null;
 
-  const onRemoveCertificate = useCallback(
-    (certificate: SelfSignedCertificate) => {
-      setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, {
-        [certificate.name]: null,
-      }).then(
-        (serializedCertificates) => updateCertificates(deserializeSelfSignedCertificates(serializedCertificates)),
-        (err: Error) => {
-          console.error(`Failed to remove certificate template: ${err?.message ?? err}`);
-        },
-      );
-    },
-    [updateCertificates],
-  );
+  const [certificateToRemove, setCertificateToRemove] = useState<SelfSignedCertificate | null>(null);
+  const removeConfirmModal = certificateToRemove ? (
+    <EuiConfirmModal
+      title={`Remove "${certificateToRemove.name}"?`}
+      onCancel={() => setCertificateToRemove(null)}
+      onConfirm={() => {
+        setCertificateToRemove(null);
+        setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, {
+          [certificateToRemove.name]: null,
+        }).then(
+          (serializedCertificates) => updateCertificates(deserializeSelfSignedCertificates(serializedCertificates)),
+          (err: Error) => {
+            console.error(`Failed to remove certificate template: ${err?.message ?? err}`);
+          },
+        );
+      }}
+      cancelButtonText="Cancel"
+      confirmButtonText="Remove"
+      buttonColor="danger"
+    >
+      The certificate template will be removed. Are you sure you want to proceed?
+    </EuiConfirmModal>
+  ) : null;
 
   const onEditCertificate = useCallback((certificate: SelfSignedCertificate) => {
     setIsEditFlyoutOpen({ isOpen: true, certificate: certificate });
@@ -296,7 +307,7 @@ export default function CertificatesSelfSignedCertificates() {
                   description: 'Remove template',
                   icon: 'minusInCircle',
                   type: 'icon',
-                  onClick: onRemoveCertificate,
+                  onClick: setCertificateToRemove,
                 },
               ],
             },
@@ -311,6 +322,7 @@ export default function CertificatesSelfSignedCertificates() {
       {content}
       {editFlyout}
       {generateModal}
+      {removeConfirmModal}
     </>
   );
 }

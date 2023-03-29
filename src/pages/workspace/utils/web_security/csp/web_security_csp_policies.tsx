@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
+  EuiConfirmModal,
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
@@ -61,19 +62,29 @@ export default function WebSecurityContentSecurityPolicies() {
     setIsEditFlyoutOpen({ isOpen: true, policy });
   }, []);
 
-  const onRemovePolicy = useCallback(
-    (policy: ContentSecurityPolicy) => {
-      setUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_TYPE, {
-        [policy.name]: null,
-      }).then(
-        (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
-        (err: Error) => {
-          console.error(`Failed to remove content security policy: ${err?.message ?? err}`);
-        },
-      );
-    },
-    [updatePolicies],
-  );
+  const [policyToRemove, setPolicyToRemove] = useState<ContentSecurityPolicy | null>(null);
+  const removeConfirmModal = policyToRemove ? (
+    <EuiConfirmModal
+      title={`Remove "${policyToRemove.name}"?`}
+      onCancel={() => setPolicyToRemove(null)}
+      onConfirm={() => {
+        setPolicyToRemove(null);
+        setUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_TYPE, {
+          [policyToRemove.name]: null,
+        }).then(
+          (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
+          (err: Error) => {
+            console.error(`Failed to remove content security policy: ${err?.message ?? err}`);
+          },
+        );
+      }}
+      cancelButtonText="Cancel"
+      confirmButtonText="Remove"
+      buttonColor="danger"
+    >
+      The Content Security Policy template will be removed. Are you sure you want to proceed?
+    </EuiConfirmModal>
+  ) : null;
 
   const createButton = (
     <EuiButton
@@ -222,7 +233,7 @@ export default function WebSecurityContentSecurityPolicies() {
                 description: 'Remove policy',
                 icon: 'minusInCircle',
                 type: 'icon',
-                onClick: onRemovePolicy,
+                onClick: setPolicyToRemove,
               },
             ],
           },
@@ -236,6 +247,7 @@ export default function WebSecurityContentSecurityPolicies() {
       {content}
       {editFlyout}
       {copyModal}
+      {removeConfirmModal}
     </>
   );
 }

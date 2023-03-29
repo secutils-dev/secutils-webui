@@ -5,6 +5,7 @@ import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
   EuiButtonIcon,
+  EuiConfirmModal,
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
@@ -80,23 +81,34 @@ export default function WebhooksResponders() {
     <SaveAutoResponderFlyout onClose={onToggleEditFlyout} autoResponder={isEditFlyoutOpen.responderToEdit} />
   ) : null;
 
-  const onRemoveResponder = useCallback(
-    (autoResponder: Responder) => {
-      setUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE, {
-        [autoResponder.name]: null,
-      }).then(
-        (serializedResponders) => updateResponders(deserializeResponders(serializedResponders)),
-        (err: Error) => {
-          console.error(`Failed to remove auto responder: ${err?.message ?? err}`);
-        },
-      );
-    },
-    [updateResponders],
-  );
-
   const onEditResponder = useCallback((responder: Responder) => {
     setIsEditFlyoutOpen({ isOpen: true, responderToEdit: responder });
   }, []);
+
+  const [responderToRemove, setResponderToRemove] = useState<Responder | null>(null);
+  const removeConfirmModal = responderToRemove ? (
+    <EuiConfirmModal
+      title={`Remove "${responderToRemove.name}"?`}
+      onCancel={() => setResponderToRemove(null)}
+      onConfirm={() => {
+        setResponderToRemove(null);
+        setUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE, {
+          [responderToRemove.name]: null,
+        }).then(
+          (serializedResponders) => updateResponders(deserializeResponders(serializedResponders)),
+          (err: Error) => {
+            console.error(`Failed to remove auto responder: ${err?.message ?? err}`);
+          },
+        );
+      }}
+      cancelButtonText="Cancel"
+      confirmButtonText="Remove"
+      buttonColor="danger"
+    >
+      The responder endpoint will be deactivated, and the request history will be cleared. Are you sure you want to
+      proceed?
+    </EuiConfirmModal>
+  ) : null;
 
   const [pagination, setPagination] = useState<Pagination>({
     pageIndex: 0,
@@ -254,7 +266,7 @@ export default function WebhooksResponders() {
                 description: 'Remove responder',
                 icon: 'minusInCircle',
                 type: 'icon',
-                onClick: onRemoveResponder,
+                onClick: setResponderToRemove,
               },
             ],
           },
@@ -287,6 +299,7 @@ export default function WebhooksResponders() {
     <>
       {content}
       {editFlyout}
+      {removeConfirmModal}
     </>
   );
 }
