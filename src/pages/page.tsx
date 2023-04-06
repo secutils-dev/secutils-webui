@@ -5,10 +5,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 import {
   EuiHeader,
   EuiHeaderBreadcrumbs,
-  EuiHeaderLogo,
   EuiHeaderSection,
   EuiHeaderSectionItem,
   EuiHorizontalRule,
+  EuiIcon,
   EuiLink,
   EuiPage,
   EuiPageBody,
@@ -18,10 +18,11 @@ import {
 } from '@elastic/eui';
 import type { EuiPageSectionProps, IconType } from '@elastic/eui';
 import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
+import { css } from '@emotion/react';
 
 import { PageHeader } from './page_header';
 import { ContactFormModal } from '../app_container/contact_form_modal';
-import { Logo, PageErrorState, PageLoadingState } from '../components';
+import { LogoWithName, PageErrorState, PageLoadingState } from '../components';
 import { useAppContext } from '../hooks';
 
 export interface PageProps {
@@ -100,13 +101,16 @@ export function Page({
     <EuiPage grow direction={'row'}>
       <header aria-label="Top bar">
         <EuiHeader position="fixed">
-          <EuiHeaderSection grow={false}>
+          <EuiHeaderSection
+            grow={false}
+            css={css`
+              margin-right: 0.5rem;
+            `}
+          >
             <EuiHeaderSectionItem border="right">
-              <EuiHeaderLogo iconType={Logo} href="/" onClick={(e) => e.preventDefault()} aria-label="Go to home page">
-                <EuiText size="m">
-                  <b>Secutils.dev</b>
-                </EuiText>
-              </EuiHeaderLogo>
+              <EuiLink href="/">
+                <EuiIcon type={LogoWithName} size={'xl'} aria-label="Go to home page" />
+              </EuiLink>
             </EuiHeaderSectionItem>
           </EuiHeaderSection>
 
