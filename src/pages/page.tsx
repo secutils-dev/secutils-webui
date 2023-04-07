@@ -104,6 +104,7 @@ export function Page({
           <EuiHeaderSection
             grow={false}
             css={css`
+              line-height: 0.5rem;
               margin-right: 0.5rem;
             `}
           >
