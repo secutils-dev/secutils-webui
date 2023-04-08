@@ -80,7 +80,7 @@ export function SignupPage() {
             <>
               {isClientError(err)
                 ? originalErrorMessage
-                : 'We were unable to sign you up, please try again later or contact us.'}
+                : 'Unable to sign you up, please try again later or contact us.'}
             </>
           ),
         });
@@ -119,7 +119,7 @@ export function SignupPage() {
             <>
               {isClientError(err)
                 ? originalErrorMessage
-                : 'We were unable to sign you up, please try again later or contact us.'}
+                : 'Unable to sign you up, please try again later or contact us.'}
             </>
           ),
         });

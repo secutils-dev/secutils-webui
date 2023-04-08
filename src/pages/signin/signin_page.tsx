@@ -65,7 +65,7 @@ export function SigninPage() {
             <>
               {isClientError(err)
                 ? originalErrorMessage
-                : 'We were unable to sign you in, please try again later or contact us.'}
+                : 'Unable to sign you in, please try again later or contact us.'}
             </>
           ),
         });
@@ -98,7 +98,7 @@ export function SigninPage() {
             <>
               {isClientError(err)
                 ? originalErrorMessage
-                : 'We were unable to sign you in, please try again later or contact us.'}
+                : 'Unable to sign you in, please try again later or contact us.'}
             </>
           ),
         });

@@ -63,7 +63,7 @@ export function ResetCredentialsPage() {
               <>
                 {isClientError(err)
                   ? originalErrorMessage
-                  : 'We were unable to change your password, please request a new password reset link from the sign-in page or contact us.'}
+                  : 'Unable to change your password, please request a new password reset link from the sign-in page or contact us.'}
               </>
             ),
           });

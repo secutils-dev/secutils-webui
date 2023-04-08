@@ -44,7 +44,7 @@ export default function Home() {
           <EuiLink href="https://github.com/secutils-dev/secutils/issues" target="_blank">
             Github Issues
           </EuiLink>
-          . If you need to contact us for anything else, feel free to do so using the "Contact Us" button.
+          . If you need to contact us for anything else, feel free to do so using the "Contact" form.
         </p>
         <h2>Learn and get help</h2>
         <p>

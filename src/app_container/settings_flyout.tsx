@@ -93,7 +93,7 @@ export function SettingsFlyout({ onClose }: Props) {
             id: 'remove-credentials',
             color: 'danger',
             title: `Failed to remove ${credentials}`,
-            text: <>We were unable to delete your ${credentials}, please try again later.</>,
+            text: <>Unable to delete your ${credentials}, please try again later.</>,
           });
         },
       );
@@ -131,7 +131,7 @@ export function SettingsFlyout({ onClose }: Props) {
           id: 'update-password',
           color: 'danger',
           title: 'Failed to update password',
-          text: <>We were unable to update password, please try again later.</>,
+          text: <>Unable to update password, please try again later.</>,
         });
       },
     );
@@ -165,7 +165,7 @@ export function SettingsFlyout({ onClose }: Props) {
           id: 'update-passkey',
           color: 'danger',
           title: 'Failed to update passkey',
-          text: <>We were unable to update passkey, please try again later.</>,
+          text: <>Unable to update passkey, please try again later.</>,
         });
       },
     );
@@ -199,7 +199,7 @@ export function SettingsFlyout({ onClose }: Props) {
           id: 'send-activation-link',
           color: 'danger',
           title: 'Failed to send activation link',
-          text: <>We were unable to send activation link, please try again later.</>,
+          text: <>Unable to send activation link, please try again later.</>,
         });
       },
     );

@@ -69,7 +69,7 @@ export function ResetCredentialsModal({ email, onClose }: ResetCredentialsModalP
             id: 'end-password-reset-link',
             color: 'danger',
             title: 'Failed to send password reset link',
-            text: <>We were unable to send password reset link, please try again later.</>,
+            text: <>Unable to send password reset link, please try again later.</>,
           });
         },
       );

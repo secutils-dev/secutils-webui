@@ -143,8 +143,8 @@ export function Page({
         <EuiPageSection>
           <EuiHorizontalRule size={'half'} margin="m" />
           <EuiText textAlign={'center'} size={'xs'}>
-            <EuiLink target="_blank" href="/about-us" color={'success'}>
-              About Us
+            <EuiLink target="_blank" href="/about" color={'success'}>
+              About
             </EuiLink>{' '}
             |{' '}
             <EuiLink target="_blank" href="/privacy" color={'success'}>
@@ -156,7 +156,7 @@ export function Page({
             </EuiLink>{' '}
             |{' '}
             <EuiLink onClick={onContactForm} color={'success'}>
-              Contact Us
+              Contact
             </EuiLink>
           </EuiText>
         </EuiPageSection>

@@ -76,7 +76,7 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
       <EuiModalHeader>
         <EuiModalHeaderTitle>
           <EuiTitle size={'s'}>
-            <span>Contact Us</span>
+            <span>Contact</span>
           </EuiTitle>
         </EuiModalHeaderTitle>
       </EuiModalHeader>
@@ -85,7 +85,7 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
           {sendingStatusCallout}
           <EuiFormRow label="Message">
             <EuiTextArea
-              placeholder="Include any question, suggestion, feedback you would like to share or email us directly to contact@secutils.dev."
+              placeholder="Include any question, suggestion, feedback you would like to share or email directly to contact@secutils.dev."
               value={message}
               onChange={onMessageChange}
             />
