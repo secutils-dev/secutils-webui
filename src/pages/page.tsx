@@ -140,7 +140,7 @@ export function Page({
         <EuiPageSection color="plain" alignment={contentAlignment} contentProps={contentProps} grow>
           {children}
         </EuiPageSection>
-        <EuiPageSection>
+        <EuiPageSection color="plain">
           <EuiHorizontalRule size={'half'} margin="m" />
           <EuiText textAlign={'center'} size={'xs'}>
             <EuiLink target="_blank" href="/about" color={'success'}>
