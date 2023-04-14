@@ -230,7 +230,7 @@ export function SignupPage() {
           ) : null}
           <EuiFormRow className="eui-textCenter">
             <EuiButtonEmpty
-              size={'xs'}
+              size={'s'}
               onClick={() => {
                 navigate('/signin');
               }}

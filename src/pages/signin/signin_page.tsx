@@ -186,7 +186,7 @@ export function SigninPage() {
           <EuiFormRow className="eui-textCenter">
             <>
               <EuiButtonEmpty
-                size={'xs'}
+                size={'s'}
                 onClick={() => {
                   navigate('/signup');
                 }}
@@ -194,7 +194,7 @@ export function SigninPage() {
                 Create account
               </EuiButtonEmpty>
               <EuiButtonEmpty
-                size={'xs'}
+                size={'s'}
                 onClick={() => {
                   setIsResetPasswordModalOpen(true);
                 }}
