@@ -140,28 +140,37 @@ export function Page({
         <EuiPageSection color="plain" alignment={contentAlignment} contentProps={contentProps} grow>
           {children}
         </EuiPageSection>
-        <EuiPageSection color="plain">
+        <EuiPageSection color="plain" paddingSize="m">
           <EuiHorizontalRule size={'half'} margin="m" />
           <EuiText textAlign={'center'} size={'xs'}>
             <EuiLink target="_blank" href="/about" color={'success'}>
               About
             </EuiLink>{' '}
-            |{' '}
+            ·{' '}
             <EuiLink target="_blank" href="https://github.com/orgs/secutils-dev/projects/1" color={'success'}>
               Roadmap
             </EuiLink>{' '}
-            |{' '}
+            ·{' '}
             <EuiLink target="_blank" href="/privacy" color={'success'}>
               Privacy
             </EuiLink>{' '}
-            |{' '}
+            ·{' '}
             <EuiLink target="_blank" href="/terms" color={'success'}>
               Terms
             </EuiLink>{' '}
-            |{' '}
+            ·{' '}
             <EuiLink onClick={onContactForm} color={'success'}>
               Contact
             </EuiLink>
+          </EuiText>
+          <EuiText
+            textAlign={'center'}
+            size="xs"
+            css={css`
+              margin-top: 8px;
+            `}
+          >
+            Copyright © {new Date().getFullYear()} Secutils.dev
           </EuiText>
         </EuiPageSection>
       </EuiPageBody>
