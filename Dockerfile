@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM --platform=$BUILDPLATFORM node:18-alpine3.17 as UI_BUILDER
+FROM --platform=$BUILDPLATFORM node:20-alpine3.17 as UI_BUILDER
 WORKDIR /app
 COPY ["./*.json", "./yarn.lock", "./.parcelrc", "./"]
 RUN set -x && yarn install
