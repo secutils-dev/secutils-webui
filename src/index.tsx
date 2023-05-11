@@ -25,6 +25,7 @@ import { icon as EuiIconCopyClipboard } from '@elastic/eui/es/components/icon/as
 import { icon as EuiIconCross } from '@elastic/eui/es/components/icon/assets/cross';
 import { icon as EuiIconCut } from '@elastic/eui/es/components/icon/assets/cut';
 import { icon as EuiIconDiscuss } from '@elastic/eui/es/components/icon/assets/discuss';
+import { icon as EuiIconDocumentation } from '@elastic/eui/es/components/icon/assets/documentation';
 import { icon as EuiIconDot } from '@elastic/eui/es/components/icon/assets/dot';
 import { icon as EuiIconDownload } from '@elastic/eui/es/components/icon/assets/download';
 import { icon as EuiIconEmpty } from '@elastic/eui/es/components/icon/assets/empty';
@@ -96,6 +97,7 @@ appendIconComponentCache({
   cross: EuiIconCross,
   cut: EuiIconCut,
   discuss: EuiIconDiscuss,
+  documentation: EuiIconDocumentation,
   dot: EuiIconDot,
   download: EuiIconDownload,
   empty: EuiIconEmpty,

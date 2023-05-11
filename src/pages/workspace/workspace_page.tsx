@@ -79,7 +79,8 @@ export function WorkspacePage() {
     let utilToBreadcrumb: Util | undefined = util;
     while (utilToBreadcrumb) {
       const utilUrl = `/ws/${utilToBreadcrumb.handle}`;
-      const shouldIncludeURL = utilToBreadcrumb.handle !== util.handle || deepLink != null;
+      const shouldIncludeURL =
+        (utilToBreadcrumb.handle !== util.handle || deepLink != null) && !utilToBreadcrumb.utils?.length;
       breadcrumbs.unshift({
         text: utilToBreadcrumb.name,
         onClick: shouldIncludeURL
@@ -117,17 +118,20 @@ export function WorkspacePage() {
       return {
         id: util.handle,
         name: util.name,
-        href: utilUrl,
+        href: util.utils && util.utils.length === 0 ? utilUrl : undefined,
         icon: utilIcon ? <EuiIcon type={utilIcon} /> : undefined,
         isSelected: selectedUtil?.handle === util.handle && !deepLinkFromParam,
-        onClick: (e) => {
-          e.preventDefault();
-          setTitleActions(null);
-          setSelectedUtil(util);
-          setTitle(util.name);
-          setNavigationBar({ breadcrumbs: getBreadcrumbs(util, utilsMap) });
-          navigate(utilUrl);
-        },
+        onClick:
+          util.utils && util.utils.length > 0
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                setTitleActions(null);
+                setSelectedUtil(util);
+                setTitle(util.name);
+                setNavigationBar({ breadcrumbs: getBreadcrumbs(util, utilsMap) });
+                navigate(utilUrl);
+              },
         items: (showOnlyFavorites && util.utils
           ? util.utils.filter((util) => showDisplayUtil(util, favorites))
           : util.utils ?? []
@@ -266,13 +270,25 @@ export function WorkspacePage() {
         <EuiButtonIcon
           iconType={showOnlyFavorites ? 'starFilled' : 'starEmpty'}
           css={css`
-            margin-right: ${euiTheme.euiTheme.size.xs};
+            margin-right: ${euiTheme.euiTheme.size.xxs};
           `}
           iconSize="l"
           size="m"
           title={`Only show favorite utilities`}
           aria-label={`Only show favorite utilities`}
           onClick={() => onChangeShowOnlyFavorites(!showOnlyFavorites)}
+        />,
+        <EuiButtonIcon
+          iconType={'documentation'}
+          css={css`
+            margin-right: ${euiTheme.euiTheme.size.xxs};
+          `}
+          iconSize="m"
+          size="m"
+          title={`Documentation`}
+          aria-label={`Open documentation`}
+          target={'_blank'}
+          href={'/docs'}
         />,
         <EuiPopover
           anchorClassName="eui-fullWidth"

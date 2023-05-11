@@ -116,7 +116,16 @@ export function Page({
           </EuiHeaderSection>
 
           {headerBreadcrumbs && headerBreadcrumbs.length > 0 ? (
-            <EuiHeaderBreadcrumbs aria-label="Breadcrumbs" breadcrumbs={headerBreadcrumbs} />
+            <EuiHeaderBreadcrumbs
+              css={css`
+                @media screen and (max-width: 380px) {
+                  display: none;
+                }
+              `}
+              aria-label="Breadcrumbs"
+              breadcrumbs={headerBreadcrumbs}
+              lastBreadcrumbIsCurrentPage={true}
+            />
           ) : undefined}
 
           {headerActions && headerActions.length > 0 ? (

@@ -1,22 +1,11 @@
-import { useNavigate } from 'react-router-dom';
-
 import { EuiCard, EuiFlexGroup, EuiFlexItem, EuiIcon, EuiLink, EuiText } from '@elastic/eui';
 
-import { getUtilPath, UTIL_HANDLES } from '..';
 import { usePageMeta } from '../../../../hooks';
 import HelpPageContent from '../../components/help_page_content';
 import { GUIDE_CARD_STYLE } from '../../components/styles';
 
 export default function Home() {
   usePageMeta('Welcome to Secutils.dev');
-
-  const navigate = useNavigate();
-  const goToGettingStarted = () => {
-    navigate(getUtilPath(UTIL_HANDLES.gettingStarted));
-  };
-  const goToWhatsNew = () => {
-    navigate(getUtilPath(UTIL_HANDLES.whatsNew));
-  };
 
   return (
     <HelpPageContent>
@@ -60,7 +49,8 @@ export default function Home() {
             title="Getting Started"
             paddingSize="xl"
             description="Learn to use Secutils.dev through real-life scenarios"
-            onClick={goToGettingStarted}
+            href={'/docs/category/guides'}
+            target={'_blank'}
           />
         </EuiFlexItem>
         <EuiFlexItem>
@@ -70,7 +60,8 @@ export default function Home() {
             title="What's New"
             paddingSize="xl"
             description="Discover what's new in the latest Secutils.dev version"
-            onClick={goToWhatsNew}
+            href={'/docs/category/changelog'}
+            target={'_blank'}
           />
         </EuiFlexItem>
         <EuiFlexItem>
