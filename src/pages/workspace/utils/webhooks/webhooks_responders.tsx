@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
+  EuiButtonEmpty,
   EuiButtonIcon,
   EuiConfirmModal,
   EuiEmptyPrompt,
@@ -13,6 +14,7 @@ import {
   EuiInMemoryTable,
   EuiLink,
   EuiScreenReaderOnly,
+  EuiSpacer,
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
@@ -58,6 +60,17 @@ export default function WebhooksResponders() {
     <EuiButton iconType={'plusInCircle'} title="Create new responder" fill onClick={() => onToggleEditFlyout()}>
       Create responder
     </EuiButton>
+  );
+
+  const docsButton = (
+    <EuiButtonEmpty
+      iconType={'documentation'}
+      title="Learn how to create and use responders"
+      target={'_blank'}
+      href={'/docs/guides/webhooks'}
+    >
+      Learn how to
+    </EuiButtonEmpty>
   );
 
   useEffect(() => {
@@ -166,6 +179,8 @@ export default function WebhooksResponders() {
               <div>
                 <p>Go ahead and create your first HTTP responder.</p>
                 {createButton}
+                <EuiSpacer size={'s'} />
+                {docsButton}
               </div>
             }
           />

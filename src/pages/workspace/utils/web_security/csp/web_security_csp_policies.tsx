@@ -3,12 +3,14 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
+  EuiButtonEmpty,
   EuiConfirmModal,
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
   EuiIcon,
   EuiInMemoryTable,
+  EuiSpacer,
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
@@ -97,6 +99,17 @@ export default function WebSecurityContentSecurityPolicies() {
     </EuiButton>
   );
 
+  const docsButton = (
+    <EuiButtonEmpty
+      iconType={'documentation'}
+      title="Learn how to create and use content security policies"
+      target={'_blank'}
+      href={'/docs/guides/web_security/csp'}
+    >
+      Learn how to
+    </EuiButtonEmpty>
+  );
+
   useEffect(() => {
     if (!uiState.synced || !uiState.user) {
       return;
@@ -165,6 +178,8 @@ export default function WebSecurityContentSecurityPolicies() {
               <div>
                 <p>Go ahead and create your first policy.</p>
                 {createButton}
+                <EuiSpacer size={'s'} />
+                {docsButton}
               </div>
             }
           />

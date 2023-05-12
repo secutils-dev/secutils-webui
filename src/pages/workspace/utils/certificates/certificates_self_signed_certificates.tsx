@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Criteria, Pagination, PropertySort } from '@elastic/eui';
 import {
   EuiButton,
+  EuiButtonEmpty,
   EuiCallOut,
   EuiConfirmModal,
   EuiEmptyPrompt,
@@ -75,6 +76,17 @@ export default function CertificatesSelfSignedCertificates() {
     >
       Create certificate template
     </EuiButton>
+  );
+
+  const docsButton = (
+    <EuiButtonEmpty
+      iconType={'documentation'}
+      title="Learn how to create and use certificate templates"
+      target={'_blank'}
+      href={'/docs/guides/digital_certificates'}
+    >
+      Learn how to
+    </EuiButtonEmpty>
   );
 
   useEffect(() => {
@@ -197,6 +209,8 @@ export default function CertificatesSelfSignedCertificates() {
               <div>
                 <p>Go ahead and create your first self-signed certificate template.</p>
                 {createButton}
+                <EuiSpacer size={'s'} />
+                {docsButton}
               </div>
             }
           />
