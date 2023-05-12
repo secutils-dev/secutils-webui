@@ -60,7 +60,7 @@ export default function Home() {
             title="What's New"
             paddingSize="xl"
             description="Discover what's new in the latest Secutils.dev version"
-            href={'/docs/category/changelog'}
+            href={'/docs/project/changelog'}
             target={'_blank'}
           />
         </EuiFlexItem>
