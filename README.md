@@ -2,15 +2,17 @@
 
 The web user interface for Secutils.dev, refer to [secutils-dev/secutils](https://github.com/secutils-dev/secutils) for more details.
 
-__NOTE:__ The project isn't yet ready for general consumption. Please stay tuned for updates!
+## Getting started
 
-## Getting Started
+Install all the required dependencies with `yarn install` and run the UI in watch mode with `yarn watch`.
 
-***In progress…***
+### Usage
+
+Assuming you already have a running [Secutils.dev server](https://github.com/secutils-dev/secutils) running at http://localhost:7070, the UI should be accessible at http://localhost:1234.
 
 ## Documentation
 
-***In progress…***
+The documentation for Secutils.dev is located in [github.com/secutils-dev/secutils-docs](https://github.com/secutils-dev/secutils-docs/) and hosted at [secutils.dev/docs](https://secutils.dev/docs).
 
 ## Community
 
