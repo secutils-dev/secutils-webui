@@ -89,7 +89,6 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     setName(e.target.value);
   }, []);
 
-  const [version] = useState<number>(certificate?.version ?? 3);
   const [signatureAlgorithms, setSignatureAlgorithms] = useState(
     SIGNATURE_ALGORITHMS.get(certificate?.keyAlgorithm ?? 'rsa')!,
   );
@@ -176,7 +175,6 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
         name: name,
         keyAlgorithm,
         signatureAlgorithm,
-        version,
         commonName,
         country,
         state,
@@ -217,7 +215,6 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     name,
     keyAlgorithm,
     signatureAlgorithm,
-    version,
     commonName,
     country,
     state,

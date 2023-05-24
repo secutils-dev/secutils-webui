@@ -14,7 +14,6 @@ export interface SerializedSelfSignedCertificate {
   sa: string;
   nb: number;
   na: number;
-  v: number;
   ca: boolean;
   ku?: string[];
   eku?: string[];
@@ -32,7 +31,6 @@ export interface SelfSignedCertificate {
   signatureAlgorithm: string;
   notValidBefore: number;
   notValidAfter: number;
-  version: number;
   isCA: boolean;
   keyUsage?: string[];
   extendedKeyUsage?: string[];
@@ -93,7 +91,6 @@ export function deserializeSelfSignedCertificate(
     signatureAlgorithm: serializedCertificate.sa,
     notValidBefore: serializedCertificate.nb,
     notValidAfter: serializedCertificate.na,
-    version: serializedCertificate.v,
     isCA: serializedCertificate.ca,
   };
 
@@ -153,7 +150,6 @@ export function serializeSelfSignedCertificate(certificate: SelfSignedCertificat
     sa: certificate.signatureAlgorithm,
     nb: certificate.notValidBefore,
     na: certificate.notValidAfter,
-    v: certificate.version,
     ca: certificate.isCA,
   };
 
