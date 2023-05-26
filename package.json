@@ -68,7 +68,7 @@
   "scripts": {
     "prebuild": "eslint . && rm -rf dist",
     "build": "parcel build",
-    "watch": "parcel",
+    "watch": "parcel --port 7171",
     "perf": "parcel build --reporter @parcel/reporter-bundle-buddy"
   }
 }

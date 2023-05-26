@@ -8,7 +8,7 @@ Install all the required dependencies with `yarn install` and run the UI in watc
 
 ### Usage
 
-Assuming you already have a running [Secutils.dev server](https://github.com/secutils-dev/secutils) running at http://localhost:7070, the UI should be accessible at http://localhost:1234.
+Assuming you already have a running [Secutils.dev server](https://github.com/secutils-dev/secutils) running at http://localhost:7070, the UI should be accessible at http://localhost:7171.
 
 ## Documentation
 
