@@ -156,8 +156,12 @@ export function Page({
               About
             </EuiLink>{' '}
             ·{' '}
-            <EuiLink target="_blank" href="https://github.com/orgs/secutils-dev/projects/1" color={'success'}>
-              Roadmap
+            <EuiLink target="_blank" href="/docs/blog" color={'success'}>
+              Blog
+            </EuiLink>{' '}
+            ·{' '}
+            <EuiLink target="_blank" href="/docs" color={'success'}>
+              Documentation
             </EuiLink>{' '}
             ·{' '}
             <EuiLink target="_blank" href="/privacy" color={'success'}>
