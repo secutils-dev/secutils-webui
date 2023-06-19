@@ -26,7 +26,7 @@ import {
   deserializeSelfSignedCertificates,
   getDistinguishedNameString,
   keyAlgorithmString,
-  SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE,
+  SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE,
   signatureAlgorithmString,
 } from './self_signed_certificate';
 import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
@@ -94,7 +94,7 @@ export default function CertificatesSelfSignedCertificates() {
       return;
     }
 
-    getUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE).then(
+    getUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE).then(
       (serializedCertificates) => updateCertificates(deserializeSelfSignedCertificates(serializedCertificates)),
       (err: Error) => {
         console.error(`Failed to load certificate templates: ${err?.message ?? err}`);
@@ -118,7 +118,7 @@ export default function CertificatesSelfSignedCertificates() {
       onCancel={() => setCertificateToRemove(null)}
       onConfirm={() => {
         setCertificateToRemove(null);
-        setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, {
+        setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE, {
           [certificateToRemove.name]: null,
         }).then(
           (serializedCertificates) => updateCertificates(deserializeSelfSignedCertificates(serializedCertificates)),

@@ -1,4 +1,4 @@
-export const SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE = 'selfSignedCertificates';
+export const SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE = 'selfSignedCertificates';
 
 export type SerializedSelfSignedCertificates = Record<string, SerializedSelfSignedCertificate>;
 

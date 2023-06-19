@@ -13,7 +13,7 @@ import {
 
 import type { ContentSecurityPolicy, SerializedContentSecurityPolicies } from './content_security_policy';
 import {
-  CONTENT_SECURITY_POLICIES_USER_DATA_TYPE,
+  CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE,
   deserializeContentSecurityPolicies,
   serializeContentSecurityPolicy,
 } from './content_security_policy';
@@ -57,7 +57,7 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
     }
 
     setUpdatingStatus({ status: 'pending' });
-    setUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_TYPE, {
+    setUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE, {
       [name]: serializeContentSecurityPolicy({ name, directives }),
     }).then(
       (serializedPolicies) => {
@@ -76,10 +76,10 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
         setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
 
         addToast({
-          id: `failed-update-certificate-${name}`,
+          id: `failed-update-policy-${name}`,
           iconType: 'warning',
           color: 'danger',
-          title: `Unable to save "${name}" self-signed certificate template, please try again later`,
+          title: `Unable to save "${name}" content security policy, please try again later`,
         });
       },
     );

@@ -49,6 +49,7 @@ import { icon as EuiIconPencil } from '@elastic/eui/es/components/icon/assets/pe
 import { icon as EuiIconPlusInCircle } from '@elastic/eui/es/components/icon/assets/plus_in_circle';
 import { icon as EuiIconPopout } from '@elastic/eui/es/components/icon/assets/popout';
 import { icon as EuiIconQuestionInCircle } from '@elastic/eui/es/components/icon/assets/question_in_circle';
+import { icon as EuiIconRefresh } from '@elastic/eui/es/components/icon/assets/refresh';
 import { icon as EuiIconReturnKey } from '@elastic/eui/es/components/icon/assets/return_key';
 import { icon as EuiIconSearch } from '@elastic/eui/es/components/icon/assets/search';
 import { icon as EuiIconSecuritySignal } from '@elastic/eui/es/components/icon/assets/securitySignal';
@@ -121,6 +122,7 @@ appendIconComponentCache({
   plusInCircle: EuiIconPlusInCircle,
   popout: EuiIconPopout,
   questionInCircle: EuiIconQuestionInCircle,
+  refresh: EuiIconRefresh,
   returnKey: EuiIconReturnKey,
   search: EuiIconSearch,
   securityApp: EuiIconSecurityApp,

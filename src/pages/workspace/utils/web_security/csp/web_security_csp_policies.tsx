@@ -17,7 +17,7 @@ import {
 
 import type { ContentSecurityPolicy, SerializedContentSecurityPolicies } from './content_security_policy';
 import {
-  CONTENT_SECURITY_POLICIES_USER_DATA_TYPE,
+  CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE,
   deserializeContentSecurityPolicies,
   getContentSecurityPolicyString,
 } from './content_security_policy';
@@ -71,7 +71,7 @@ export default function WebSecurityContentSecurityPolicies() {
       onCancel={() => setPolicyToRemove(null)}
       onConfirm={() => {
         setPolicyToRemove(null);
-        setUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_TYPE, {
+        setUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE, {
           [policyToRemove.name]: null,
         }).then(
           (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
@@ -115,7 +115,7 @@ export default function WebSecurityContentSecurityPolicies() {
       return;
     }
 
-    getUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_TYPE).then(
+    getUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE).then(
       (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
       (err: Error) => {
         console.error(`Failed to load content security policies: ${err?.message ?? err}`);

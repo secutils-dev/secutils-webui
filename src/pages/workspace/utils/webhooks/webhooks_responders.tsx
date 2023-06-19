@@ -21,7 +21,7 @@ import {
 
 import { AutoResponderRequestsTable } from './auto_responder_requests_table';
 import type { Responder, SerializedResponders } from './responder';
-import { deserializeHttpMethod, deserializeResponders, RESPONDERS_USER_DATA_TYPE } from './responder';
+import { deserializeHttpMethod, deserializeResponders, RESPONDERS_USER_DATA_NAMESPACE } from './responder';
 import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
 import { PageLoadingState } from '../../../../components';
 import type { User } from '../../../../model';
@@ -78,7 +78,7 @@ export default function WebhooksResponders() {
       return;
     }
 
-    getUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE).then(
+    getUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE).then(
       (serializedResponders) => {
         updateResponders(deserializeResponders(serializedResponders));
       },
@@ -105,7 +105,7 @@ export default function WebhooksResponders() {
       onCancel={() => setResponderToRemove(null)}
       onConfirm={() => {
         setResponderToRemove(null);
-        setUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE, {
+        setUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE, {
           [responderToRemove.name]: null,
         }).then(
           (serializedResponders) => updateResponders(deserializeResponders(serializedResponders)),

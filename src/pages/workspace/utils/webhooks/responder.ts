@@ -1,4 +1,4 @@
-export const RESPONDERS_USER_DATA_TYPE = 'autoResponders';
+export const RESPONDERS_USER_DATA_NAMESPACE = 'autoResponders';
 
 export type SerializedResponders = Record<string, SerializedResponder>;
 

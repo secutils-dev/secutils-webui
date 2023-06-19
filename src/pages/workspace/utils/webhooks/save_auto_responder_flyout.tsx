@@ -13,7 +13,7 @@ import {
 } from '@elastic/eui';
 
 import type { Responder, SerializedResponders } from './responder';
-import { deserializeResponders, RESPONDERS_USER_DATA_TYPE, serializeHttpMethod, serializeResponder } from './responder';
+import { deserializeResponders, RESPONDERS_USER_DATA_NAMESPACE, serializeHttpMethod, serializeResponder } from './responder';
 import type { AsyncData } from '../../../../model';
 import { setUserData } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
@@ -102,7 +102,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
     }
 
     setUpdatingStatus({ status: 'pending' });
-    setUserData<SerializedResponders>(RESPONDERS_USER_DATA_TYPE, {
+    setUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE, {
       [name]: serializeResponder({
         name: name,
         method,

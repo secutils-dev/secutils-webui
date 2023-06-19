@@ -16,7 +16,7 @@ import { CertificateLifetimeCalendar } from './certificate_lifetime_calendar';
 import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
 import {
   deserializeSelfSignedCertificates,
-  SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE,
+  SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE,
   serializeSelfSignedCertificate,
 } from './self_signed_certificate';
 import type { AsyncData } from '../../../../model';
@@ -170,7 +170,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
     }
 
     setUpdatingStatus({ status: 'pending' });
-    setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_TYPE, {
+    setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE, {
       [name]: serializeSelfSignedCertificate({
         name: name,
         keyAlgorithm,

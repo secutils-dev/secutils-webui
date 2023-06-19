@@ -1,4 +1,4 @@
-export const CONTENT_SECURITY_POLICIES_USER_DATA_TYPE = 'contentSecurityPolicies';
+export const CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE = 'contentSecurityPolicies';
 
 export type SerializedContentSecurityPolicies = Record<string, SerializedContentSecurityPolicy>;
 
