@@ -13,7 +13,12 @@ import {
 } from '@elastic/eui';
 
 import type { Responder, SerializedResponders } from './responder';
-import { deserializeResponders, RESPONDERS_USER_DATA_NAMESPACE, serializeHttpMethod, serializeResponder } from './responder';
+import {
+  deserializeResponders,
+  RESPONDERS_USER_DATA_NAMESPACE,
+  serializeHttpMethod,
+  serializeResponder,
+} from './responder';
 import type { AsyncData } from '../../../../model';
 import { setUserData } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
