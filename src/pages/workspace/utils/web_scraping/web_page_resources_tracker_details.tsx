@@ -99,7 +99,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
       axios
         .post<WebPageResourcesResponse>(getApiUrl('/api/utils/action'), {
           action: {
-            type: 'webScrapping',
+            type: 'webScraping',
             value: { type: 'fetchWebPageResources', value: { trackerName: item.name, refresh } },
           },
         })
@@ -182,7 +182,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         axios
           .post<{ value: { value: { resources: WebPageResources[] } } }>(getApiUrl('/api/utils/action'), {
             action: {
-              type: 'webScrapping',
+              type: 'webScraping',
               value: { type: 'removeWebPageResources', value: { trackerName: item.name } },
             },
           })

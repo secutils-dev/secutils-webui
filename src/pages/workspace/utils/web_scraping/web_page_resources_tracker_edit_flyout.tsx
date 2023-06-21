@@ -16,7 +16,7 @@ export interface Props {
   item?: WebPageResourcesTracker;
 }
 
-export function WebScrappingResourcesTrackerEditFlyout({ onClose, item }: Props) {
+export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) {
   const { addToast } = useWorkspaceContext();
 
   const [name, setName] = useState<string>(item?.name ?? '');
@@ -45,7 +45,7 @@ export function WebScrappingResourcesTrackerEditFlyout({ onClose, item }: Props)
     axios
       .post(getApiUrl('/api/utils/action'), {
         action: {
-          type: 'webScrapping',
+          type: 'webScraping',
           value: { type: 'saveWebPageResourcesTracker', value: { tracker: { name, url, revisions } } },
         },
       })

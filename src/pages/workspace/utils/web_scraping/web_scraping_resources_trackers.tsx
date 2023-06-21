@@ -22,7 +22,7 @@ import axios from 'axios';
 import { WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE } from './web_page_resources_tracker';
 import type { WebPageResourcesTracker, WebPageResourcesTrackers } from './web_page_resources_tracker';
 import { WebPageResourcesTrackerDetails } from './web_page_resources_tracker_details';
-import { WebScrappingResourcesTrackerEditFlyout } from './web_page_resources_tracker_edit_flyout';
+import { WebScrapingResourcesTrackerEditFlyout } from './web_page_resources_tracker_edit_flyout';
 import { PageLoadingState } from '../../../../components';
 import { getApiUrl, getUserData } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
@@ -30,7 +30,7 @@ import { useWorkspaceContext } from '../../hooks';
 type ItemType = WebPageResourcesTracker;
 type SerializedItemCollectionType = WebPageResourcesTrackers;
 
-export default function WebScrappingResourcesTrackers() {
+export default function WebScrapingResourcesTrackers() {
   const { uiState, setTitleActions } = useWorkspaceContext();
 
   const [items, setItems] = useState<ItemType[] | null>(null);
@@ -68,7 +68,7 @@ export default function WebScrappingResourcesTrackers() {
       iconType={'documentation'}
       title="Learn how to create and use web resources trackers"
       target={'_blank'}
-      href={'/docs/web_scrapping/resources'}
+      href={'/docs/web_scraping/resources'}
     >
       Learn how to
     </EuiButtonEmpty>
@@ -92,7 +92,7 @@ export default function WebScrappingResourcesTrackers() {
 
   const [itemIdToExpandedRowMap, setItemIdToExpandedRowMap] = useState<Record<string, ReactNode>>({});
   const editFlyout = isEditFlyoutOpen.isOpen ? (
-    <WebScrappingResourcesTrackerEditFlyout onClose={onToggleEditFlyout} item={isEditFlyoutOpen.itemToEdit} />
+    <WebScrapingResourcesTrackerEditFlyout onClose={onToggleEditFlyout} item={isEditFlyoutOpen.itemToEdit} />
   ) : null;
 
   const onEditItem = useCallback((item: ItemType) => {
@@ -110,7 +110,7 @@ export default function WebScrappingResourcesTrackers() {
         axios
           .post(getApiUrl('/api/utils/action'), {
             action: {
-              type: 'webScrapping',
+              type: 'webScraping',
               value: { type: 'removeWebPageResourcesTracker', value: { trackerName: itemToRemove?.name } },
             },
           })
