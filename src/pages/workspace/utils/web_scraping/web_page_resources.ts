@@ -5,7 +5,7 @@ export interface WebPageResources {
 }
 
 export interface WebPageResource {
-  url: string;
+  url?: string;
   digest?: string;
   size?: number;
 }
