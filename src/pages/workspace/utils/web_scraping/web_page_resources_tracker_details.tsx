@@ -11,7 +11,6 @@ import {
   EuiFlexItem,
   EuiIcon,
   EuiStat,
-  EuiText,
 } from '@elastic/eui';
 import axios from 'axios';
 import { unix } from 'moment';
@@ -35,6 +34,12 @@ export interface ItemDetailsType {
   stylesCount: number;
   stylesTotalSize: number;
 }
+
+const IS_NUMBER_REGEX = /^[0-9,]*$/g;
+const COMMA_SEPARATE_NUMBER_REGEX = /\B(?=(\d{3})+(?!\d))/g;
+const commaSeparateNumbers = (bytes: number) => {
+  return bytes.toString().replace(COMMA_SEPARATE_NUMBER_REGEX, ',');
+};
 
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes == 0) {
@@ -83,10 +88,17 @@ function transformWebPageResourcesResponse(response: WebPageResourcesResponse) {
 }
 
 const COLUMNS: EuiDataGridColumn[] = [
-  { id: 'url', display: 'URL', displayAsText: 'URL', isExpandable: true },
+  { id: 'url', display: 'URL', displayAsText: 'URL', isExpandable: true, isSortable: true },
   { id: 'type', display: 'Type', displayAsText: 'Type', initialWidth: 80, isExpandable: false, isSortable: true },
-  { id: 'size', display: 'Size', displayAsText: 'Size', initialWidth: 80, isExpandable: false, isSortable: true },
-  { id: 'content', display: 'Digest', displayAsText: 'Digest' },
+  {
+    id: 'size',
+    display: 'Size',
+    displayAsText: 'Size',
+    schema: 'commaNumber',
+    initialWidth: 100,
+    isExpandable: true,
+    isSortable: true,
+  },
 ];
 
 export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTrackerDetailsProps) {
@@ -139,14 +151,14 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
   const onChangePage = useCallback((pageIndex: number) => setPagination({ ...pagination, pageIndex }), [pagination]);
 
   const renderCellValue = useCallback(
-    ({ rowIndex, columnId }: EuiDataGridCellValueElementProps) => {
+    ({ rowIndex, columnId, isDetails }: EuiDataGridCellValueElementProps) => {
       if (details.status !== 'succeeded' || !details.data || rowIndex >= details.data.combinedResources.length) {
         return null;
       }
 
       const detailsItem = details.data.combinedResources[rowIndex];
       if (columnId === 'url') {
-        return detailsItem.url ?? '-';
+        return detailsItem.url ?? '(inline)';
       }
 
       if (columnId === 'type') {
@@ -154,11 +166,11 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
       }
 
       if (columnId === 'size') {
-        return detailsItem.size ? formatBytes(detailsItem.size) : '-';
-      }
-
-      if (columnId === 'content') {
-        return detailsItem.digest ? detailsItem.digest : '-';
+        return detailsItem.size
+          ? isDetails
+            ? formatBytes(detailsItem.size)
+            : commaSeparateNumbers(detailsItem.size)
+          : '-';
       }
 
       return null;
@@ -285,11 +297,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         <EuiFlexGroup>
           <EuiFlexItem>
             <EuiStat
-              title={
-                <EuiText>
-                  <b>{unix(details.data.timestamp).format('LL HH:mm:ss')}</b>
-                </EuiText>
-              }
+              title={<b>{unix(details.data.timestamp).format('LL HH:mm:ss')}</b>}
               titleSize={'xs'}
               description={'Last updated'}
             />
@@ -297,11 +305,9 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
           <EuiFlexItem>
             <EuiStat
               title={
-                <EuiText>
-                  <b>
-                    {details.data.scriptsCount} ({formatBytes(details.data.scriptsTotalSize)})
-                  </b>
-                </EuiText>
+                <b>
+                  {details.data.scriptsCount} ({formatBytes(details.data.scriptsTotalSize)})
+                </b>
               }
               titleSize={'xs'}
               description={'Scripts'}
@@ -310,11 +316,9 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
           <EuiFlexItem>
             <EuiStat
               title={
-                <EuiText>
-                  <b>
-                    {details.data.stylesCount} ({formatBytes(details.data.stylesTotalSize)})
-                  </b>
-                </EuiText>
+                <b>
+                  {details.data.stylesCount} ({formatBytes(details.data.stylesTotalSize)})
+                </b>
               }
               titleSize={'xs'}
               description={'Styles'}
@@ -339,6 +343,26 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
             onChangePage: onChangePage,
           }}
           gridStyle={{ border: 'all', fontSize: 's', stripes: true }}
+          schemaDetectors={[
+            {
+              type: 'commaNumber',
+              detector: (value) => (IS_NUMBER_REGEX.test(value) ? 1 : 0),
+              comparator(a, b, direction) {
+                const aValue = a === '-' ? 0 : Number.parseInt(a.replace(/,/g, ''), 10);
+                const bValue = b === '-' ? 0 : Number.parseInt(b.replace(/,/g, ''), 10);
+                if (aValue > bValue) {
+                  return direction === 'asc' ? 1 : -1;
+                }
+                if (aValue < bValue) {
+                  return direction === 'asc' ? -1 : 1;
+                }
+                return 0;
+              },
+              sortTextAsc: 'Low-High',
+              sortTextDesc: 'High-Low',
+              icon: 'tokenNumber',
+            },
+          ]}
           toolbarVisibility={{
             additionalControls: (
               <>
