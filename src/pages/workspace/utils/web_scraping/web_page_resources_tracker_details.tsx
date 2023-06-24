@@ -73,14 +73,14 @@ function transformWebPageResourcesResponse(response: WebPageResourcesResponse) {
   if (responseData.scripts) {
     for (const resource of responseData.scripts) {
       itemDetails.combinedResources.push({ ...resource, type: 'js' });
-      itemDetails.scriptsTotalSize += resource.size ?? 0;
+      itemDetails.scriptsTotalSize += resource.content?.size ?? 0;
     }
   }
 
   if (responseData.styles) {
     for (const resource of responseData.styles) {
       itemDetails.combinedResources.push({ ...resource, type: 'css' });
-      itemDetails.stylesTotalSize += resource.size ?? 0;
+      itemDetails.stylesTotalSize += resource.content?.size ?? 0;
     }
   }
 
@@ -166,10 +166,10 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
       }
 
       if (columnId === 'size') {
-        return detailsItem.size
+        return detailsItem.content?.size
           ? isDetails
-            ? formatBytes(detailsItem.size)
-            : commaSeparateNumbers(detailsItem.size)
+            ? formatBytes(detailsItem.content.size)
+            : commaSeparateNumbers(detailsItem.content.size)
           : '-';
       }
 

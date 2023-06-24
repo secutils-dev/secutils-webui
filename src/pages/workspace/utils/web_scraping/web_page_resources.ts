@@ -6,6 +6,10 @@ export interface WebPageResources {
 
 export interface WebPageResource {
   url?: string;
-  digest?: string;
-  size?: number;
+  content?: WebPageResourceContent;
+}
+
+export interface WebPageResourceContent {
+  digest: string;
+  size: number;
 }
