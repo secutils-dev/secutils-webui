@@ -1,12 +1,7 @@
-export interface WebPageResources {
-  timestamp: number;
-  scripts?: WebPageResource[];
-  styles?: WebPageResource[];
-}
-
 export interface WebPageResource {
   url?: string;
   content?: WebPageResourceContent;
+  diffStatus?: 'added' | 'removed' | 'changed';
 }
 
 export interface WebPageResourceContent {

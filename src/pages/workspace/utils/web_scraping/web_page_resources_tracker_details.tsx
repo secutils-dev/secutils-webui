@@ -15,7 +15,8 @@ import {
 import axios from 'axios';
 import { unix } from 'moment';
 
-import type { WebPageResource, WebPageResources } from './web_page_resources';
+import type { WebPageResource } from './web_page_resource';
+import type { WebPageResourcesRevision } from './web_page_resources_revision';
 import type { WebPageResourcesTracker } from './web_page_resources_tracker';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import type { AsyncData } from '../../../../model';
@@ -53,14 +54,14 @@ function formatBytes(bytes: number, decimals = 2) {
 }
 
 interface WebPageResourcesResponse {
-  value: { value: { resources: WebPageResources[] } };
+  value: { value: { revisions: WebPageResourcesRevision[] } };
 }
 function transformWebPageResourcesResponse(response: WebPageResourcesResponse) {
-  if (response.value.value.resources.length === 0) {
+  if (response.value.value.revisions.length === 0) {
     return null;
   }
 
-  const responseData = response.value.value.resources[response.value.value.resources.length - 1];
+  const responseData = response.value.value.revisions[response.value.value.revisions.length - 1];
   const itemDetails: ItemDetailsType = {
     timestamp: responseData.timestamp,
     scriptsCount: responseData.scripts?.length ?? 0,
@@ -112,7 +113,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         .post<WebPageResourcesResponse>(getApiUrl('/api/utils/action'), {
           action: {
             type: 'webScraping',
-            value: { type: 'fetchWebPageResources', value: { trackerName: item.name, refresh } },
+            value: { type: 'fetchWebPageResources', value: { trackerName: item.name, refresh, calculateDiff: true } },
           },
         })
         .then(
@@ -192,7 +193,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         setClearHistoryStatus((currentStatus) => ({ ...currentStatus, isInProgress: true }));
 
         axios
-          .post<{ value: { value: { resources: WebPageResources[] } } }>(getApiUrl('/api/utils/action'), {
+          .post<{ value: { value: { resources: WebPageResourcesRevision[] } } }>(getApiUrl('/api/utils/action'), {
             action: {
               type: 'webScraping',
               value: { type: 'removeWebPageResources', value: { trackerName: item.name } },
