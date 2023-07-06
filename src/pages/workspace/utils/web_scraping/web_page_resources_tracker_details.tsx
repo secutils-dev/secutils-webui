@@ -11,12 +11,14 @@ import {
   EuiFlexItem,
   EuiIcon,
   EuiStat,
+  EuiText,
 } from '@elastic/eui';
 import axios from 'axios';
 import { unix } from 'moment';
 
 import type { WebPageResource } from './web_page_resource';
 import type { WebPageResourcesRevision } from './web_page_resources_revision';
+import { WebPageResourcesRevisionSelector } from './web_page_resources_revision_selector';
 import type { WebPageResourcesTracker } from './web_page_resources_tracker';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import type { AsyncData } from '../../../../model';
@@ -61,35 +63,37 @@ function transformWebPageResourcesResponse(response: WebPageResourcesResponse) {
     return null;
   }
 
-  const responseData = response.value.value.revisions[response.value.value.revisions.length - 1];
-  const itemDetails: ItemDetailsType = {
-    timestamp: responseData.timestamp,
-    scriptsCount: responseData.scripts?.length ?? 0,
-    scriptsTotalSize: 0,
-    stylesCount: responseData.styles?.length ?? 0,
-    stylesTotalSize: 0,
-    combinedResources: [],
-  };
+  return response.value.value.revisions.map((revision) => {
+    const itemDetails: ItemDetailsType = {
+      timestamp: revision.timestamp,
+      scriptsCount: revision.scripts?.length ?? 0,
+      scriptsTotalSize: 0,
+      stylesCount: revision.styles?.length ?? 0,
+      stylesTotalSize: 0,
+      combinedResources: [],
+    };
 
-  if (responseData.scripts) {
-    for (const resource of responseData.scripts) {
-      itemDetails.combinedResources.push({ ...resource, type: 'js' });
-      itemDetails.scriptsTotalSize += resource.content?.size ?? 0;
+    if (revision.scripts) {
+      for (const resource of revision.scripts) {
+        itemDetails.combinedResources.push({ ...resource, type: 'js' });
+        itemDetails.scriptsTotalSize += resource.content?.size ?? 0;
+      }
     }
-  }
 
-  if (responseData.styles) {
-    for (const resource of responseData.styles) {
-      itemDetails.combinedResources.push({ ...resource, type: 'css' });
-      itemDetails.stylesTotalSize += resource.content?.size ?? 0;
+    if (revision.styles) {
+      for (const resource of revision.styles) {
+        itemDetails.combinedResources.push({ ...resource, type: 'css' });
+        itemDetails.stylesTotalSize += resource.content?.size ?? 0;
+      }
     }
-  }
 
-  return itemDetails;
+    return itemDetails;
+  });
 }
 
 const COLUMNS: EuiDataGridColumn[] = [
-  { id: 'url', display: 'URL', displayAsText: 'URL', isExpandable: true, isSortable: true },
+  { id: 'source', display: 'Source', displayAsText: 'Source', isExpandable: true, isSortable: true },
+  { id: 'diff', display: 'Diff', displayAsText: 'Diff', isExpandable: false, isSortable: true, initialWidth: 75 },
   { id: 'type', display: 'Type', displayAsText: 'Type', initialWidth: 80, isExpandable: false, isSortable: true },
   {
     id: 'size',
@@ -105,10 +109,10 @@ const COLUMNS: EuiDataGridColumn[] = [
 export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTrackerDetailsProps) {
   const { uiState, addToast } = useWorkspaceContext();
 
-  const [details, setDetails] = useState<AsyncData<ItemDetailsType | null>>({ status: 'pending' });
+  const [revisions, setRevisions] = useState<AsyncData<ItemDetailsType[] | null>>({ status: 'pending' });
   const fetchResources = useCallback(
     ({ refresh }: { refresh: boolean } = { refresh: false }) => {
-      setDetails({ status: 'pending' });
+      setRevisions({ status: 'pending' });
       axios
         .post<WebPageResourcesResponse>(getApiUrl('/api/utils/action'), {
           action: {
@@ -118,10 +122,17 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         })
         .then(
           (response) => {
-            setDetails({ status: 'succeeded', data: transformWebPageResourcesResponse(response.data) });
+            const transformedRevisions = transformWebPageResourcesResponse(response.data);
+            setRevisions({ status: 'succeeded', data: transformedRevisions });
+            setRevision(
+              transformedRevisions && transformedRevisions.length > 0
+                ? transformedRevisions[transformedRevisions.length - 1]
+                : null,
+            );
           },
           (err: Error) => {
-            setDetails({ status: 'failed', error: err?.message ?? err });
+            setRevisions({ status: 'failed', error: err?.message ?? err });
+            setRevision(null);
           },
         );
     },
@@ -135,6 +146,16 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
 
     fetchResources();
   }, [uiState, item]);
+
+  const [revision, setRevision] = useState<ItemDetailsType | null>(null);
+  const onRevisionChange = useCallback(
+    (index: number) => {
+      if (revisions.status === 'succeeded') {
+        setRevision(revisions.data?.[index] ?? null);
+      }
+    },
+    [revisions],
+  );
 
   const [visibleColumns, setVisibleColumns] = useState(() => COLUMNS.map(({ id }) => id));
   const [sortingColumns, setSortingColumns] = useState<Array<{ id: string; direction: 'asc' | 'desc' }>>([]);
@@ -153,13 +174,35 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
 
   const renderCellValue = useCallback(
     ({ rowIndex, columnId, isDetails }: EuiDataGridCellValueElementProps) => {
-      if (details.status !== 'succeeded' || !details.data || rowIndex >= details.data.combinedResources.length) {
+      if (!revision || rowIndex >= revision.combinedResources.length) {
         return null;
       }
 
-      const detailsItem = details.data.combinedResources[rowIndex];
-      if (columnId === 'url') {
-        return detailsItem.url ?? '(inline)';
+      const detailsItem = revision.combinedResources[rowIndex];
+      let diffStatus: { color?: string; label: string } | undefined;
+      if (detailsItem.diffStatus === 'changed') {
+        diffStatus = { color: '#79aad9', label: 'Changed' };
+      } else if (detailsItem.diffStatus === 'added') {
+        diffStatus = { color: '#6dccb1', label: 'Added' };
+      } else if (detailsItem.diffStatus === 'removed') {
+        diffStatus = { color: '#ff7e62', label: 'Removed' };
+      } else {
+        diffStatus = { label: '-' };
+      }
+
+      if (columnId === 'diff' && diffStatus) {
+        return (
+          <EuiText size={'xs'} color={diffStatus.color}>
+            <b>{diffStatus.label}</b>
+          </EuiText>
+        );
+      }
+      if (columnId === 'source') {
+        return (
+          <EuiText size={'xs'} color={diffStatus?.color}>
+            {detailsItem.url ?? '(inline)'}
+          </EuiText>
+        );
       }
 
       if (columnId === 'type') {
@@ -176,7 +219,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
 
       return null;
     },
-    [details],
+    [revision],
   );
 
   const [clearHistoryStatus, setClearHistoryStatus] = useState<{ isModalVisible: boolean; isInProgress: boolean }>({
@@ -201,7 +244,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
           })
           .then(
             () => {
-              setDetails({ status: 'succeeded', data: null });
+              setRevisions({ status: 'succeeded', data: null });
 
               addToast({
                 id: `success-clear-tracker-history-${item.name}`,
@@ -235,11 +278,11 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
     </EuiConfirmModal>
   ) : null;
 
-  if (details.status === 'pending') {
+  if (revisions.status === 'pending') {
     return <PageLoadingState title={`Loading resources for ${item.url}…`} />;
   }
 
-  if (details.status === 'failed') {
+  if (revisions.status === 'failed') {
     return (
       <PageErrorState
         title="Cannot load web page resources"
@@ -252,7 +295,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
     );
   }
 
-  if (!details.data || details.data.combinedResources.length === 0) {
+  if (!revisions.data || !revision || revision.combinedResources.length === 0) {
     const fetchButton = (
       <EuiButton
         iconType={'refresh'}
@@ -298,7 +341,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         <EuiFlexGroup>
           <EuiFlexItem>
             <EuiStat
-              title={<b>{unix(details.data.timestamp).format('LL HH:mm:ss')}</b>}
+              title={<b>{unix(revision.timestamp).format('LL HH:mm:ss')}</b>}
               titleSize={'xs'}
               description={'Last updated'}
             />
@@ -307,7 +350,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
             <EuiStat
               title={
                 <b>
-                  {details.data.scriptsCount} ({formatBytes(details.data.scriptsTotalSize)})
+                  {revision.scriptsCount} ({formatBytes(revision.scriptsTotalSize)})
                 </b>
               }
               titleSize={'xs'}
@@ -318,7 +361,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
             <EuiStat
               title={
                 <b>
-                  {details.data.stylesCount} ({formatBytes(details.data.stylesTotalSize)})
+                  {revision.stylesCount} ({formatBytes(revision.stylesTotalSize)})
                 </b>
               }
               titleSize={'xs'}
@@ -334,7 +377,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
           aria-label="Resources"
           columns={COLUMNS}
           columnVisibility={{ visibleColumns, setVisibleColumns }}
-          rowCount={details.data.combinedResources.length}
+          rowCount={revision.combinedResources.length}
           renderCellValue={renderCellValue}
           inMemory={{ level: 'sorting' }}
           sorting={{ columns: sortingColumns, onSort: setSortingColumns }}
@@ -367,6 +410,11 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
           toolbarVisibility={{
             additionalControls: (
               <>
+                <WebPageResourcesRevisionSelector
+                  value={revisions.data.findIndex((rev) => rev.timestamp === revision.timestamp)}
+                  values={revisions.data}
+                  onChange={onRevisionChange}
+                />
                 <EuiButtonEmpty
                   size="xs"
                   iconType="refresh"
