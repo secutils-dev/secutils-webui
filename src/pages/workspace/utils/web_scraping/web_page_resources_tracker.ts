@@ -6,4 +6,5 @@ export interface WebPageResourcesTracker {
   name: string;
   url: string;
   revisions: number;
+  delay: number;
 }

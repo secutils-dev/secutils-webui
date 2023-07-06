@@ -29,7 +29,12 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
     setUrl(e.target.value);
   }, []);
 
-  const [revisions, setRevisions] = useState<number>(item?.revisions ?? 2);
+  const [delay, setDelay] = useState<number>(item?.delay ?? 5000);
+  const onDelayChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setDelay(+e.target.value);
+  }, []);
+
+  const [revisions, setRevisions] = useState<number>(item?.revisions ?? 3);
   const onRevisionsChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setRevisions(+e.target.value);
   }, []);
@@ -46,7 +51,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
       .post(getApiUrl('/api/utils/action'), {
         action: {
           type: 'webScraping',
-          value: { type: 'saveWebPageResourcesTracker', value: { tracker: { name, url, revisions } } },
+          value: { type: 'saveWebPageResourcesTracker', value: { tracker: { name, url, revisions, delay } } },
         },
       })
       .then(() => getUserData<WebPageResourcesTrackers>(WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE))
@@ -74,7 +79,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           });
         },
       );
-  }, [name, url, revisions, updatingStatus]);
+  }, [name, url, delay, revisions, updatingStatus]);
 
   return (
     <EditorFlyout
@@ -92,12 +97,16 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           <EuiFormRow label="URL" helpText="URL of the web page for resource tracking" fullWidth>
             <EuiFieldText value={url} required type={'url'} onChange={onUrlChange} />
           </EuiFormRow>
+          <EuiFormRow label="Revisions" helpText="Tracker will persist only specified number of resources revisions">
+            <EuiFieldNumber fullWidth min={0} max={10} step={1} value={revisions} onChange={onRevisionsChange} />
+          </EuiFormRow>
+        </EuiDescribedFormGroup>
+        <EuiDescribedFormGroup title={<h3>Timeouts</h3>} description={'Timeouts and delays'}>
           <EuiFormRow
-            isDisabled={true}
-            label="Revisions"
-            helpText="Tracker will persist only specified number of resources revisions"
+            label="Delay"
+            helpText="Tracker will begin analyzing web page resources only after a specified number of milliseconds. This feature can be particularly useful for pages that have dynamically loaded resources"
           >
-            <EuiFieldNumber fullWidth min={0} max={100} step={1} value={revisions} onChange={onRevisionsChange} />
+            <EuiFieldNumber fullWidth min={0} max={60000} step={1000} value={delay} onChange={onDelayChange} />
           </EuiFormRow>
         </EuiDescribedFormGroup>
       </EuiForm>
