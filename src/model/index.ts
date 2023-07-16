@@ -15,3 +15,4 @@ export type { UserSettings } from './user_settings';
 export { getApiUrl } from './urls';
 export type { SerializedSearchItem, SearchItem } from './search_item';
 export { deserializeSearchItem } from './search_item';
+export { getErrorMessage, isClientError } from './errors';

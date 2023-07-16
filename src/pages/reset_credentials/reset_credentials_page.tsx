@@ -7,8 +7,7 @@ import axios from 'axios';
 
 import { PageErrorState, PageSuccessState } from '../../components';
 import { useAppContext, usePageMeta } from '../../hooks';
-import { type AsyncData, getApiUrl } from '../../model';
-import { getErrorMessage, isClientError } from '../../model/errors';
+import { type AsyncData, getApiUrl, getErrorMessage, isClientError } from '../../model';
 import { Page } from '../page';
 
 export function ResetCredentialsPage() {

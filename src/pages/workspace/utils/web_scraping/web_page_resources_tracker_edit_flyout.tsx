@@ -6,14 +6,22 @@ import axios from 'axios';
 
 import type { WebPageResourcesTracker, WebPageResourcesTrackers } from './web_page_resources_tracker';
 import { WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE } from './web_page_resources_tracker';
-import type { AsyncData } from '../../../../model';
-import { getApiUrl, getUserData } from '../../../../model';
+import { type AsyncData, getApiUrl, getErrorMessage, getUserData } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface Props {
   onClose: (items?: WebPageResourcesTracker[]) => void;
   item?: WebPageResourcesTracker;
+}
+
+function isValidURL(url: string) {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) {
@@ -69,13 +77,13 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           onClose(items ? Object.values(items) : []);
         },
         (err: Error) => {
-          setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
+          setUpdatingStatus({ status: 'failed', error: getErrorMessage(err) });
 
           addToast({
             id: `failed-update-tracker-${name}`,
             iconType: 'warning',
             color: 'danger',
-            title: `Unable to save "${name}" web page resource tracker, please try again later`,
+            title: `Unable to save "${name}" web page resource tracker: ${getErrorMessage(err)}`,
           });
         },
       );
@@ -86,7 +94,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
       title={`${item ? 'Edit' : 'Add'} policy`}
       onClose={() => onClose()}
       onSave={onSave}
-      canSave={name.trim().length > 0 && url.trim().length > 0}
+      canSave={name.trim().length > 0 && isValidURL(url.trim())}
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm fullWidth>
@@ -94,7 +102,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           <EuiFormRow label="Name" helpText="Arbitrary web page resources tracker name" fullWidth isDisabled={!!item}>
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
-          <EuiFormRow label="URL" helpText="URL of the web page for resource tracking" fullWidth>
+          <EuiFormRow label="URL" helpText="Fully-qualified URL of the web page for resource tracking" fullWidth>
             <EuiFieldText value={url} required type={'url'} onChange={onUrlChange} />
           </EuiFormRow>
           <EuiFormRow label="Revisions" helpText="Tracker will persist only specified number of resources revisions">

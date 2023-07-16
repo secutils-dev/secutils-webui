@@ -21,8 +21,7 @@ import type { WebPageResourcesRevision } from './web_page_resources_revision';
 import { WebPageResourcesRevisionSelector } from './web_page_resources_revision_selector';
 import type { WebPageResourcesTracker } from './web_page_resources_tracker';
 import { PageErrorState, PageLoadingState } from '../../../../components';
-import type { AsyncData } from '../../../../model';
-import { getApiUrl } from '../../../../model';
+import { type AsyncData, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface WebPageResourcesTrackerDetailsProps {
@@ -131,7 +130,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
             );
           },
           (err: Error) => {
-            setRevisions({ status: 'failed', error: err?.message ?? err });
+            setRevisions({ status: 'failed', error: getErrorMessage(err) });
             setRevision(null);
           },
         );
@@ -288,7 +287,10 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         title="Cannot load web page resources"
         content={
           <p>
-            Cannot load web page resources for <strong>{item.url}</strong>.
+            Cannot load web page resources for {item.url}
+            <br />
+            <br />
+            <strong>{revisions.error}</strong>.
           </p>
         }
       />

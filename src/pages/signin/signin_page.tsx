@@ -15,9 +15,7 @@ import axios from 'axios';
 
 import { ResetCredentialsModal } from './reset_credentials_modal';
 import { useAppContext, usePageMeta } from '../../hooks';
-import type { AsyncData } from '../../model';
-import { getApiUrl } from '../../model';
-import { getErrorMessage, isClientError } from '../../model/errors';
+import { type AsyncData, getApiUrl, getErrorMessage, isClientError } from '../../model';
 import { signinWithPasskey } from '../../model/webauthn';
 import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';

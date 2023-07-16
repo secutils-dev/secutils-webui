@@ -17,9 +17,7 @@ import { css } from '@emotion/react';
 import axios from 'axios';
 
 import { useAppContext, usePageMeta } from '../../hooks';
-import type { AsyncData } from '../../model';
-import { getApiUrl } from '../../model';
-import { getErrorMessage, isClientError } from '../../model/errors';
+import { type AsyncData, getApiUrl, getErrorMessage, isClientError } from '../../model';
 import { signupWithPasskey } from '../../model/webauthn';
 import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';
