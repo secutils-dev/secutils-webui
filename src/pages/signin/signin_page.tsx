@@ -1,6 +1,6 @@
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import {
   EuiButton,
@@ -17,11 +17,14 @@ import { ResetCredentialsModal } from './reset_credentials_modal';
 import { useAppContext, usePageMeta } from '../../hooks';
 import { type AsyncData, getApiUrl, getErrorMessage, isClientError } from '../../model';
 import { signinWithPasskey } from '../../model/webauthn';
+import { isSafeNextUrl } from '../../tools/url';
 import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';
 
 export function SigninPage() {
   usePageMeta('Sign-in');
+
+  const location = useLocation();
 
   const navigate = useNavigate();
   const { uiState, refreshUiState, addToast } = useAppContext();
@@ -115,7 +118,8 @@ export function SigninPage() {
   ) : null;
 
   if (uiState.user) {
-    return <Navigate to="/ws" />;
+    const urlToRedirect = new URLSearchParams(location.search).get('next');
+    return <Navigate to={urlToRedirect && isSafeNextUrl(urlToRedirect) ? urlToRedirect : '/ws'} />;
   }
 
   return (

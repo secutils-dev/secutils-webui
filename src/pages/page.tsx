@@ -93,7 +93,15 @@ export function Page({
   }
 
   if (!uiState.user && !isUnauthenticatedPage(location.pathname)) {
-    return <Navigate to="/signin" />;
+    return (
+      <Navigate
+        to={
+          location.pathname !== '/' && location.pathname !== '/ws'
+            ? `/signin?next=${encodeURIComponent(location.pathname)}`
+            : '/signin'
+        }
+      />
+    );
   }
 
   const header = pageTitle ? <PageHeader title={pageTitle} /> : null;

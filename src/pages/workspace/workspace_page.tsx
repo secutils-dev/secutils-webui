@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import type { EuiSideNavItemType } from '@elastic/eui';
 import {
@@ -164,9 +164,14 @@ export function WorkspacePage() {
   }, [utilIdFromParam, selectedUtil, utilsMap, deepLinkFromParam, navigationBar]);
 
   const content = useMemo(() => {
+    // Check if URL is invalid.
+    if (utilIdFromParam && !utilsMap.has(utilIdFromParam)) {
+      return <Navigate to="/ws" />;
+    }
+
     const Component = (selectedUtil ? UtilsComponents.get(selectedUtil.handle) : undefined) ?? DEFAULT_COMPONENT;
     return <Component />;
-  }, [selectedUtil]);
+  }, [selectedUtil, utilsMap, utilIdFromParam]);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const onToggleSettings = useCallback(() => {
