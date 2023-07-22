@@ -91,7 +91,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
 
   return (
     <EditorFlyout
-      title={`${item ? 'Edit' : 'Add'} policy`}
+      title={`${item ? 'Edit' : 'Add'} tracker`}
       onClose={() => onClose()}
       onSave={onSave}
       canSave={name.trim().length > 0 && isValidURL(url.trim())}
