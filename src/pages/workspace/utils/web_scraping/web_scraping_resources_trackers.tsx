@@ -68,7 +68,7 @@ export default function WebScrapingResourcesTrackers() {
       iconType={'documentation'}
       title="Learn how to create and use web resources trackers"
       target={'_blank'}
-      href={'/docs/web_scraping/resources'}
+      href={'/docs/guides/web_scraping/resources'}
     >
       Learn how to
     </EuiButtonEmpty>
