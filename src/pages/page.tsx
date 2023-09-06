@@ -116,7 +116,7 @@ export function Page({
               margin-right: 0.5rem;
             `}
           >
-            <EuiHeaderSectionItem border="right">
+            <EuiHeaderSectionItem>
               <EuiLink href="/">
                 <EuiIcon type={LogoWithName} size={'xl'} aria-label="Go to home page" />
               </EuiLink>

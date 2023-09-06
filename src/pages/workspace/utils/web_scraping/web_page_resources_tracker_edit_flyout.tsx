@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react';
 import { useCallback, useState } from 'react';
 
-import { EuiDescribedFormGroup, EuiFieldNumber, EuiFieldText, EuiForm, EuiFormRow } from '@elastic/eui';
+import { EuiDescribedFormGroup, EuiFieldNumber, EuiFieldText, EuiForm, EuiFormRow, EuiSelect } from '@elastic/eui';
 import axios from 'axios';
 
 import type { WebPageResourcesTracker, WebPageResourcesTrackers } from './web_page_resources_tracker';
@@ -9,6 +9,14 @@ import { WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE } from './web_page_reso
 import { type AsyncData, getApiUrl, getErrorMessage, getUserData } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
+
+const SCHEDULES = [
+  { value: '@', text: 'Manually' },
+  { value: '@hourly', text: 'Hourly' },
+  { value: '@daily', text: 'Daily' },
+  { value: '@weekly', text: 'Weekly' },
+  { value: '@monthly', text: 'Monthly' },
+];
 
 export interface Props {
   onClose: (items?: WebPageResourcesTracker[]) => void;
@@ -42,6 +50,11 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
     setDelay(+e.target.value);
   }, []);
 
+  const [schedule, setSchedule] = useState<string>(item?.schedule ?? '@');
+  const onScheduleChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+    setSchedule(e.target.value);
+  }, []);
+
   const [revisions, setRevisions] = useState<number>(item?.revisions ?? 3);
   const onRevisionsChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setRevisions(+e.target.value);
@@ -59,7 +72,10 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
       .post(getApiUrl('/api/utils/action'), {
         action: {
           type: 'webScraping',
-          value: { type: 'saveWebPageResourcesTracker', value: { tracker: { name, url, revisions, delay } } },
+          value: {
+            type: 'saveWebPageResourcesTracker',
+            value: { tracker: { name, url, revisions, delay, schedule: schedule === '@' ? undefined : schedule } },
+          },
         },
       })
       .then(() => getUserData<WebPageResourcesTrackers>(WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE))
@@ -87,7 +103,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           });
         },
       );
-  }, [name, url, delay, revisions, updatingStatus]);
+  }, [name, url, delay, revisions, schedule, updatingStatus]);
 
   return (
     <EditorFlyout
@@ -109,7 +125,13 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
             <EuiFieldNumber fullWidth min={0} max={10} step={1} value={revisions} onChange={onRevisionsChange} />
           </EuiFormRow>
         </EuiDescribedFormGroup>
-        <EuiDescribedFormGroup title={<h3>Timeouts</h3>} description={'Timeouts and delays'}>
+        <EuiDescribedFormGroup title={<h3>Timing</h3>} description={'Timing properties of resource tracking'}>
+          <EuiFormRow
+            label="Schedule"
+            helpText="How often resources should be checked for changes. By default, automatic resource checks are disabled and can be initiated manually"
+          >
+            <EuiSelect options={SCHEDULES} value={schedule} onChange={onScheduleChange} />
+          </EuiFormRow>
           <EuiFormRow
             label="Delay"
             helpText="Tracker will begin analyzing web page resources only after a specified number of milliseconds. This feature can be particularly useful for pages that have dynamically loaded resources"

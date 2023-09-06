@@ -7,4 +7,5 @@ export interface WebPageResourcesTracker {
   url: string;
   revisions: number;
   delay: number;
+  schedule?: string;
 }
