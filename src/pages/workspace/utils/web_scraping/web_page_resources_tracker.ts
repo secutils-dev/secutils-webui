@@ -8,4 +8,7 @@ export interface WebPageResourcesTracker {
   revisions: number;
   delay: number;
   schedule?: string;
+  scripts?: {
+    resourceFilterMap?: string;
+  };
 }

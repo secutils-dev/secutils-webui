@@ -1,11 +1,20 @@
 import type { ChangeEvent } from 'react';
 import { useCallback, useState } from 'react';
 
-import { EuiDescribedFormGroup, EuiFieldNumber, EuiFieldText, EuiForm, EuiFormRow, EuiSelect } from '@elastic/eui';
+import {
+  EuiDescribedFormGroup,
+  EuiFieldNumber,
+  EuiFieldText,
+  EuiForm,
+  EuiFormRow,
+  EuiLink,
+  EuiSelect,
+} from '@elastic/eui';
 import axios from 'axios';
 
 import type { WebPageResourcesTracker, WebPageResourcesTrackers } from './web_page_resources_tracker';
 import { WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE } from './web_page_resources_tracker';
+import WebScrapingResourcesTrackerScriptEditor from './web_page_resources_tracker_script_editor';
 import { type AsyncData, getApiUrl, getErrorMessage, getUserData } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
@@ -55,6 +64,13 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
     setSchedule(e.target.value);
   }, []);
 
+  const [resourceFilterMapScript, setResourceFilterMapScript] = useState<string | undefined>(
+    item?.scripts?.resourceFilterMap,
+  );
+  const onResourceFilterMapScriptChange = useCallback((value?: string) => {
+    setResourceFilterMapScript(value);
+  }, []);
+
   const [revisions, setRevisions] = useState<number>(item?.revisions ?? 3);
   const onRevisionsChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setRevisions(+e.target.value);
@@ -74,7 +90,16 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           type: 'webScraping',
           value: {
             type: 'saveWebPageResourcesTracker',
-            value: { tracker: { name, url, revisions, delay, schedule: schedule === '@' ? undefined : schedule } },
+            value: {
+              tracker: {
+                name,
+                url,
+                revisions,
+                delay,
+                schedule: schedule === '@' ? undefined : schedule,
+                scripts: resourceFilterMapScript ? { resourceFilterMap: resourceFilterMapScript } : undefined,
+              },
+            },
           },
         },
       })
@@ -103,7 +128,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           });
         },
       );
-  }, [name, url, delay, revisions, schedule, updatingStatus]);
+  }, [name, url, delay, revisions, schedule, resourceFilterMapScript, updatingStatus]);
 
   return (
     <EditorFlyout
@@ -137,6 +162,31 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
             helpText="Tracker will begin analyzing web page resources only after a specified number of milliseconds. This feature can be particularly useful for pages that have dynamically loaded resources"
           >
             <EuiFieldNumber fullWidth min={0} max={60000} step={1000} value={delay} onChange={onDelayChange} />
+          </EuiFormRow>
+        </EuiDescribedFormGroup>
+        <EuiDescribedFormGroup
+          title={<h3>Scripts</h3>}
+          description={
+            'Custom JavaScript scripts that will be injected into the web page before resources are extracted'
+          }
+        >
+          <EuiFormRow
+            label="Resource filter/mapper"
+            helpText={
+              <span>
+                The script accepts "resource" as an argument and returns it, either with or without modifications, if
+                the resource should be tracked, or "null" if it should not. Refer to the{' '}
+                <EuiLink target="_blank" href="/docs/guides/web_scraping/resources">
+                  <b>documentation</b>
+                </EuiLink>{' '}
+                for a list of available "resource" properties and script examples.
+              </span>
+            }
+          >
+            <WebScrapingResourcesTrackerScriptEditor
+              onChange={onResourceFilterMapScriptChange}
+              defaultValue={resourceFilterMapScript}
+            />
           </EuiFormRow>
         </EuiDescribedFormGroup>
       </EuiForm>
