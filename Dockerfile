@@ -7,6 +7,6 @@ RUN set -x && yarn install
 COPY ["./src", "./src"]
 RUN set -x && yarn build
 
-FROM nginx:stable-alpine
+FROM nginx:alpine3.18-slim
 COPY --from=UI_BUILDER ["/app/dist/", "/usr/share/nginx/html/"]
 COPY ["./config/nginx.conf", "/etc/nginx/conf.d/default.conf"]
