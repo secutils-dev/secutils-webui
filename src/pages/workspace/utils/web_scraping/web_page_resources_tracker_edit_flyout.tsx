@@ -9,7 +9,9 @@ import {
   EuiFormRow,
   EuiLink,
   EuiSelect,
+  EuiSwitch,
 } from '@elastic/eui';
+import type { EuiSwitchEvent } from '@elastic/eui';
 import axios from 'axios';
 
 import type { WebPageResourcesTracker, WebPageResourcesTrackers } from './web_page_resources_tracker';
@@ -52,6 +54,11 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
   const [url, setUrl] = useState<string>(item?.url ?? '');
   const onUrlChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
+  }, []);
+
+  const [sendNotification, setSendNotification] = useState<boolean>(true);
+  const onSendNotificationChange = useCallback((e: EuiSwitchEvent) => {
+    setSendNotification(e.target.checked);
   }, []);
 
   const [delay, setDelay] = useState<number>(item?.delay ?? 5000);
@@ -139,7 +146,10 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm fullWidth>
-        <EuiDescribedFormGroup title={<h3>Basic properties</h3>} description={'Basic properties'}>
+        <EuiDescribedFormGroup
+          title={<h3>General</h3>}
+          description={'General properties of the web page resource tracker'}
+        >
           <EuiFormRow label="Name" helpText="Arbitrary web page resources tracker name" fullWidth isDisabled={!!item}>
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
@@ -149,19 +159,35 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           <EuiFormRow label="Revisions" helpText="Tracker will persist only specified number of resources revisions">
             <EuiFieldNumber fullWidth min={0} max={10} step={1} value={revisions} onChange={onRevisionsChange} />
           </EuiFormRow>
-        </EuiDescribedFormGroup>
-        <EuiDescribedFormGroup title={<h3>Timing</h3>} description={'Timing properties of resource tracking'}>
           <EuiFormRow
-            label="Schedule"
+            label="Delay"
+            helpText="Tracker will begin analyzing web page resources only after a specified number of milliseconds after the page is loaded. This feature can be particularly useful for pages that have dynamically loaded resources"
+          >
+            <EuiFieldNumber fullWidth min={0} max={60000} step={1000} value={delay} onChange={onDelayChange} />
+          </EuiFormRow>
+        </EuiDescribedFormGroup>
+        <EuiDescribedFormGroup
+          title={<h3>Change tracking</h3>}
+          description={
+            'Properties defining how frequently web page resources should be checked for changes and how those changes should be reported'
+          }
+        >
+          <EuiFormRow
+            label="Frequency"
             helpText="How often resources should be checked for changes. By default, automatic resource checks are disabled and can be initiated manually"
           >
             <EuiSelect options={SCHEDULES} value={schedule} onChange={onScheduleChange} />
           </EuiFormRow>
           <EuiFormRow
-            label="Delay"
-            helpText="Tracker will begin analyzing web page resources only after a specified number of milliseconds. This feature can be particularly useful for pages that have dynamically loaded resources"
+            label={'Notifications'}
+            helpText={"Send notification to user's primary email when a resource change is detected"}
           >
-            <EuiFieldNumber fullWidth min={0} max={60000} step={1000} value={delay} onChange={onDelayChange} />
+            <EuiSwitch
+              showLabel={false}
+              label="Notification on change"
+              checked={sendNotification}
+              onChange={onSendNotificationChange}
+            />
           </EuiFormRow>
         </EuiDescribedFormGroup>
         <EuiDescribedFormGroup

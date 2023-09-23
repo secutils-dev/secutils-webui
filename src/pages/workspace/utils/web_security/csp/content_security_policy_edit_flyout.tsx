@@ -107,7 +107,10 @@ export function ContentSecurityPolicyEditFlyout({ onClose, policy }: Props) {
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm fullWidth>
-        <EuiDescribedFormGroup title={<h3>Basic properties</h3>} description={'Basic properties'}>
+        <EuiDescribedFormGroup
+          title={<h3>General</h3>}
+          description={'General properties of the content security policy (CSP)'}
+        >
           <EuiFormRow label="Name" helpText="Arbitrary CSP policy name" fullWidth isDisabled={!!policy}>
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
