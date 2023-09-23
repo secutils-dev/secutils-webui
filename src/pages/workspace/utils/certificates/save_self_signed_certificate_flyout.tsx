@@ -13,7 +13,13 @@ import {
 import moment from 'moment/moment';
 
 import { CertificateLifetimeCalendar } from './certificate_lifetime_calendar';
-import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
+import type {
+  SelfSignedCertificate,
+  SelfSignedCertificateCurveName,
+  SelfSignedCertificateKeyAlgorithm,
+  SelfSignedCertificateKeySize,
+  SerializedSelfSignedCertificates,
+} from './self_signed_certificate';
 import {
   deserializeSelfSignedCertificates,
   SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE,
@@ -90,16 +96,39 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
   }, []);
 
   const [signatureAlgorithms, setSignatureAlgorithms] = useState(
-    SIGNATURE_ALGORITHMS.get(certificate?.keyAlgorithm ?? 'rsa')!,
+    SIGNATURE_ALGORITHMS.get(certificate?.keyAlgorithm?.alg ?? 'rsa')!,
   );
 
-  const [keyAlgorithm, setKeyAlgorithm] = useState<string>(certificate?.keyAlgorithm ?? 'rsa');
+  const [keyAlgorithm, setKeyAlgorithm] = useState<SelfSignedCertificateKeyAlgorithm>(
+    certificate?.keyAlgorithm && typeof certificate?.keyAlgorithm === 'object'
+      ? certificate.keyAlgorithm
+      : { alg: 'rsa', keySize: '2048' },
+  );
   const onKeyAlgorithmChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-    setKeyAlgorithm(e.target.value);
+    const alg = e.target.value as SelfSignedCertificateKeyAlgorithm['alg'];
+    if (alg === 'ed25519') {
+      setKeyAlgorithm({ alg });
+    } else if (alg === 'ecdsa') {
+      setKeyAlgorithm({ alg, curve: 'secp256r1' });
+    } else {
+      setKeyAlgorithm({ alg, keySize: '2048' });
+    }
 
     const newSignatureAlgorithms = SIGNATURE_ALGORITHMS.get(e.target.value)!;
     setSignatureAlgorithms(newSignatureAlgorithms);
     setSignatureAlgorithm(newSignatureAlgorithms[0].value);
+  }, []);
+
+  const onKeySizeChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+    setKeyAlgorithm((keyAlg) =>
+      'keySize' in keyAlg ? { ...keyAlg, keySize: e.target.value as SelfSignedCertificateKeySize } : keyAlg,
+    );
+  }, []);
+
+  const onCurveChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+    setKeyAlgorithm((keyAlg) =>
+      'curve' in keyAlg ? { ...keyAlg, curve: e.target.value as SelfSignedCertificateCurveName } : keyAlg,
+    );
   }, []);
 
   const [signatureAlgorithm, setSignatureAlgorithm] = useState<string>(
@@ -257,10 +286,47 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
                 { value: 'ecdsa', text: 'ECDSA' },
                 { value: 'ed25519', text: 'Ed25519' },
               ]}
-              value={keyAlgorithm}
+              value={keyAlgorithm.alg}
               onChange={onKeyAlgorithmChange}
             />
           </EuiFormRow>
+          {'keySize' in keyAlgorithm ? (
+            <EuiFormRow label="Key size" helpText="Private key size.">
+              <EuiSelect
+                options={[
+                  { value: '1024', text: '1024 bit' },
+                  { value: '2048', text: '2048 bit' },
+                  { value: '4096', text: '4096 bit' },
+                  { value: '8192', text: '8192 bit' },
+                ]}
+                value={keyAlgorithm.keySize}
+                onChange={onKeySizeChange}
+              />
+            </EuiFormRow>
+          ) : null}
+          {'curve' in keyAlgorithm ? (
+            <EuiFormRow
+              label="Curve name"
+              helpText={
+                <span>
+                  <EuiLink target="_blank" href="https://www.rfc-editor.org/rfc/rfc8422.html#section-5.1.1">
+                    Elliptic curve
+                  </EuiLink>{' '}
+                  used for cryptographic operations.
+                </span>
+              }
+            >
+              <EuiSelect
+                options={[
+                  { value: 'secp256r1', text: 'prime256v1 / secp256r1 / NIST P-256' },
+                  { value: 'secp384r1', text: 'secp384r1 / NIST P-384' },
+                  { value: 'secp521r1', text: 'secp521r1 / NIST P-521' },
+                ]}
+                value={keyAlgorithm.curve}
+                onChange={onCurveChange}
+              />
+            </EuiFormRow>
+          ) : null}
           <EuiFormRow label="Signature algorithm" helpText="Public key signature algorithm.">
             <EuiSelect
               options={signatureAlgorithms}

@@ -10,7 +10,7 @@ export interface SerializedSelfSignedCertificate {
   l?: string;
   o?: string;
   ou?: string;
-  ka: string;
+  ka: SelfSignedCertificateKeyAlgorithm;
   sa: string;
   nb: number;
   na: number;
@@ -27,7 +27,7 @@ export interface SelfSignedCertificate {
   locality?: string;
   organization?: string;
   organizationalUnit?: string;
-  keyAlgorithm: string;
+  keyAlgorithm: SelfSignedCertificateKeyAlgorithm;
   signatureAlgorithm: string;
   notValidBefore: number;
   notValidAfter: number;
@@ -35,6 +35,14 @@ export interface SelfSignedCertificate {
   keyUsage?: string[];
   extendedKeyUsage?: string[];
 }
+
+export type SelfSignedCertificateKeyAlgorithm =
+  | { alg: 'ed25519' }
+  | { alg: 'rsa' | 'dsa'; keySize: SelfSignedCertificateKeySize }
+  | { alg: 'ecdsa'; curve: SelfSignedCertificateCurveName };
+
+export type SelfSignedCertificateKeySize = '1024' | '2048' | '4096' | '8192';
+export type SelfSignedCertificateCurveName = 'secp256r1' | 'secp384r1' | 'secp521r1';
 
 export function getDistinguishedNameString(certificate: SelfSignedCertificate) {
   return [
@@ -58,11 +66,11 @@ export function certificateTypeString(certificate: SelfSignedCertificate) {
 }
 
 export function keyAlgorithmString(certificate: SelfSignedCertificate) {
-  switch (certificate.keyAlgorithm) {
+  switch (certificate.keyAlgorithm.alg) {
     case 'rsa':
     case 'dsa':
     case 'ecdsa':
-      return certificate.keyAlgorithm.toUpperCase();
+      return certificate.keyAlgorithm.alg.toUpperCase();
     default:
       return 'Ed25519';
   }
