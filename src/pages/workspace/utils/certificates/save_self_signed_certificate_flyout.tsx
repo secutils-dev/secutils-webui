@@ -102,7 +102,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
   const [keyAlgorithm, setKeyAlgorithm] = useState<SelfSignedCertificateKeyAlgorithm>(
     certificate?.keyAlgorithm && typeof certificate?.keyAlgorithm === 'object'
       ? certificate.keyAlgorithm
-      : { alg: 'rsa', keySize: '2048' },
+      : { alg: 'ed25519' },
   );
   const onKeyAlgorithmChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     const alg = e.target.value as SelfSignedCertificateKeyAlgorithm['alg'];
