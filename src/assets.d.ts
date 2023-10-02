@@ -27,3 +27,8 @@ declare module '@elastic/eui/dist/*.min.css' {
   const path: string;
   export default path;
 }
+
+declare module 'url:monaco-editor/*' {
+  const path: string;
+  export default path;
+}
