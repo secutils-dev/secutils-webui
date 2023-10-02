@@ -96,7 +96,7 @@ export function SaveSelfSignedCertificatesFlyout({ onClose, certificate }: SaveS
   }, []);
 
   const [signatureAlgorithms, setSignatureAlgorithms] = useState(
-    SIGNATURE_ALGORITHMS.get(certificate?.keyAlgorithm?.alg ?? 'rsa')!,
+    SIGNATURE_ALGORITHMS.get(certificate?.keyAlgorithm?.alg ?? 'ed25519')!,
   );
 
   const [keyAlgorithm, setKeyAlgorithm] = useState<SelfSignedCertificateKeyAlgorithm>(
