@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import type { EuiThemeColorMode } from '@elastic/eui';
 import { EuiGlobalToastList, EuiProvider } from '@elastic/eui';
@@ -8,10 +8,11 @@ import axios from 'axios';
 
 import { AppContext } from './app_context';
 import { useLocalStorage } from '../hooks';
-import type { SerializedUiState, UiState, UserSettings } from '../model';
+import type { UiState, UserSettings } from '../model';
 import {
-  deserializeUser,
+  getApiRequestConfig,
   getApiUrl,
+  getUserShareId,
   setUserData,
   USER_SETTINGS_KEY_COMMON_UI_THEME,
   USER_SETTINGS_USER_DATA_TYPE,
@@ -19,6 +20,7 @@ import {
 import type { PageToast } from '../pages/page';
 
 export function AppContainer() {
+  const location = useLocation();
   const [isUiStateRefreshInProgress, setIsUiStateRefreshInProgress] = useState(false);
   const [uiState, setUiState] = useState<UiState>({
     synced: false,
@@ -33,20 +35,13 @@ export function AppContainer() {
 
     setIsUiStateRefreshInProgress(true);
 
-    axios.get(getApiUrl('/api/ui/state')).then(
-      ({ data: serializedUiState }: { data: SerializedUiState }) => {
-        setUiState({
-          synced: true,
-          status: serializedUiState.status,
-          license: serializedUiState.license,
-          user: serializedUiState.user ? deserializeUser(serializedUiState.user) : undefined,
-          settings: serializedUiState.settings,
-          utils: serializedUiState.utils,
-        });
+    axios.get(getApiUrl('/api/ui/state'), getApiRequestConfig()).then(
+      ({ data }: { data: UiState }) => {
+        setUiState({ ...data, synced: true });
 
-        if (serializedUiState.settings) {
-          setSettings(serializedUiState.settings);
-          setLocalSettings(serializedUiState.settings);
+        if (data.settings) {
+          setSettings(data.settings);
+          setLocalSettings(data.settings);
         }
 
         setIsUiStateRefreshInProgress(false);
@@ -58,6 +53,20 @@ export function AppContainer() {
     );
   }, [isUiStateRefreshInProgress]);
   useEffect(refreshUiState, []);
+
+  // Track share context and refresh UI state if it changes.
+  useEffect(() => {
+    if (!uiState.synced) {
+      return;
+    }
+
+    const shareId = getUserShareId();
+    const shareContextHasChanged =
+      (uiState.userShare && uiState.userShare.id !== shareId) || (!uiState.userShare && shareId);
+    if (shareContextHasChanged) {
+      refreshUiState();
+    }
+  }, [location.search, uiState]);
 
   // Settings aren't sensitive data, so we can duplicate them in the local storage to improve overall responsiveness.
   const [localSettings, setLocalSettings] = useLocalStorage<UserSettings | undefined>('settings', undefined);

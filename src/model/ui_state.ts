@@ -1,6 +1,7 @@
 import type { ServerStatus } from './server_status';
-import type { SerializedUser, User } from './user';
+import type { User } from './user';
 import type { UserSettings } from './user_settings';
+import type { UserShare } from './user_share';
 import type { Util } from './util';
 
 /**
@@ -13,19 +14,12 @@ export interface License {
   maxEndpoints: number;
 }
 
-export interface SerializedUiState {
-  status: ServerStatus;
-  license: License;
-  user?: SerializedUser;
-  settings?: UserSettings;
-  utils: Util[];
-}
-
 export interface UiState {
   synced: boolean;
   status: ServerStatus;
   license: License;
   user?: User;
+  userShare?: UserShare;
   settings?: UserSettings;
   utils: Util[];
 }

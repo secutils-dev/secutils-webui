@@ -4,10 +4,15 @@ import { EuiCheckbox, EuiComboBox, EuiSpacer } from '@elastic/eui';
 
 export interface ContentSecurityPolicySandboxComboboxProps {
   value?: string[];
+  isDisabled?: boolean;
   onChange(value: string[], isSandboxEnforced: boolean): void;
 }
 
-export function ContentSecurityPolicySandboxCombobox({ onChange, value }: ContentSecurityPolicySandboxComboboxProps) {
+export function ContentSecurityPolicySandboxCombobox({
+  onChange,
+  value,
+  isDisabled,
+}: ContentSecurityPolicySandboxComboboxProps) {
   const [restrictionsToLift, setRestrictionsToLift] = useState<Array<{ label: string }>>(
     value?.map((restrictionToLift) => ({ label: restrictionToLift })) ?? [],
   );
@@ -34,7 +39,7 @@ export function ContentSecurityPolicySandboxCombobox({ onChange, value }: Conten
         fullWidth
         aria-label={placeholder}
         placeholder={placeholder}
-        isDisabled={enforceSandbox}
+        isDisabled={enforceSandbox || isDisabled}
         selectedOptions={enforceSandbox ? [] : restrictionsToLift}
         options={[
           { label: 'allow-downloads' },
@@ -54,16 +59,21 @@ export function ContentSecurityPolicySandboxCombobox({ onChange, value }: Conten
         onChange={onLiftedRestrictionsChange}
         isClearable
       />
-      <EuiSpacer size="xs" />
-      <EuiCheckbox
-        id={'sandbox-enforce'}
-        label="Enforce all restrictions"
-        checked={enforceSandbox}
-        onChange={(e) => {
-          setEnforceSandbox(e.target.checked);
-          onLiftedRestrictionsChange([], e.target.checked);
-        }}
-      />
+      {!isDisabled ? (
+        <>
+          <EuiSpacer size="xs" />
+          <EuiCheckbox
+            id={'sandbox-enforce'}
+            label="Enforce all restrictions"
+            checked={enforceSandbox}
+            disabled={isDisabled}
+            onChange={(e) => {
+              setEnforceSandbox(e.target.checked);
+              onLiftedRestrictionsChange([], e.target.checked);
+            }}
+          />
+        </>
+      ) : null}
     </>
   );
 }

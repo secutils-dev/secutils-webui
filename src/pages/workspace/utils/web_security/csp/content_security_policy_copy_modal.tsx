@@ -19,7 +19,7 @@ import axios from 'axios';
 
 import type { ContentSecurityPolicy } from './content_security_policy';
 import type { AsyncData } from '../../../../../model';
-import { getApiUrl } from '../../../../../model';
+import { getApiRequestConfig, getApiUrl } from '../../../../../model';
 import { useWorkspaceContext } from '../../../hooks';
 
 export interface ContentSecurityPolicyCopyModalProps {
@@ -52,15 +52,19 @@ export function ContentSecurityPolicyCopyModal({ policy, onClose }: ContentSecur
       setSerializingStatus({ status: 'pending' });
 
       axios
-        .post<SerializeResponse>(getApiUrl('/api/utils/action'), {
-          action: {
-            type: 'webSecurity',
-            value: {
-              type: 'serializeContentSecurityPolicy',
-              value: { policyName: policy.name, source: currentSource ?? source },
+        .post<SerializeResponse>(
+          getApiUrl('/api/utils/action'),
+          {
+            action: {
+              type: 'webSecurity',
+              value: {
+                type: 'serializeContentSecurityPolicy',
+                value: { policyName: policy.name, source: currentSource ?? source },
+              },
             },
           },
-        })
+          getApiRequestConfig(),
+        )
         .then(
           (response) => {
             const data = response.data.value.value;
@@ -95,7 +99,7 @@ Content-Security-Policy-Report-Only: ${data.policy}`,
   );
 
   useEffect(() => {
-    if (!uiState.synced || !uiState.user) {
+    if (!uiState.synced) {
       return;
     }
 

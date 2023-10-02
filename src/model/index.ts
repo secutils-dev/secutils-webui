@@ -1,9 +1,10 @@
 export type { ServerStatus } from './server_status';
-export type { UiState, SerializedUiState } from './ui_state';
+export type { UiState } from './ui_state';
 export type { AsyncData } from './async_data';
 export { isAbortError } from './errors';
-export { deserializeUser, getUserData, setUserData } from './user';
-export type { User, SerializedUser } from './user';
+export { getUserData, setUserData } from './user';
+export { getUserShareId } from './user_share';
+export type { User } from './user';
 export type { Util } from './util';
 export {
   USER_SETTINGS_USER_DATA_TYPE,
@@ -12,7 +13,7 @@ export {
   USER_SETTINGS_KEY_COMMON_UI_THEME,
 } from './user_settings';
 export type { UserSettings } from './user_settings';
-export { getApiUrl } from './urls';
+export { getApiUrl, getApiRequestConfig } from './urls';
 export type { SerializedSearchItem, SearchItem } from './search_item';
 export { deserializeSearchItem } from './search_item';
 export { getErrorMessage, isClientError } from './errors';

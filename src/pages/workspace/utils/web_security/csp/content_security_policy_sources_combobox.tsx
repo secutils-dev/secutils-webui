@@ -4,6 +4,7 @@ import { EuiComboBox } from '@elastic/eui';
 
 export interface ContentSecurityPolicySourcesComboboxProps {
   value?: string[];
+  isDisabled?: boolean;
   onChange(value: string[]): void;
   omitKeywordSources?: string[];
 }
@@ -45,6 +46,7 @@ const isSourceSafe = (source: string) => {
 export function ContentSecurityPolicySourcesCombobox({
   onChange,
   value,
+  isDisabled,
   omitKeywordSources,
 }: ContentSecurityPolicySourcesComboboxProps) {
   const knownSources = useMemo(() => {
@@ -80,6 +82,7 @@ export function ContentSecurityPolicySourcesCombobox({
   return (
     <EuiComboBox
       fullWidth
+      isDisabled={isDisabled}
       isCaseSensitive={false}
       aria-label="Select or create sources"
       placeholder="Select or create sources"

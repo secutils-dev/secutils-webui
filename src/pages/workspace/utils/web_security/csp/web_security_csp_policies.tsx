@@ -14,8 +14,9 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
+import axios from 'axios';
 
-import type { ContentSecurityPolicy, SerializedContentSecurityPolicies } from './content_security_policy';
+import type { ContentSecurityPolicy, SerializedItemCollectionType } from './content_security_policy';
 import {
   CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE,
   deserializeContentSecurityPolicies,
@@ -23,23 +24,17 @@ import {
 } from './content_security_policy';
 import { ContentSecurityPolicyCopyModal } from './content_security_policy_copy_modal';
 import { ContentSecurityPolicyEditFlyout } from './content_security_policy_edit_flyout';
+import { ContentSecurityPolicyShareModal } from './content_security_policy_share_modal';
 import { PageLoadingState } from '../../../../../components';
-import { getUserData, setUserData } from '../../../../../model';
+import { getApiUrl, getUserData } from '../../../../../model';
 import { useWorkspaceContext } from '../../../hooks';
 
 export default function WebSecurityContentSecurityPolicies() {
   const { uiState, setTitleActions } = useWorkspaceContext();
 
-  const [isCopyModalOpen, setIsCopyModalOpen] = useState<
-    { isOpen: false } | { isOpen: true; policy: ContentSecurityPolicy }
-  >({ isOpen: false });
-  const onToggleCopyModal = useCallback((policy?: ContentSecurityPolicy) => {
-    if (policy) {
-      setIsCopyModalOpen({ isOpen: true, policy });
-    } else {
-      setIsCopyModalOpen({ isOpen: false });
-    }
-  }, []);
+  const [policyToCopy, setPolicyToCopy] = useState<ContentSecurityPolicy | null>(null);
+  const [policyToShare, setPolicyToShare] = useState<ContentSecurityPolicy | null>(null);
+  const [policyToRemove, setPolicyToRemove] = useState<ContentSecurityPolicy | null>(null);
 
   const [policies, setPolicies] = useState<ContentSecurityPolicy[] | null>(null);
   const updatePolicies = useCallback((updatedPolicies: ContentSecurityPolicy[]) => {
@@ -63,30 +58,6 @@ export default function WebSecurityContentSecurityPolicies() {
   const onEditPolicy = useCallback((policy: ContentSecurityPolicy) => {
     setIsEditFlyoutOpen({ isOpen: true, policy });
   }, []);
-
-  const [policyToRemove, setPolicyToRemove] = useState<ContentSecurityPolicy | null>(null);
-  const removeConfirmModal = policyToRemove ? (
-    <EuiConfirmModal
-      title={`Remove "${policyToRemove.name}"?`}
-      onCancel={() => setPolicyToRemove(null)}
-      onConfirm={() => {
-        setPolicyToRemove(null);
-        setUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE, {
-          [policyToRemove.name]: null,
-        }).then(
-          (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
-          (err: Error) => {
-            console.error(`Failed to remove content security policy: ${err?.message ?? err}`);
-          },
-        );
-      }}
-      cancelButtonText="Cancel"
-      confirmButtonText="Remove"
-      buttonColor="danger"
-    >
-      The Content Security Policy template will be removed. Are you sure you want to proceed?
-    </EuiConfirmModal>
-  ) : null;
 
   const createButton = (
     <EuiButton
@@ -115,7 +86,7 @@ export default function WebSecurityContentSecurityPolicies() {
       return;
     }
 
-    getUserData<SerializedContentSecurityPolicies>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE).then(
+    getUserData<SerializedItemCollectionType>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE).then(
       (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
       (err: Error) => {
         console.error(`Failed to load content security policies: ${err?.message ?? err}`);
@@ -128,8 +99,42 @@ export default function WebSecurityContentSecurityPolicies() {
     <ContentSecurityPolicyEditFlyout onClose={onToggleEditFlyout} policy={isEditFlyoutOpen.policy} />
   ) : null;
 
-  const copyModal = isCopyModalOpen.isOpen ? (
-    <ContentSecurityPolicyCopyModal onClose={() => onToggleCopyModal()} policy={isCopyModalOpen.policy} />
+  const copyModal = policyToCopy ? (
+    <ContentSecurityPolicyCopyModal onClose={() => setPolicyToCopy(null)} policy={policyToCopy} />
+  ) : null;
+
+  const shareModal = policyToShare ? (
+    <ContentSecurityPolicyShareModal onClose={() => setPolicyToShare(null)} policy={policyToShare} />
+  ) : null;
+
+  const removeConfirmModal = policyToRemove ? (
+    <EuiConfirmModal
+      title={`Remove "${policyToRemove.name}"?`}
+      onCancel={() => setPolicyToRemove(null)}
+      onConfirm={() => {
+        setPolicyToRemove(null);
+
+        axios
+          .post(getApiUrl('/api/utils/action'), {
+            action: {
+              type: 'webSecurity',
+              value: { type: 'removeContentSecurityPolicy', value: { policyName: policyToRemove?.name } },
+            },
+          })
+          .then(() => getUserData<SerializedItemCollectionType>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE))
+          .then(
+            (items) => updatePolicies(deserializeContentSecurityPolicies(items)),
+            (err: Error) => {
+              console.error(`Failed to remove content security policy: ${err?.message ?? err}`);
+            },
+          );
+      }}
+      cancelButtonText="Cancel"
+      confirmButtonText="Remove"
+      buttonColor="danger"
+    >
+      The Content Security Policy template will be removed. Are you sure you want to proceed?
+    </EuiConfirmModal>
   ) : null;
 
   const [pagination, setPagination] = useState<Pagination>({
@@ -234,7 +239,14 @@ export default function WebSecurityContentSecurityPolicies() {
                 icon: 'copy',
                 type: 'icon',
                 isPrimary: true,
-                onClick: onToggleCopyModal,
+                onClick: setPolicyToCopy,
+              },
+              {
+                name: 'Share policy',
+                description: 'Share policy',
+                icon: 'share',
+                type: 'icon',
+                onClick: setPolicyToShare,
               },
               {
                 name: 'Edit policy',
@@ -248,6 +260,7 @@ export default function WebSecurityContentSecurityPolicies() {
                 description: 'Remove policy',
                 icon: 'minusInCircle',
                 type: 'icon',
+                isPrimary: true,
                 onClick: setPolicyToRemove,
               },
             ],
@@ -262,6 +275,7 @@ export default function WebSecurityContentSecurityPolicies() {
       {content}
       {editFlyout}
       {copyModal}
+      {shareModal}
       {removeConfirmModal}
     </>
   );

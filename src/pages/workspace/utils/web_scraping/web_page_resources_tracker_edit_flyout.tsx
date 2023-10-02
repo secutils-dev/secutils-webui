@@ -202,7 +202,10 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
               <span>
                 The script accepts "resource" as an argument and returns it, either with or without modifications, if
                 the resource should be tracked, or "null" if it should not. Refer to the{' '}
-                <EuiLink target="_blank" href="/docs/guides/web_scraping/resources">
+                <EuiLink
+                  target="_blank"
+                  href="/docs/guides/web_scraping/resources#annex-resource-filtermapper-script-examples"
+                >
                   <b>documentation</b>
                 </EuiLink>{' '}
                 for a list of available "resource" properties and script examples.

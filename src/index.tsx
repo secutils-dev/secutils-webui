@@ -41,6 +41,7 @@ import { icon as EuiIconHelp } from '@elastic/eui/es/components/icon/assets/help
 import { icon as EuiIconHome } from '@elastic/eui/es/components/icon/assets/home';
 import { icon as EuiIconInputOutput } from '@elastic/eui/es/components/icon/assets/inputOutput';
 import { icon as EuiIconKeyboard } from '@elastic/eui/es/components/icon/assets/keyboard';
+import { icon as EuiIconLink } from '@elastic/eui/es/components/icon/assets/link';
 import { icon as EuiIconListAdd } from '@elastic/eui/es/components/icon/assets/list_add';
 import { icon as EuiIconMinus } from '@elastic/eui/es/components/icon/assets/minus';
 import { icon as EuiIconMinusInCircle } from '@elastic/eui/es/components/icon/assets/minus_in_circle';
@@ -54,6 +55,7 @@ import { icon as EuiIconReturnKey } from '@elastic/eui/es/components/icon/assets
 import { icon as EuiIconSearch } from '@elastic/eui/es/components/icon/assets/search';
 import { icon as EuiIconSecuritySignal } from '@elastic/eui/es/components/icon/assets/securitySignal';
 import { icon as EuiIconSecuritySignalDetected } from '@elastic/eui/es/components/icon/assets/securitySignalDetected';
+import { icon as EuiIconShare } from '@elastic/eui/es/components/icon/assets/share';
 import { icon as EuiIconSortDown } from '@elastic/eui/es/components/icon/assets/sort_down';
 import { icon as EuiIconSortUp } from '@elastic/eui/es/components/icon/assets/sort_up';
 import { icon as EuiIconSortable } from '@elastic/eui/es/components/icon/assets/sortable';
@@ -114,6 +116,7 @@ appendIconComponentCache({
   home: EuiIconHome,
   inputOutput: EuiIconInputOutput,
   keyboard: EuiIconKeyboard,
+  link: EuiIconLink,
   listAdd: EuiIconListAdd,
   minus: EuiIconMinus,
   minusInCircle: EuiIconMinusInCircle,
@@ -128,6 +131,7 @@ appendIconComponentCache({
   securityApp: EuiIconSecurityApp,
   securitySignal: EuiIconSecuritySignal,
   securitySignalDetected: EuiIconSecuritySignalDetected,
+  share: EuiIconShare,
   sortable: EuiIconSortable,
   sortUp: EuiIconSortUp,
   sortDown: EuiIconSortDown,

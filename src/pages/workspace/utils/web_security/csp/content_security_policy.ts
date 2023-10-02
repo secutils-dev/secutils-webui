@@ -1,6 +1,6 @@
 export const CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE = 'contentSecurityPolicies';
 
-export type SerializedContentSecurityPolicies = Record<string, SerializedContentSecurityPolicy>;
+export type SerializedItemCollectionType = Record<string, SerializedContentSecurityPolicy>;
 
 export interface SerializedContentSecurityPolicy {
   n: string;
@@ -34,7 +34,7 @@ export function deserializeContentSecurityPolicy(
 }
 
 export function deserializeContentSecurityPolicies(
-  serializedPolicies: SerializedContentSecurityPolicies | null,
+  serializedPolicies: SerializedItemCollectionType | null,
 ): ContentSecurityPolicy[] {
   if (!serializedPolicies) {
     return [];

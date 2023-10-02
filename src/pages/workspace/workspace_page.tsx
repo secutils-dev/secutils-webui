@@ -4,6 +4,8 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import type { EuiSideNavItemType } from '@elastic/eui';
 import {
+  EuiButton,
+  EuiButtonEmpty,
   EuiButtonIcon,
   EuiContextMenuItem,
   EuiContextMenuPanel,
@@ -20,7 +22,7 @@ import { css } from '@emotion/react';
 import axios from 'axios';
 
 import { SiteSearchBar } from './components/site_search_bar';
-import { getUtilIcon, UTIL_HANDLES, UtilsComponents } from './utils';
+import { getUtilIcon, UTIL_HANDLES, UtilsComponents, UtilsShareComponents } from './utils';
 import { WorkspaceContext } from './workspace_context';
 import { SettingsFlyout } from '../../app_container';
 import { PageLoadingState } from '../../components';
@@ -169,9 +171,18 @@ export function WorkspacePage() {
       return <Navigate to="/ws" />;
     }
 
-    const Component = (selectedUtil ? UtilsComponents.get(selectedUtil.handle) : undefined) ?? DEFAULT_COMPONENT;
-    return <Component />;
-  }, [selectedUtil, utilsMap, utilIdFromParam]);
+    // Check if the user tries to access known utility.
+    if (!selectedUtil) {
+      return <DEFAULT_COMPONENT />;
+    }
+
+    // Check if utility has a UI component defined.
+    const UtilComponent =
+      (uiState.userShare ? UtilsShareComponents.get(selectedUtil.handle) : null) ||
+      UtilsComponents.get(selectedUtil.handle) ||
+      DEFAULT_COMPONENT;
+    return <UtilComponent />;
+  }, [selectedUtil, utilsMap, utilIdFromParam, uiState]);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const onToggleSettings = useCallback(() => {
@@ -207,7 +218,9 @@ export function WorkspacePage() {
     }
   };
 
-  const utilIcon = selectedUtil ? getUtilIcon(selectedUtil.handle, 'navigation') : undefined;
+  const utilIcon = selectedUtil
+    ? getUtilIcon(selectedUtil.handle, uiState.userShare ? 'share' : 'navigation')
+    : undefined;
   const titleIcon = selectedUtil ? (
     utilIcon ? (
       <EuiIcon
@@ -245,33 +258,23 @@ export function WorkspacePage() {
     );
   }, []);
 
-  return (
-    <Page
-      pageTitle={
-        <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
-          <EuiFlexItem>
-            <EuiFlexGroup responsive={false} gutterSize="s" alignItems="center">
-              <EuiFlexItem grow={false}>{titleIcon}</EuiFlexItem>
-              <EuiFlexItem>{title}</EuiFlexItem>
-            </EuiFlexGroup>
-          </EuiFlexItem>
-          {titleActions ? <EuiFlexItem grow={false}>{titleActions}</EuiFlexItem> : null}
-        </EuiFlexGroup>
-      }
-      sideBar={
-        <aside>
-          <SiteSearchBar />
-          <EuiSpacer size="m" />
-          <EuiSideNav
-            mobileTitle="All Utils"
-            toggleOpenOnMobile={toggleOpenOnMobile}
-            isOpenOnMobile={isSideNavOpenOnMobile}
-            items={sideNavItems}
-          />
-        </aside>
-      }
-      headerBreadcrumbs={navigationBar.breadcrumbs}
-      headerActions={[
+  // Sidebar is only available to authenticated users.
+  const sidebar = uiState.user ? (
+    <aside>
+      <SiteSearchBar />
+      <EuiSpacer size="m" />
+      <EuiSideNav
+        mobileTitle="All Utils"
+        toggleOpenOnMobile={toggleOpenOnMobile}
+        isOpenOnMobile={isSideNavOpenOnMobile}
+        items={sideNavItems}
+      />
+    </aside>
+  ) : null;
+
+  // Authenticated and unauthenticated users have different header actions.
+  const headerActions = uiState.user
+    ? [
         <EuiButtonIcon
           iconType={showOnlyFavorites ? 'starFilled' : 'starEmpty'}
           css={css`
@@ -325,7 +328,38 @@ export function WorkspacePage() {
             ]}
           />
         </EuiPopover>,
-      ]}
+      ]
+    : [
+        <EuiButtonEmpty
+          href="/signin"
+          size="s"
+          css={css`
+            margin-right: ${euiTheme.euiTheme.size.xxs};
+          `}
+        >
+          Sign in
+        </EuiButtonEmpty>,
+        <EuiButton href="/signup" fill size="s">
+          Start free trial
+        </EuiButton>,
+      ];
+
+  return (
+    <Page
+      pageTitle={
+        <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+          <EuiFlexItem>
+            <EuiFlexGroup responsive={false} gutterSize="s" alignItems="center">
+              <EuiFlexItem grow={false}>{titleIcon}</EuiFlexItem>
+              <EuiFlexItem>{title}</EuiFlexItem>
+            </EuiFlexGroup>
+          </EuiFlexItem>
+          {titleActions ? <EuiFlexItem grow={false}>{titleActions}</EuiFlexItem> : null}
+        </EuiFlexGroup>
+      }
+      sideBar={sidebar}
+      headerBreadcrumbs={navigationBar.breadcrumbs}
+      headerActions={headerActions}
       contentProps={{
         css: css`
           height: 100%;

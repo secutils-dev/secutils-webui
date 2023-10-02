@@ -18,7 +18,7 @@ export function PageHeader({ title }: PageHeaderProps) {
         background-color: ${theme.euiTheme.colors.lightestShade};
       `}
     >
-      <EuiPageHeader paddingSize={'m'} pageTitle={title} />
+      <EuiPageHeader paddingSize={'s'} pageTitle={title} />
     </EuiPageSection>
   );
 }

@@ -92,7 +92,7 @@ export function Page({
     );
   }
 
-  if (!uiState.user && !isUnauthenticatedPage(location.pathname)) {
+  if (!uiState.user && !uiState.userShare && !isUnauthenticatedPage(location.pathname)) {
     return (
       <Navigate
         to={
