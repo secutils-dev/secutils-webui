@@ -36,6 +36,8 @@
     "use-http": "^1.0.28"
   },
   "devDependencies": {
+    "@commitlint/cli": "^17.7.2",
+    "@commitlint/config-conventional": "^17.7.0",
     "@eslint/eslintrc": "^2.1.2",
     "@parcel/compressor-brotli": "^2.9.3",
     "@parcel/compressor-gzip": "^2.9.3",
@@ -60,12 +62,18 @@
     "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-react": "^7.33.2",
+    "husky": "^8.0.3",
     "monaco-editor": "^0.43.0",
     "parcel": "^2.9.3",
     "prettier": "^3.0.3",
     "process": "^0.11.10",
     "typescript": "^5.2.2",
     "url": "^0.11.3"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   },
   "scripts": {
     "prebuild": "eslint . && rm -rf dist",
