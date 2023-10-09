@@ -27,6 +27,7 @@ export function AppContainer() {
     status: { level: 'available' },
     license: { maxEndpoints: Infinity },
     utils: [],
+    webhookUrlType: 'path',
   });
   const refreshUiState = useCallback(() => {
     if (isUiStateRefreshInProgress) {

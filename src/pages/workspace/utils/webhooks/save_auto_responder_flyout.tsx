@@ -11,6 +11,7 @@ import {
   EuiSelect,
   EuiTextArea,
 } from '@elastic/eui';
+import axios from 'axios';
 
 import type { Responder, SerializedResponders } from './responder';
 import {
@@ -20,7 +21,7 @@ import {
   serializeResponder,
 } from './responder';
 import type { AsyncData } from '../../../../model';
-import { setUserData } from '../../../../model';
+import { getApiUrl, getUserData } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
@@ -43,10 +44,11 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
     [],
   );
 
-  const [name, setName] = useState<string>(autoResponder?.name ?? '');
-  const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
+  const [path, setPath] = useState<string>(autoResponder?.path ?? '');
+  const onPathChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setPath(e.target.value);
   }, []);
+  const isPathValid = path.startsWith('/') && (path.length === 1 || !path.endsWith('/'));
 
   const [trackingRequests, setTrackingRequests] = useState<number>(autoResponder?.trackingRequests ?? 0);
   const onTrackingRequestsChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -107,57 +109,69 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
     }
 
     setUpdatingStatus({ status: 'pending' });
-    setUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE, {
-      [name]: serializeResponder({
-        name: name,
-        method,
-        trackingRequests,
-        statusCode,
-        body: body && method !== serializeHttpMethod('HEAD') ? body : undefined,
-        headers:
-          headers.length > 0
-            ? headers.map((headerValue) => {
-                const separatorIndex = headerValue.label.indexOf(':');
-                return [
-                  headerValue.label.substring(0, separatorIndex).trim(),
-                  headerValue.label.substring(separatorIndex + 1).trim(),
-                ] as [string, string];
-              })
-            : undefined,
-        delay,
-      }),
-    }).then(
-      (serializedResponders) => {
-        setUpdatingStatus({ status: 'succeeded', data: undefined });
 
-        addToast({
-          id: `success-update-responder-${name}`,
-          iconType: 'check',
-          color: 'success',
-          title: `Successfully saved "${name}" responder`,
-        });
+    axios
+      .post(getApiUrl('/api/utils/action'), {
+        action: {
+          type: 'webhooks',
+          value: {
+            type: 'saveAutoResponder',
+            value: {
+              responder: serializeResponder({
+                path,
+                method,
+                trackingRequests,
+                statusCode,
+                body: body && method !== serializeHttpMethod('HEAD') ? body : undefined,
+                headers:
+                  headers.length > 0
+                    ? headers.map((headerValue) => {
+                        const separatorIndex = headerValue.label.indexOf(':');
+                        return [
+                          headerValue.label.substring(0, separatorIndex).trim(),
+                          headerValue.label.substring(separatorIndex + 1).trim(),
+                        ] as [string, string];
+                      })
+                    : undefined,
+                delay,
+              }),
+            },
+          },
+        },
+      })
+      .then(() => getUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE))
+      .then(
+        (items) => {
+          setUpdatingStatus({ status: 'succeeded', data: undefined });
 
-        onClose(deserializeResponders(serializedResponders));
-      },
-      (err: Error) => {
-        setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
+          addToast({
+            id: `success-update-responder-${path}`,
+            iconType: 'check',
+            color: 'success',
+            title: `Successfully saved "${path}" responder`,
+          });
 
-        addToast({
-          id: `failed-update-responder-${name}`,
-          iconType: 'warning',
-          color: 'danger',
-          title: `Unable to save "${name}" responder, please try again later`,
-        });
-      },
-    );
-  }, [method, name, trackingRequests, statusCode, body, headers, delay, autoResponder, updatingStatus]);
+          onClose(deserializeResponders(items));
+        },
+        (err: Error) => {
+          setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
+
+          addToast({
+            id: `failed-update-responder-${path}`,
+            iconType: 'warning',
+            color: 'danger',
+            title: `Unable to save "${path}" responder, please try again later`,
+          });
+        },
+      );
+  }, [method, path, trackingRequests, statusCode, body, headers, delay, autoResponder, updatingStatus]);
 
   return (
     <EditorFlyout
       title={`${autoResponder ? 'Edit' : 'Add'} responder`}
       onClose={() => onClose()}
       onSave={onAddAutoResponder}
-      canSave={!areHeadersInvalid && name.trim().length > 0 && trackingRequests >= 0 && trackingRequests <= 100}
+      canSave={!areHeadersInvalid && isPathValid && trackingRequests >= 0 && trackingRequests <= 100}
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm id="update-form" component="form" fullWidth>
@@ -165,8 +179,18 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
           title={<h3>Request</h3>}
           description={'Properties of the responder related to the HTTP requests it handles'}
         >
-          <EuiFormRow label="Name" helpText="The last segment of the responder HTTP path" isDisabled={!!autoResponder}>
-            <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
+          <EuiFormRow
+            label="Path"
+            helpText="The responder path should start with a '/', and should not end with a '/'"
+            isDisabled={!!autoResponder}
+          >
+            <EuiFieldText
+              value={path}
+              isInvalid={path.length > 0 && !isPathValid}
+              required
+              type={'text'}
+              onChange={onPathChange}
+            />
           </EuiFormRow>
           <EuiFormRow label="Method" helpText="Responder will only respond to requests with the specified HTTP method">
             <EuiSelect options={httpMethods} value={method} onChange={onMethodChange} />

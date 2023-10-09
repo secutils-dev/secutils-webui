@@ -60,7 +60,7 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
       .post<GetAutoRespondersRequestsResponse>(getApiUrl('/api/utils/action'), {
         action: {
           type: 'webhooks',
-          value: { type: 'getAutoRespondersRequests', value: { autoResponderName: responder.name } },
+          value: { type: 'getAutoRespondersRequests', value: { responderPath: responder.path } },
         },
       })
       .then(
@@ -175,7 +175,7 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
   );
 
   if (requests.status === 'pending') {
-    return <PageLoadingState title={`Loading requests for "${responder.name}"…`} />;
+    return <PageLoadingState title={`Loading requests for "${responder.path}"…`} />;
   }
 
   if (requests.status === 'failed') {
@@ -184,7 +184,7 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
         title="Cannot load requests"
         content={
           <p>
-            Cannot load recorded requests for <strong>{responder.name}</strong> auto responder.
+            Cannot load recorded requests for <strong>{responder.path}</strong> auto responder.
           </p>
         }
       />

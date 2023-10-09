@@ -18,24 +18,31 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
+import axios from 'axios';
 
 import { AutoResponderRequestsTable } from './auto_responder_requests_table';
 import type { Responder, SerializedResponders } from './responder';
 import { deserializeHttpMethod, deserializeResponders, RESPONDERS_USER_DATA_NAMESPACE } from './responder';
 import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
 import { PageLoadingState } from '../../../../components';
-import type { User } from '../../../../model';
-import { getUserData, setUserData } from '../../../../model';
+import { getApiUrl, getUserData } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
 export default function WebhooksResponders() {
   const { uiState, setTitleActions } = useWorkspaceContext();
 
-  const getResponderUrl = useCallback((autoResponder: Responder, user: User) => {
-    return `${location.origin}/api/webhooks/ar/${encodeURIComponent(user.handle)}/${encodeURIComponent(
-      autoResponder.name,
-    )}`;
-  }, []);
+  const getResponderUrl = useCallback(
+    (autoResponder: Responder) => {
+      if (!uiState.user) {
+        return '-';
+      }
+
+      return uiState.webhookUrlType === 'path'
+        ? `${location.origin}/api/webhooks/${uiState.user.handle}${autoResponder.path}`
+        : `${location.protocol}//${uiState.user.handle}.webhooks.${location.host}${autoResponder.path}`;
+    },
+    [uiState],
+  );
 
   const [autoResponders, setAutoResponders] = useState<Responder[] | null>(null);
   const updateResponders = useCallback((updatedResponders: Responder[]) => {
@@ -101,18 +108,25 @@ export default function WebhooksResponders() {
   const [responderToRemove, setResponderToRemove] = useState<Responder | null>(null);
   const removeConfirmModal = responderToRemove ? (
     <EuiConfirmModal
-      title={`Remove "${responderToRemove.name}"?`}
+      title={`Remove "${responderToRemove.path}"?`}
       onCancel={() => setResponderToRemove(null)}
       onConfirm={() => {
         setResponderToRemove(null);
-        setUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE, {
-          [responderToRemove.name]: null,
-        }).then(
-          (serializedResponders) => updateResponders(deserializeResponders(serializedResponders)),
-          (err: Error) => {
-            console.error(`Failed to remove auto responder: ${err?.message ?? err}`);
-          },
-        );
+
+        axios
+          .post(getApiUrl('/api/utils/action'), {
+            action: {
+              type: 'webhooks',
+              value: { type: 'removeAutoResponder', value: { responderPath: responderToRemove.path } },
+            },
+          })
+          .then(() => getUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE))
+          .then(
+            (items) => updateResponders(deserializeResponders(items)),
+            (err: Error) => {
+              console.error(`Failed to remove auto responder: ${err?.message ?? err}`);
+            },
+          );
       }}
       cancelButtonText="Cancel"
       confirmButtonText="Remove"
@@ -129,7 +143,7 @@ export default function WebhooksResponders() {
     pageSizeOptions: [10, 15, 25, 50, 100],
     totalItemCount: 0,
   });
-  const [sorting, setSorting] = useState<{ sort: PropertySort }>({ sort: { field: 'name', direction: 'asc' } });
+  const [sorting, setSorting] = useState<{ sort: PropertySort }>({ sort: { field: 'path', direction: 'asc' } });
   const onTableChange = useCallback(
     ({ page, sort }: Criteria<Responder>) => {
       setPagination({
@@ -147,10 +161,10 @@ export default function WebhooksResponders() {
 
   const toggleResponderRequests = (responder: Responder) => {
     const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
-    if (itemIdToExpandedRowMapValues[responder.name]) {
-      delete itemIdToExpandedRowMapValues[responder.name];
+    if (itemIdToExpandedRowMapValues[responder.path]) {
+      delete itemIdToExpandedRowMapValues[responder.path];
     } else {
-      itemIdToExpandedRowMapValues[responder.name] = <AutoResponderRequestsTable responder={responder} />;
+      itemIdToExpandedRowMapValues[responder.path] = <AutoResponderRequestsTable responder={responder} />;
     }
     setItemIdToExpandedRowMap(itemIdToExpandedRowMapValues);
   };
@@ -195,7 +209,7 @@ export default function WebhooksResponders() {
         sorting={sorting}
         onTableChange={onTableChange}
         items={autoResponders}
-        itemId={(autoResponder) => autoResponder.name}
+        itemId={(autoResponder) => autoResponder.path}
         isExpandable={true}
         itemIdToExpandedRowMap={itemIdToExpandedRowMap}
         tableLayout={'auto'}
@@ -251,10 +265,10 @@ export default function WebhooksResponders() {
                 </span>
               </EuiToolTip>
             ),
-            field: 'name',
+            field: 'path',
             sortable: true,
             render: (_, autoResponder: Responder) => {
-              const url = uiState.user ? getResponderUrl(autoResponder, uiState.user) : undefined;
+              const url = getResponderUrl(autoResponder);
               return url ? (
                 <EuiLink href={url} target="_blank">
                   {url}
@@ -299,8 +313,8 @@ export default function WebhooksResponders() {
               return (
                 <EuiButtonIcon
                   onClick={() => toggleResponderRequests(item)}
-                  aria-label={itemIdToExpandedRowMapValues[item.name] ? 'Hide requests' : 'Show requests'}
-                  iconType={itemIdToExpandedRowMapValues[item.name] ? 'arrowDown' : 'arrowRight'}
+                  aria-label={itemIdToExpandedRowMapValues[item.path] ? 'Hide requests' : 'Show requests'}
+                  iconType={itemIdToExpandedRowMapValues[item.path] ? 'arrowDown' : 'arrowRight'}
                 />
               );
             },

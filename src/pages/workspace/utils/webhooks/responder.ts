@@ -3,7 +3,7 @@ export const RESPONDERS_USER_DATA_NAMESPACE = 'autoResponders';
 export type SerializedResponders = Record<string, SerializedResponder>;
 
 export interface SerializedResponder {
-  n: string;
+  p: string;
   m: string;
   t: number;
   s: number;
@@ -13,7 +13,7 @@ export interface SerializedResponder {
 }
 
 export interface Responder {
-  name: string;
+  path: string;
   method: string;
   trackingRequests: number;
   statusCode: number;
@@ -24,7 +24,7 @@ export interface Responder {
 
 export function deserializeResponder(serializedResponder: SerializedResponder): Responder {
   const responder: Responder = {
-    name: serializedResponder.n,
+    path: serializedResponder.p,
     method: serializedResponder.m,
     statusCode: serializedResponder.s,
     trackingRequests: serializedResponder.t,
@@ -59,7 +59,7 @@ export function deserializeResponders(serializedResponders: SerializedResponders
 
 export function serializeResponder(responder: Responder): SerializedResponder {
   const serializedResponder: SerializedResponder = {
-    n: responder.name,
+    p: responder.path,
     m: responder.method,
     s: responder.statusCode,
     h: responder.headers,

@@ -1,5 +1,5 @@
 export type { ServerStatus } from './server_status';
-export type { UiState } from './ui_state';
+export type { UiState, WebhookUrlType } from './ui_state';
 export type { AsyncData } from './async_data';
 export { isAbortError } from './errors';
 export { getUserData, setUserData } from './user';

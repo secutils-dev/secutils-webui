@@ -14,6 +14,8 @@ export interface License {
   maxEndpoints: number;
 }
 
+export type WebhookUrlType = 'path' | 'subdomain';
+
 export interface UiState {
   synced: boolean;
   status: ServerStatus;
@@ -22,4 +24,5 @@ export interface UiState {
   userShare?: UserShare;
   settings?: UserSettings;
   utils: Util[];
+  webhookUrlType: WebhookUrlType;
 }
