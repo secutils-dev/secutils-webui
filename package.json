@@ -24,16 +24,15 @@
   "dependencies": {
     "@babel/runtime": "^7.23.1",
     "@elastic/datemath": "^5.0.3",
-    "@elastic/eui": "^88.5.3",
+    "@elastic/eui": "^89.0.0",
     "@emotion/css": "^11.11.2",
     "@emotion/react": "^11.11.1",
-    "@monaco-editor/react": "^4.5.2",
+    "@monaco-editor/react": "^4.6.0",
     "axios": "^1.5.1",
     "moment": "^2.29.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0",
-    "use-http": "^1.0.28"
+    "react-router-dom": "^6.16.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.2",
@@ -51,24 +50,27 @@
     "@parcel/transformer-typescript-tsc": "^2.9.3",
     "@parcel/transformer-webmanifest": "^2.9.3",
     "@parcel/validator-typescript": "^2.9.3",
-    "@types/react": "^18.2.24",
-    "@types/react-dom": "^18.2.8",
-    "@typescript-eslint/eslint-plugin": "^6.7.4",
-    "@typescript-eslint/parser": "^6.7.4",
+    "@types/react": "^18.2.27",
+    "@types/react-dom": "^18.2.12",
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
     "buffer": "^6.0.3",
-    "eslint": "^8.50.0",
+    "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-react": "^7.33.2",
     "husky": "^8.0.3",
-    "monaco-editor": "^0.43.0",
+    "monaco-editor": "^0.44.0",
     "parcel": "^2.9.3",
     "prettier": "^3.0.3",
     "process": "^0.11.10",
     "typescript": "^5.2.2",
     "url": "^0.11.3"
+  },
+  "overrides": {
+    "typescript": "^5.2.2"
   },
   "commitlint": {
     "extends": [

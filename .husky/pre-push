@@ -2,7 +2,7 @@
 
 set -eu
 
-if ! yarn build
+if ! npm run build
 then
     echo "Cannot build project."
     exit 1

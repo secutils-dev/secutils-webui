@@ -4,7 +4,7 @@ The web user interface for Secutils.dev, refer to [secutils-dev/secutils](https:
 
 ## Getting started
 
-Install all the required dependencies with `yarn install` and run the UI in watch mode with `yarn watch`.
+Install all the required dependencies with `npm install` and run the UI in watch mode with `npm run watch`.
 
 ### Usage
 

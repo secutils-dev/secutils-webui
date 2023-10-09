@@ -2,10 +2,10 @@
 
 FROM --platform=$BUILDPLATFORM node:20-alpine3.18 as UI_BUILDER
 WORKDIR /app
-COPY ["./*.json", "./yarn.lock", "./.parcelrc", "./"]
-RUN set -x && yarn install
+COPY ["./*.json", "./.parcelrc", "./"]
+RUN set -x && npm ci
 COPY ["./src", "./src"]
-RUN set -x && yarn build
+RUN set -x && npm run build
 
 FROM nginxinc/nginx-unprivileged:alpine3.18-slim
 COPY --from=UI_BUILDER ["/app/dist/", "/usr/share/nginx/html/"]
