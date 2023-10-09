@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+if ! yarn build
+then
+    echo "Cannot build project."
+    exit 1
+fi
+
+exit 0
