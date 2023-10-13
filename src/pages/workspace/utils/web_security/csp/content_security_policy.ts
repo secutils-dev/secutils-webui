@@ -27,7 +27,7 @@ export function deserializeContentSecurityPolicy(
     name: serializedPolicy.n,
     directives: new Map(
       serializedPolicy.d.map((directive) => {
-        return [directive.n, directive.v];
+        return [directive.n, directive.v ?? []];
       }),
     ),
   };

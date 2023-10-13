@@ -40,6 +40,7 @@ import { icon as EuiIconGlobe } from '@elastic/eui/es/components/icon/assets/glo
 import { icon as EuiIconGrab } from '@elastic/eui/es/components/icon/assets/grab';
 import { icon as EuiIconHelp } from '@elastic/eui/es/components/icon/assets/help';
 import { icon as EuiIconHome } from '@elastic/eui/es/components/icon/assets/home';
+import { icon as EuiIconImport } from '@elastic/eui/es/components/icon/assets/import';
 import { icon as EuiIconInputOutput } from '@elastic/eui/es/components/icon/assets/inputOutput';
 import { icon as EuiIconKeyboard } from '@elastic/eui/es/components/icon/assets/keyboard';
 import { icon as EuiIconLink } from '@elastic/eui/es/components/icon/assets/link';
@@ -116,6 +117,7 @@ appendIconComponentCache({
   grab: EuiIconGrab,
   help: EuiIconHelp,
   home: EuiIconHome,
+  importAction: EuiIconImport,
   inputOutput: EuiIconInputOutput,
   keyboard: EuiIconKeyboard,
   link: EuiIconLink,

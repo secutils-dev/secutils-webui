@@ -3,17 +3,20 @@ import { useState } from 'react';
 
 import {
   EuiAccordion,
+  EuiComboBox,
   EuiDescribedFormGroup,
   EuiFieldText,
   EuiForm,
   EuiFormRow,
   EuiLink,
   EuiSpacer,
+  EuiSwitch,
 } from '@elastic/eui';
 
 import type { ContentSecurityPolicy } from './content_security_policy';
 import { ContentSecurityPolicySandboxCombobox } from './content_security_policy_sandbox_combobox';
 import { ContentSecurityPolicySourcesCombobox } from './content_security_policy_sources_combobox';
+import { ContentSecurityPolicyTrustedTypesCombobox } from './content_security_policy_trusted_types_combobox';
 
 export interface ContentSecurityPolicyFormProps {
   policy?: ContentSecurityPolicy;
@@ -254,6 +257,74 @@ export function ContentSecurityPolicyForm({ policy, onChange, isReadOnly = false
     );
   }
 
+  const extensionDirectives = [];
+  if (!isReadOnly || directives.has('upgrade-insecure-requests')) {
+    extensionDirectives.push(
+      <EuiFormRow
+        key="upgrade-insecure-requests"
+        label={'Upgrade insecure requests (upgrade-insecure-requests)'}
+        helpText={
+          "Instructs user agents to treat all of a site's insecure URLs (HTTP) as though they have been replaced with secure URLs (HTTPS)."
+        }
+        isDisabled={isReadOnly}
+      >
+        <EuiSwitch
+          showLabel={false}
+          label="Upgrade insecure requests"
+          checked={directives.has('upgrade-insecure-requests')}
+          onChange={(e) => onDirectiveChange('upgrade-insecure-requests', [], e.target.checked)}
+        />
+      </EuiFormRow>,
+    );
+  }
+
+  const trustedTypesDirectives = [];
+  if (!isReadOnly || directives.has('trusted-types')) {
+    trustedTypesDirectives.push(
+      <EuiFormRow
+        key="trusted-types"
+        label={'Trusted Types policies (trusted-types)'}
+        helpText={'Controls the creation of Trusted Types policies.'}
+        isDisabled={isReadOnly}
+      >
+        <ContentSecurityPolicyTrustedTypesCombobox
+          value={directives.get('trusted-types')}
+          isDisabled={isReadOnly}
+          onChange={(policies) => onDirectiveChange('trusted-types', policies)}
+        />
+      </EuiFormRow>,
+    );
+  }
+
+  if (!isReadOnly || directives.has('require-trusted-types-for')) {
+    trustedTypesDirectives.push(
+      <EuiFormRow
+        key="require-trusted-types-for"
+        label={'Trusted Types sink groups (require-trusted-types-for)'}
+        helpText={
+          'Defines what should be the behavior when a string value is passed to an injection sink of a given Trusted Type group.'
+        }
+        isDisabled={isReadOnly}
+      >
+        <EuiComboBox
+          fullWidth
+          aria-label={'Select sink groups'}
+          placeholder={'Select sink groups'}
+          isDisabled={isReadOnly}
+          selectedOptions={directives.get('require-trusted-types-for')?.map((value) => ({ label: value })) ?? []}
+          options={[{ label: "'script'" }]}
+          onChange={(selectedGroups) =>
+            onDirectiveChange(
+              'require-trusted-types-for',
+              selectedGroups.map(({ label }) => label),
+            )
+          }
+          isClearable
+        />
+      </EuiFormRow>,
+    );
+  }
+
   const reportingDirectives = [];
   if (!isReadOnly || directives.has('report-to')) {
     reportingDirectives.push(
@@ -338,7 +409,12 @@ export function ContentSecurityPolicyForm({ policy, onChange, isReadOnly = false
           {otherFetchDirectives.length > 0 ? (
             <>
               <EuiSpacer />
-              <EuiAccordion id={'other-fetch-directives'} buttonContent="Other fetch directives" paddingSize="none">
+              <EuiAccordion
+                id={'other-fetch-directives'}
+                buttonContent="Other fetch directives"
+                paddingSize="none"
+                initialIsOpen={isReadOnly}
+              >
                 <EuiSpacer />
                 {otherFetchDirectives.map(({ directive, label, helpText }) => (
                   <EuiFormRow key={directive} label={label} helpText={helpText} isDisabled={isReadOnly}>
@@ -387,6 +463,42 @@ export function ContentSecurityPolicyForm({ policy, onChange, isReadOnly = false
           }
         >
           {navigationDirectives.map((directive) => directive)}
+        </EuiDescribedFormGroup>
+      ) : null}
+
+      {trustedTypesDirectives.length > 0 ? (
+        <EuiDescribedFormGroup
+          title={<h3>Trusted Types directives</h3>}
+          description={
+            <span>
+              Trusted Types directives control integration of the content security policy (CSP) with the Trusted Types
+              framework. For more information refer to{' '}
+              <EuiLink target="_blank" href="https://www.w3.org/TR/trusted-types">
+                specification
+              </EuiLink>
+              .
+            </span>
+          }
+        >
+          {trustedTypesDirectives.map((directive) => directive)}
+        </EuiDescribedFormGroup>
+      ) : null}
+
+      {extensionDirectives.length > 0 ? (
+        <EuiDescribedFormGroup
+          title={<h3>Extension directives</h3>}
+          description={
+            <span>
+              Extension directives are defined by specifications separate from the one that defines the core set of
+              directives. For more information refer to{' '}
+              <EuiLink target="_blank" href="https://w3c.github.io/webappsec-csp/#directives-elsewhere">
+                specification
+              </EuiLink>
+              .
+            </span>
+          }
+        >
+          {extensionDirectives.map((directive) => directive)}
         </EuiDescribedFormGroup>
       ) : null}
 

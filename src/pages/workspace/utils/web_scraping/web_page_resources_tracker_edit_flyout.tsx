@@ -18,6 +18,7 @@ import type { WebPageResourcesTracker, WebPageResourcesTrackers } from './web_pa
 import { WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE } from './web_page_resources_tracker';
 import WebScrapingResourcesTrackerScriptEditor from './web_page_resources_tracker_script_editor';
 import { type AsyncData, getApiUrl, getErrorMessage, getUserData } from '../../../../model';
+import { isValidURL } from '../../../../tools/url';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
@@ -32,15 +33,6 @@ const SCHEDULES = [
 export interface Props {
   onClose: (items?: WebPageResourcesTracker[]) => void;
   item?: WebPageResourcesTracker;
-}
-
-function isValidURL(url: string) {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) {

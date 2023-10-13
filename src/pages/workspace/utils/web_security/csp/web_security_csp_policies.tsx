@@ -24,9 +24,10 @@ import {
 } from './content_security_policy';
 import { ContentSecurityPolicyCopyModal } from './content_security_policy_copy_modal';
 import { ContentSecurityPolicyEditFlyout } from './content_security_policy_edit_flyout';
+import { ContentSecurityPolicyImportModal } from './content_security_policy_import_modal';
 import { ContentSecurityPolicyShareModal } from './content_security_policy_share_modal';
 import { PageLoadingState } from '../../../../../components';
-import { getApiUrl, getUserData } from '../../../../../model';
+import { getApiUrl, getErrorMessage, getUserData } from '../../../../../model';
 import { useWorkspaceContext } from '../../../hooks';
 
 export default function WebSecurityContentSecurityPolicies() {
@@ -37,37 +38,59 @@ export default function WebSecurityContentSecurityPolicies() {
   const [policyToRemove, setPolicyToRemove] = useState<ContentSecurityPolicy | null>(null);
 
   const [policies, setPolicies] = useState<ContentSecurityPolicy[] | null>(null);
-  const updatePolicies = useCallback((updatedPolicies: ContentSecurityPolicy[]) => {
+  const updatePolicies = (updatedPolicies: ContentSecurityPolicy[]) => {
     setPolicies(updatedPolicies);
     setTitleActions(updatedPolicies.length === 0 ? null : createButton);
-  }, []);
+  };
+
+  const refreshPolicies = () => {
+    getUserData<SerializedItemCollectionType>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE).then(
+      (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
+      (err: Error) => {
+        console.error(`Failed to load content security policies: ${getErrorMessage(err)}`);
+        updatePolicies([]);
+      },
+    );
+  };
 
   const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
     { isOpen: false } | { isOpen: true; policy?: ContentSecurityPolicy }
   >({ isOpen: false });
-  const onToggleEditFlyout = useCallback(
-    (updatedPolicies?: ContentSecurityPolicy[]) => {
-      if (updatedPolicies) {
-        updatePolicies(updatedPolicies);
-      }
-      setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
-    },
-    [updatePolicies],
-  );
+  const onToggleEditFlyout = (updatedPolicies?: ContentSecurityPolicy[]) => {
+    if (updatedPolicies) {
+      updatePolicies(updatedPolicies);
+    }
+    setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
+  };
+
+  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
 
   const onEditPolicy = useCallback((policy: ContentSecurityPolicy) => {
     setIsEditFlyoutOpen({ isOpen: true, policy });
   }, []);
 
   const createButton = (
-    <EuiButton
-      iconType={'plusInCircle'}
-      fill
-      title="Create new content security policy"
-      onClick={() => onToggleEditFlyout()}
-    >
-      Create policy
-    </EuiButton>
+    <EuiFlexGroup responsive={false} gutterSize="s" alignItems="center" justifyContent={'center'}>
+      <EuiFlexItem grow={false}>
+        <EuiButton
+          iconType={'importAction'}
+          title="Import content security policy"
+          onClick={() => setIsImportModalOpen(true)}
+        >
+          Import policy
+        </EuiButton>
+      </EuiFlexItem>
+      <EuiFlexItem grow={false}>
+        <EuiButton
+          iconType={'plusInCircle'}
+          fill
+          title="Create new content security policy"
+          onClick={() => onToggleEditFlyout()}
+        >
+          Create policy
+        </EuiButton>
+      </EuiFlexItem>
+    </EuiFlexGroup>
   );
 
   const docsButton = (
@@ -86,14 +109,8 @@ export default function WebSecurityContentSecurityPolicies() {
       return;
     }
 
-    getUserData<SerializedItemCollectionType>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE).then(
-      (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
-      (err: Error) => {
-        console.error(`Failed to load content security policies: ${err?.message ?? err}`);
-        updatePolicies([]);
-      },
-    );
-  }, [uiState, updatePolicies]);
+    refreshPolicies();
+  }, [uiState]);
 
   const editFlyout = isEditFlyoutOpen.isOpen ? (
     <ContentSecurityPolicyEditFlyout onClose={onToggleEditFlyout} policy={isEditFlyoutOpen.policy} />
@@ -105,6 +122,17 @@ export default function WebSecurityContentSecurityPolicies() {
 
   const shareModal = policyToShare ? (
     <ContentSecurityPolicyShareModal onClose={() => setPolicyToShare(null)} policy={policyToShare} />
+  ) : null;
+
+  const importModal = isImportModalOpen ? (
+    <ContentSecurityPolicyImportModal
+      onClose={(success) => {
+        setIsImportModalOpen(false);
+        if (success) {
+          refreshPolicies();
+        }
+      }}
+    />
   ) : null;
 
   const removeConfirmModal = policyToRemove ? (
@@ -277,6 +305,7 @@ export default function WebSecurityContentSecurityPolicies() {
       {copyModal}
       {shareModal}
       {removeConfirmModal}
+      {importModal}
     </>
   );
 }

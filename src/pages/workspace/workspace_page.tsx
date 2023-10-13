@@ -340,7 +340,7 @@ export function WorkspacePage() {
           Sign in
         </EuiButtonEmpty>,
         <EuiButton href="/signup" fill size="s">
-          Start free trial
+          Get started
         </EuiButton>,
       ];
 

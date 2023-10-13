@@ -7,6 +7,7 @@ import {
   EuiCodeBlock,
   EuiForm,
   EuiFormRow,
+  EuiLink,
   EuiModal,
   EuiModalBody,
   EuiModalFooter,
@@ -34,7 +35,7 @@ type SerializeResponse = {
 export function ContentSecurityPolicyCopyModal({ policy, onClose }: ContentSecurityPolicyCopyModalProps) {
   const { uiState } = useWorkspaceContext();
 
-  const [source, setSource] = useState<string>('header');
+  const [source, setSource] = useState<string>('enforcingHeader');
   const onSourceChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setSource(e.target.value);
     onSerializePolicy(e.target.value);
@@ -80,11 +81,10 @@ Reporting-Endpoints: default="https://secutils.dev/csp_reports/default
                 : '';
 
               setSnippet(
-                `${reportToHeader}## Policy header (enforcing)
-Content-Security-Policy: ${data.policy}
-
-## Policy header (reporting only)
-Content-Security-Policy-Report-Only: ${data.policy}`,
+                `${reportToHeader}## Policy header
+${data.source === 'enforcingHeader' ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only'}: ${
+                  data.policy
+                }`,
               );
             }
 
@@ -114,7 +114,7 @@ Content-Security-Policy-Report-Only: ${data.policy}`,
     ) : undefined;
 
   return (
-    <EuiModal onClose={onClose}>
+    <EuiModal onClose={onClose} maxWidth={450}>
       <EuiModalHeader>
         <EuiModalHeaderTitle>
           <EuiTitle size={'s'}>
@@ -125,19 +125,31 @@ Content-Security-Policy-Report-Only: ${data.policy}`,
       <EuiModalBody>
         <EuiForm id="copy-form" component="form">
           {copyStatusCallout}
-          <EuiFormRow fullWidth label="Policy source">
+          <EuiFormRow
+            fullWidth
+            label="Policy source"
+            helpText={
+              <span>
+                Defines how the policy should be{' '}
+                <EuiLink target="_blank" href="https://www.w3.org/TR/CSP3/#policy-delivery">
+                  delivered
+                </EuiLink>
+              </span>
+            }
+          >
             <EuiSelect
               fullWidth
               options={[
-                { value: 'header', text: 'HTTP header' },
-                { value: 'meta', text: 'HTML tag' },
+                { value: 'enforcingHeader', text: 'HTTP header (enforcing)' },
+                { value: 'reportOnlyHeader', text: 'HTTP header (report only)' },
+                { value: 'meta', text: 'HTML meta tag' },
               ]}
               value={source}
               onChange={onSourceChange}
             />
           </EuiFormRow>
           <EuiFormRow label="Snippet" fullWidth>
-            <EuiCodeBlock language={source === 'header' ? 'http' : 'html'} fontSize="m" paddingSize="m" isCopyable>
+            <EuiCodeBlock language={source === 'meta' ? 'html' : 'http'} fontSize="m" paddingSize="m" isCopyable>
               {snippet}
             </EuiCodeBlock>
           </EuiFormRow>
