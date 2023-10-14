@@ -3,7 +3,7 @@ export type { UiState, WebhookUrlType } from './ui_state';
 export type { AsyncData } from './async_data';
 export { isAbortError } from './errors';
 export { getUserData, setUserData } from './user';
-export { getUserShareId } from './user_share';
+export { getUserShareId, removeUserShareId } from './user_share';
 export type { User } from './user';
 export type { Util } from './util';
 export {

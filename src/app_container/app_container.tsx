@@ -13,6 +13,7 @@ import {
   getApiRequestConfig,
   getApiUrl,
   getUserShareId,
+  removeUserShareId,
   setUserData,
   USER_SETTINGS_KEY_COMMON_UI_THEME,
   USER_SETTINGS_USER_DATA_TYPE,
@@ -43,6 +44,11 @@ export function AppContainer() {
         if (data.settings) {
           setSettings(data.settings);
           setLocalSettings(data.settings);
+        }
+
+        // Remove user share ID from URL if it's not valid anymore.
+        if (!data.userShare) {
+          removeUserShareId();
         }
 
         setIsUiStateRefreshInProgress(false);

@@ -4,6 +4,18 @@ export function getUserShareId() {
   return new URLSearchParams(window.location.search).get(USER_SHARE_ID_HEADER_NAME);
 }
 
+export function removeUserShareId() {
+  const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.has(USER_SHARE_ID_HEADER_NAME)) {
+    searchParams.delete(USER_SHARE_ID_HEADER_NAME);
+    window.history.replaceState(
+      null,
+      '',
+      searchParams.size > 0 ? `${window.location.pathname}?${searchParams.toString()}` : window.location.pathname,
+    );
+  }
+}
+
 /**
  * Describes a user share.
  */
