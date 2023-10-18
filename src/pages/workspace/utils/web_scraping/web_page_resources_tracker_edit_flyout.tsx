@@ -142,7 +142,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           title={<h3>General</h3>}
           description={'General properties of the web page resource tracker'}
         >
-          <EuiFormRow label="Name" helpText="Arbitrary web page resources tracker name" fullWidth isDisabled={!!item}>
+          <EuiFormRow label="Name" helpText="Arbitrary web page resources tracker name." fullWidth isDisabled={!!item}>
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
           <EuiFormRow label="URL" helpText="Fully-qualified URL of the web page for resource tracking" fullWidth>

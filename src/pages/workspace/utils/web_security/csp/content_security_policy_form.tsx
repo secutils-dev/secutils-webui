@@ -379,7 +379,7 @@ export function ContentSecurityPolicyForm({ policy, onChange, isReadOnly = false
         title={<h3>General</h3>}
         description={'General properties of the content security policy (CSP)'}
       >
-        <EuiFormRow label="Name" helpText="Arbitrary CSP policy name" fullWidth isDisabled={!!policy}>
+        <EuiFormRow label="Name" helpText="Arbitrary CSP policy name." fullWidth isDisabled={!!policy}>
           <EuiFieldText value={name} required type={'text'} onChange={onNameChange} readOnly={isReadOnly} />
         </EuiFormRow>
       </EuiDescribedFormGroup>

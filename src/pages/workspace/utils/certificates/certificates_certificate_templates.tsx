@@ -19,52 +19,52 @@ import {
 import { unix } from 'moment';
 
 import { CertificateFormatModal } from './certificate_format_modal';
-import { SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
-import { SaveSelfSignedCertificatesFlyout } from './save_self_signed_certificate_flyout';
 import {
+  CERTIFICATE_TEMPLATES_USER_DATA_NAMESPACE,
   certificateTypeString,
-  deserializeSelfSignedCertificates,
+  deserializeCertificateTemplates,
   getDistinguishedNameString,
-  keyAlgorithmString,
-  SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE,
   signatureAlgorithmString,
-} from './self_signed_certificate';
-import type { SelfSignedCertificate, SerializedSelfSignedCertificates } from './self_signed_certificate';
+} from './certificate_template';
+import type { CertificateTemplate, SerializedCertificateTemplates } from './certificate_template';
+import { SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
+import { privateKeyAlgString } from './private_key_alg';
+import { SaveCertificateTemplateFlyout } from './save_certificate_template_flyout';
 import { PageLoadingState } from '../../../../components';
 import { getUserData, setUserData } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
-export default function CertificatesSelfSignedCertificates() {
+export default function CertificatesCertificateTemplates() {
   const { uiState, settings, setSettings, setTitleActions } = useWorkspaceContext();
 
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState<
-    { isOpen: false } | { isOpen: true; certificate: SelfSignedCertificate }
+    { isOpen: false } | { isOpen: true; template: CertificateTemplate }
   >({ isOpen: false });
-  const onToggleGenerateModal = useCallback((certificate?: SelfSignedCertificate) => {
-    if (certificate) {
-      setIsGenerateModalOpen({ isOpen: true, certificate });
+  const onToggleGenerateModal = useCallback((template?: CertificateTemplate) => {
+    if (template) {
+      setIsGenerateModalOpen({ isOpen: true, template });
     } else {
       setIsGenerateModalOpen({ isOpen: false });
     }
   }, []);
 
-  const [certificates, setCertificates] = useState<SelfSignedCertificate[] | null>(null);
-  const updateCertificates = useCallback((updatedCertificates: SelfSignedCertificate[]) => {
-    setCertificates(updatedCertificates);
-    setTitleActions(updatedCertificates.length === 0 ? null : createButton);
+  const [templates, setTemplates] = useState<CertificateTemplate[] | null>(null);
+  const updateTemplates = useCallback((updatedTemplates: CertificateTemplate[]) => {
+    setTemplates(updatedTemplates);
+    setTitleActions(updatedTemplates.length === 0 ? null : createButton);
   }, []);
 
   const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
-    { isOpen: false } | { isOpen: true; certificate?: SelfSignedCertificate }
+    { isOpen: false } | { isOpen: true; template?: CertificateTemplate }
   >({ isOpen: false });
   const onToggleEditFlyout = useCallback(
-    (updatedCertificates?: SelfSignedCertificate[]) => {
-      if (updatedCertificates) {
-        updateCertificates(updatedCertificates);
+    (updatedTemplates?: CertificateTemplate[]) => {
+      if (updatedTemplates) {
+        updateTemplates(updatedTemplates);
       }
       setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
     },
-    [updateCertificates],
+    [updateTemplates],
   );
 
   const createButton = (
@@ -94,34 +94,34 @@ export default function CertificatesSelfSignedCertificates() {
       return;
     }
 
-    getUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE).then(
-      (serializedCertificates) => updateCertificates(deserializeSelfSignedCertificates(serializedCertificates)),
+    getUserData<SerializedCertificateTemplates>(CERTIFICATE_TEMPLATES_USER_DATA_NAMESPACE).then(
+      (serializedTemplates) => updateTemplates(deserializeCertificateTemplates(serializedTemplates)),
       (err: Error) => {
         console.error(`Failed to load certificate templates: ${err?.message ?? err}`);
-        updateCertificates([]);
+        updateTemplates([]);
       },
     );
-  }, [uiState, updateCertificates]);
+  }, [uiState, updateTemplates]);
 
   const editFlyout = isEditFlyoutOpen.isOpen ? (
-    <SaveSelfSignedCertificatesFlyout onClose={onToggleEditFlyout} certificate={isEditFlyoutOpen.certificate} />
+    <SaveCertificateTemplateFlyout onClose={onToggleEditFlyout} template={isEditFlyoutOpen.template} />
   ) : null;
 
   const generateModal = isGenerateModalOpen.isOpen ? (
-    <CertificateFormatModal onClose={() => onToggleGenerateModal()} certificate={isGenerateModalOpen.certificate} />
+    <CertificateFormatModal onClose={() => onToggleGenerateModal()} template={isGenerateModalOpen.template} />
   ) : null;
 
-  const [certificateToRemove, setCertificateToRemove] = useState<SelfSignedCertificate | null>(null);
-  const removeConfirmModal = certificateToRemove ? (
+  const [templateToRemove, setTemplateToRemove] = useState<CertificateTemplate | null>(null);
+  const removeConfirmModal = templateToRemove ? (
     <EuiConfirmModal
-      title={`Remove "${certificateToRemove.name}"?`}
-      onCancel={() => setCertificateToRemove(null)}
+      title={`Remove "${templateToRemove.name}"?`}
+      onCancel={() => setTemplateToRemove(null)}
       onConfirm={() => {
-        setCertificateToRemove(null);
-        setUserData<SerializedSelfSignedCertificates>(SELF_SIGNED_CERTIFICATES_USER_DATA_NAMESPACE, {
-          [certificateToRemove.name]: null,
+        setTemplateToRemove(null);
+        setUserData<SerializedCertificateTemplates>(CERTIFICATE_TEMPLATES_USER_DATA_NAMESPACE, {
+          [templateToRemove.name]: null,
         }).then(
-          (serializedCertificates) => updateCertificates(deserializeSelfSignedCertificates(serializedCertificates)),
+          (serializedCertificates) => updateTemplates(deserializeCertificateTemplates(serializedCertificates)),
           (err: Error) => {
             console.error(`Failed to remove certificate template: ${err?.message ?? err}`);
           },
@@ -135,8 +135,8 @@ export default function CertificatesSelfSignedCertificates() {
     </EuiConfirmModal>
   ) : null;
 
-  const onEditCertificate = useCallback((certificate: SelfSignedCertificate) => {
-    setIsEditFlyoutOpen({ isOpen: true, certificate: certificate });
+  const onEditTemplate = useCallback((template: CertificateTemplate) => {
+    setIsEditFlyoutOpen({ isOpen: true, template });
   }, []);
 
   const [pagination, setPagination] = useState<Pagination>({
@@ -147,7 +147,7 @@ export default function CertificatesSelfSignedCertificates() {
   });
   const [sorting, setSorting] = useState<{ sort: PropertySort }>({ sort: { field: 'name', direction: 'asc' } });
   const onTableChange = useCallback(
-    ({ page, sort }: Criteria<SelfSignedCertificate>) => {
+    ({ page, sort }: Criteria<CertificateTemplate>) => {
       setPagination({
         ...pagination,
         pageIndex: page?.index ?? 0,
@@ -161,7 +161,7 @@ export default function CertificatesSelfSignedCertificates() {
     [pagination],
   );
 
-  if (!uiState.synced || !uiState.user || !certificates) {
+  if (!uiState.synced || !uiState.user || !templates) {
     return <PageLoadingState />;
   }
 
@@ -190,7 +190,7 @@ export default function CertificatesSelfSignedCertificates() {
     );
 
   let content;
-  if (certificates.length === 0) {
+  if (templates.length === 0) {
     content = (
       <EuiFlexGroup
         direction={'column'}
@@ -207,7 +207,7 @@ export default function CertificatesSelfSignedCertificates() {
             style={{ maxWidth: '60em', display: 'flex' }}
             body={
               <div>
-                <p>Go ahead and create your first self-signed certificate template.</p>
+                <p>Go ahead and create your first certificate template.</p>
                 {createButton}
                 <EuiSpacer size={'s'} />
                 {docsButton}
@@ -226,13 +226,13 @@ export default function CertificatesSelfSignedCertificates() {
           allowNeutralSort={false}
           sorting={sorting}
           onTableChange={onTableChange}
-          items={certificates}
-          itemId={(certificate) => certificate.name}
+          items={templates}
+          itemId={(template) => template.name}
           tableLayout={'auto'}
           columns={[
             {
               name: (
-                <EuiToolTip content="A unique name of the self-signed certificate template">
+                <EuiToolTip content="A unique name of the certificate template">
                   <span>
                     Name <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
                   </span>
@@ -241,7 +241,7 @@ export default function CertificatesSelfSignedCertificates() {
               field: 'name',
               textOnly: true,
               sortable: true,
-              render: (_, certificate: SelfSignedCertificate) => <EuiText>{certificate.name}</EuiText>,
+              render: (_, template) => <EuiText>{template.name}</EuiText>,
             },
             {
               name: (
@@ -254,46 +254,36 @@ export default function CertificatesSelfSignedCertificates() {
               field: 'isCA',
               textOnly: true,
               sortable: true,
-              render: (_, certificate: SelfSignedCertificate) => (
-                <EuiText>{certificateTypeString(certificate)}</EuiText>
-              ),
+              render: (_, template) => <EuiText>{certificateTypeString(template)}</EuiText>,
             },
             {
               name: 'Distinguished name (DN)',
               field: 'commonName',
-              render: (_, certificate: SelfSignedCertificate) => (
-                <EuiText>{getDistinguishedNameString(certificate)}</EuiText>
-              ),
+              render: (_, template) => <EuiText>{getDistinguishedNameString(template)}</EuiText>,
             },
             {
               name: 'Not valid before',
               field: 'notValidBefore',
               sortable: true,
-              render: (_, certificate: SelfSignedCertificate) => (
-                <EuiText>{unix(certificate.notValidBefore).format('LL HH:mm')}</EuiText>
-              ),
+              render: (_, template) => <EuiText>{unix(template.notValidBefore).format('LL HH:mm')}</EuiText>,
             },
             {
               name: 'Not valid after',
               field: 'notValidAfter',
               sortable: true,
-              render: (_, certificate: SelfSignedCertificate) => (
-                <EuiText>{unix(certificate.notValidAfter).format('LL HH:mm')}</EuiText>
-              ),
+              render: (_, template) => <EuiText>{unix(template.notValidAfter).format('LL HH:mm')}</EuiText>,
             },
             {
-              name: 'Public key algorithm',
-              field: 'publicKeyAlgorithm',
+              name: 'Key algorithm',
+              field: 'keyAlgorithm',
               mobileOptions: { only: true },
-              render: (_, certificate: SelfSignedCertificate) => <EuiText>{keyAlgorithmString(certificate)}</EuiText>,
+              render: (_, template) => <EuiText>{privateKeyAlgString(template.keyAlgorithm)}</EuiText>,
             },
             {
               name: 'Signature algorithm',
               field: 'signatureAlgorithm',
               mobileOptions: { only: true },
-              render: (_, certificate: SelfSignedCertificate) => (
-                <EuiText>{signatureAlgorithmString(certificate)}</EuiText>
-              ),
+              render: (_, template) => <EuiText>{signatureAlgorithmString(template)}</EuiText>,
             },
             {
               name: 'Actions',
@@ -314,14 +304,14 @@ export default function CertificatesSelfSignedCertificates() {
                   icon: 'pencil',
                   type: 'icon',
                   isPrimary: true,
-                  onClick: onEditCertificate,
+                  onClick: onEditTemplate,
                 },
                 {
                   name: 'Remove template',
                   description: 'Remove template',
                   icon: 'minusInCircle',
                   type: 'icon',
-                  onClick: setCertificateToRemove,
+                  onClick: setTemplateToRemove,
                 },
               ],
             },

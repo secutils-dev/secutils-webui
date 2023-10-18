@@ -18,21 +18,21 @@ import {
 } from '@elastic/eui';
 import axios from 'axios';
 
-import type { SelfSignedCertificate } from './self_signed_certificate';
+import type { CertificateTemplate } from './certificate_template';
 import type { AsyncData } from '../../../../model';
 import { getApiUrl } from '../../../../model';
 import { Downloader } from '../../../../tools/downloader';
 
 export interface CertificateFormatModalProps {
-  certificate: SelfSignedCertificate;
+  template: CertificateTemplate;
   onClose: () => void;
 }
 
 type GenerationResponse = {
-  value: { value: { certificate: number[] } };
+  value: { value: number[] };
 };
 
-export function CertificateFormatModal({ certificate, onClose }: CertificateFormatModalProps) {
+export function CertificateFormatModal({ template, onClose }: CertificateFormatModalProps) {
   const [format, setFormat] = useState<string>('pkcs12');
   const onFormatChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setFormat(e.target.value);
@@ -60,35 +60,22 @@ export function CertificateFormatModal({ certificate, onClose }: CertificateForm
             type: 'certificates',
             value: {
               type: 'generateSelfSignedCertificate',
-              value: { templateName: certificate.name, format, passphrase: passphrase || null },
+              value: { templateName: template.name, format, passphrase: passphrase || null },
             },
           },
         })
         .then(
           (response) => {
+            const content = new Uint8Array(response.data.value.value);
             if (format === 'pem') {
-              Downloader.download(
-                `${certificate.name}.zip`,
-                new Uint8Array(response.data.value.value.certificate),
-                'application/zip',
-              );
+              Downloader.download(`${template.name}.zip`, content, 'application/zip');
             } else if (format === 'pkcs8') {
-              Downloader.download(
-                `${certificate.name}.p8`,
-                new Uint8Array(response.data.value.value.certificate),
-                'application/pkcs8',
-              );
+              Downloader.download(`${template.name}.p8`, content, 'application/pkcs8');
             } else {
-              Downloader.download(
-                `${certificate.name}.pfx`,
-                new Uint8Array(response.data.value.value.certificate),
-                'application/x-pkcs12',
-              );
+              Downloader.download(`${template.name}.pfx`, content, 'application/x-pkcs12');
             }
 
             setGeneratingStatus({ status: 'succeeded', data: undefined });
-            setFormat('');
-            setPassphrase('');
 
             onClose();
           },
