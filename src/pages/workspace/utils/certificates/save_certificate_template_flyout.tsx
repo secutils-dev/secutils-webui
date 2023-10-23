@@ -274,7 +274,7 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
       title={`${template ? 'Edit' : 'Add'} certificate template`}
       onClose={() => onClose()}
       onSave={onSave}
-      canSave={name.trim().length === 0}
+      canSave={name.trim().length > 0}
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm id="update-form" component="form" fullWidth>
