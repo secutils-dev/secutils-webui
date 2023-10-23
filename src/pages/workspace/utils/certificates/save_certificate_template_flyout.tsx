@@ -10,25 +10,21 @@ import {
   EuiLink,
   EuiSelect,
 } from '@elastic/eui';
+import axios from 'axios';
 import moment from 'moment/moment';
 
 import { CertificateLifetimeCalendar } from './certificate_lifetime_calendar';
-import {
-  CERTIFICATE_TEMPLATES_USER_DATA_NAMESPACE,
-  deserializeCertificateTemplates,
-  serializeCertificateTemplate,
-} from './certificate_template';
-import type { CertificateTemplate, SerializedCertificateTemplates } from './certificate_template';
+import type { CertificateTemplate } from './certificate_template';
 import type { PrivateKeyAlgorithm, PrivateKeyCurveName, PrivateKeySize } from './private_key_alg';
 import { privateKeyCurveNameString } from './private_key_alg';
 import type { AsyncData } from '../../../../model';
-import { setUserData } from '../../../../model';
+import { getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface SaveCertificateTemplateFlyoutProps {
   template?: CertificateTemplate;
-  onClose: (certificates?: CertificateTemplate[]) => void;
+  onClose: (success?: boolean) => void;
 }
 
 const SIGNATURE_ALGORITHMS = new Map([
@@ -92,12 +88,12 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
   }, []);
 
   const [signatureAlgorithms, setSignatureAlgorithms] = useState(
-    SIGNATURE_ALGORITHMS.get(template?.keyAlgorithm?.keyType ?? 'ed25519')!,
+    SIGNATURE_ALGORITHMS.get(template?.attributes.keyAlgorithm?.keyType ?? 'ed25519')!,
   );
 
   const [keyAlgorithm, setKeyAlgorithm] = useState<PrivateKeyAlgorithm>(
-    template?.keyAlgorithm && typeof template?.keyAlgorithm === 'object'
-      ? template.keyAlgorithm
+    template?.attributes.keyAlgorithm && typeof template?.attributes.keyAlgorithm === 'object'
+      ? template.attributes.keyAlgorithm
       : { keyType: 'ed25519' },
   );
   const onKeyAlgorithmChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
@@ -128,64 +124,64 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
   }, []);
 
   const [signatureAlgorithm, setSignatureAlgorithm] = useState<string>(
-    template?.signatureAlgorithm ?? signatureAlgorithms[0].value,
+    template?.attributes.signatureAlgorithm ?? signatureAlgorithms[0].value,
   );
   const onSignatureAlgorithmChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setSignatureAlgorithm(e.target.value);
   }, []);
 
-  const [type, setType] = useState<CertificateType>(template?.isCA ? 'ca' : 'endEntity');
+  const [type, setType] = useState<CertificateType>(template?.attributes.isCa ? 'ca' : 'endEntity');
   const onTypeChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setType(e.target.value as CertificateType);
   }, []);
 
   const [keyUsage, setKeyUsage] = useState<Array<{ label: string; value: string }>>(
-    template?.keyUsage?.map((usage) => KEY_USAGE.get(usage)!) ?? [],
+    template?.attributes.keyUsage?.map((usage) => KEY_USAGE.get(usage)!) ?? [],
   );
   const onKeyUsageChange = (selectedKeyUsage: Array<{ label: string; value?: string }>) => {
     setKeyUsage(selectedKeyUsage as Array<{ label: string; value: string }>);
   };
 
   const [extendedKeyUsage, setExtendedKeyUsage] = useState<Array<{ label: string; value: string }>>(
-    template?.extendedKeyUsage?.map((usage) => EXTENDED_KEY_USAGE.get(usage)!) ?? [],
+    template?.attributes.extendedKeyUsage?.map((usage) => EXTENDED_KEY_USAGE.get(usage)!) ?? [],
   );
   const onExtendedKeyUsageChange = (selectedKeyUsage: Array<{ label: string; value?: string }>) => {
     setExtendedKeyUsage(selectedKeyUsage as Array<{ label: string; value: string }>);
   };
 
-  const [commonName, setCommonName] = useState<string>(template?.commonName ?? 'CA Issuer');
+  const [commonName, setCommonName] = useState<string>(template?.attributes.commonName ?? 'CA Issuer');
   const onCommonNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setCommonName(e.target.value);
   }, []);
 
-  const [country, setCountry] = useState<string>(template?.country ?? 'US');
+  const [country, setCountry] = useState<string>(template?.attributes.country ?? 'US');
   const onCountryChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setCountry(e.target.value);
   }, []);
 
-  const [state, setState] = useState<string>(template?.state ?? 'California');
+  const [stateOrProvince, setStateOrProvince] = useState<string>(template?.attributes.stateOrProvince ?? 'California');
   const onStateChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setState(e.target.value);
+    setStateOrProvince(e.target.value);
   }, []);
 
-  const [locality, setLocality] = useState<string>(template?.locality ?? 'San Francisco');
+  const [locality, setLocality] = useState<string>(template?.attributes.locality ?? 'San Francisco');
   const onLocalityChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setLocality(e.target.value);
   }, []);
 
-  const [organization, setOrganization] = useState<string>(template?.organization ?? 'CA Issuer, Inc');
+  const [organization, setOrganization] = useState<string>(template?.attributes.organization ?? 'CA Issuer, Inc');
   const onOrganizationChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setOrganization(e.target.value);
   }, []);
 
-  const [organizationalUnit, setOrganizationalUnit] = useState<string>(template?.organizationalUnit ?? '');
+  const [organizationalUnit, setOrganizationalUnit] = useState<string>(template?.attributes.organizationalUnit ?? '');
   const onOrganizationalUnitChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setOrganizationalUnit(e.target.value);
   }, []);
 
-  const [notValidBefore, setNotValidBefore] = useState<number>(template?.notValidBefore ?? moment().unix());
+  const [notValidBefore, setNotValidBefore] = useState<number>(template?.attributes.notValidBefore ?? moment().unix());
   const [notValidAfter, setNotValidAfter] = useState<number>(
-    template?.notValidAfter ?? moment().add(1, 'years').unix(),
+    template?.attributes.notValidAfter ?? moment().add(1, 'years').unix(),
   );
 
   const [updatingStatus, setUpdatingStatus] = useState<AsyncData<void>>();
@@ -195,44 +191,63 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
     }
 
     setUpdatingStatus({ status: 'pending' });
-    setUserData<SerializedCertificateTemplates>(CERTIFICATE_TEMPLATES_USER_DATA_NAMESPACE, {
-      [name]: serializeCertificateTemplate({
-        name: name,
-        keyAlgorithm,
-        signatureAlgorithm,
-        commonName,
-        country,
-        state,
-        locality,
-        organization,
-        organizationalUnit,
-        notValidBefore,
-        notValidAfter,
-        isCA: type === 'ca',
-        keyUsage: keyUsage.map(({ value }) => value),
-        extendedKeyUsage: extendedKeyUsage.map(({ value }) => value),
-      }),
-    }).then(
-      (serializedTemplates) => {
+
+    const attributes = {
+      keyAlgorithm,
+      signatureAlgorithm,
+      commonName: commonName ? commonName : null,
+      country: country ? country : null,
+      stateOrProvince: stateOrProvince ? stateOrProvince : null,
+      locality: locality ? locality : null,
+      organization: organization ? organization : null,
+      organizationalUnit: organizationalUnit ? organizationalUnit : null,
+      notValidBefore,
+      notValidAfter,
+      isCa: type === 'ca',
+      keyUsage: keyUsage.length > 0 ? keyUsage.map(({ value }) => value) : null,
+      extendedKeyUsage: extendedKeyUsage.length > 0 ? extendedKeyUsage.map(({ value }) => value) : null,
+    };
+
+    const [requestPayload, successMessage, errorMessage] = template
+      ? [
+          {
+            type: 'updateCertificateTemplate',
+            value: {
+              templateId: template.id,
+              templateName: template.name !== name ? name.trim() : null,
+              attributes,
+            },
+          },
+          `Successfully updated "${name}" certificate template`,
+          `Unable to update "${name}" certificate template, please try again later`,
+        ]
+      : [
+          { type: 'createCertificateTemplate', value: { templateName: name, attributes } },
+          `Successfully saved "${name}" certificate template`,
+          `Unable to save "${name}" certificate template, please try again later`,
+        ];
+    axios.post(getApiUrl('/api/utils/action'), { action: { type: 'certificates', value: requestPayload } }).then(
+      () => {
         setUpdatingStatus({ status: 'succeeded', data: undefined });
 
         addToast({
-          id: `success-update-certificate-${name}`,
+          id: `success-save-private-key-${name}`,
           iconType: 'check',
           color: 'success',
-          title: `Successfully saved "${name}" certificate template`,
+          title: successMessage,
         });
 
-        onClose(deserializeCertificateTemplates(serializedTemplates));
+        onClose(true);
       },
       (err: Error) => {
-        setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
+        const remoteErrorMessage = getErrorMessage(err);
+        setUpdatingStatus({ status: 'failed', error: remoteErrorMessage });
 
         addToast({
-          id: `failed-update-certificate-${name}`,
+          id: `failed-save-private-key-${name}`,
           iconType: 'warning',
           color: 'danger',
-          title: `Unable to save "${name}" certificate template, please try again later`,
+          title: isClientError(err) ? remoteErrorMessage : errorMessage,
         });
       },
     );
@@ -242,7 +257,7 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
     signatureAlgorithm,
     commonName,
     country,
-    state,
+    stateOrProvince,
     locality,
     organization,
     organizationalUnit,
@@ -259,12 +274,12 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
       title={`${template ? 'Edit' : 'Add'} certificate template`}
       onClose={() => onClose()}
       onSave={onSave}
-      canSave={name.trim().length > 0}
+      canSave={name.trim().length === 0}
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm id="update-form" component="form" fullWidth>
         <EuiDescribedFormGroup title={<h3>General</h3>} description={'General properties of the certificate template'}>
-          <EuiFormRow label="Name" helpText="Unique name of the certificate template." isDisabled={!!template}>
+          <EuiFormRow label="Name" helpText="Unique name of the certificate template.">
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
           <EuiFormRow label="Key algorithm" helpText="Private key algorithm.">
@@ -388,7 +403,7 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
             label="State or province (ST, S, or P)"
             helpText="List of state or province names (ST, S, or P). The field can contain an array of values. Example: California"
           >
-            <EuiFieldText value={state} type={'text'} onChange={onStateChange} />
+            <EuiFieldText value={stateOrProvince} type={'text'} onChange={onStateChange} />
           </EuiFormRow>
           <EuiFormRow
             label="Locality (L)"

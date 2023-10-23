@@ -76,7 +76,7 @@ export function SavePrivateKeyFlyout({ onClose, privateKey }: SavePrivateKeyFlyo
             type: 'updatePrivateKey',
             value: {
               keyId: privateKey.id,
-              name: privateKey.name !== name ? name.trim() : null,
+              keyName: privateKey.name !== name ? name.trim() : null,
               ...(!privateKey.encrypted || newPassphraseToSend !== currentPassphraseToSend
                 ? { passphrase: currentPassphraseToSend, newPassphrase: newPassphraseToSend }
                 : {}),

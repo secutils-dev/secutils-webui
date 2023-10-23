@@ -16,63 +16,65 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
+import axios from 'axios';
 import { unix } from 'moment';
 
+import { certificateTypeString, getDistinguishedNameString, signatureAlgorithmString } from './certificate_attributes';
 import { CertificateFormatModal } from './certificate_format_modal';
-import {
-  CERTIFICATE_TEMPLATES_USER_DATA_NAMESPACE,
-  certificateTypeString,
-  deserializeCertificateTemplates,
-  getDistinguishedNameString,
-  signatureAlgorithmString,
-} from './certificate_template';
-import type { CertificateTemplate, SerializedCertificateTemplates } from './certificate_template';
+import type { CertificateTemplate } from './certificate_template';
 import { SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
 import { privateKeyAlgString } from './private_key_alg';
 import { SaveCertificateTemplateFlyout } from './save_certificate_template_flyout';
-import { PageLoadingState } from '../../../../components';
-import { getUserData, setUserData } from '../../../../model';
+import { PageErrorState, PageLoadingState } from '../../../../components';
+import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
+
+type GetCertificateTemplatesResponse = {
+  value: { value: CertificateTemplate[] };
+};
 
 export default function CertificatesCertificateTemplates() {
   const { uiState, settings, setSettings, setTitleActions } = useWorkspaceContext();
 
-  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState<
-    { isOpen: false } | { isOpen: true; template: CertificateTemplate }
-  >({ isOpen: false });
-  const onToggleGenerateModal = useCallback((template?: CertificateTemplate) => {
-    if (template) {
-      setIsGenerateModalOpen({ isOpen: true, template });
-    } else {
-      setIsGenerateModalOpen({ isOpen: false });
+  const [templates, setTemplates] = useState<AsyncData<CertificateTemplate[]>>({ status: 'pending' });
+
+  const [templateToGenerate, setTemplateToGenerate] = useState<CertificateTemplate | null>(null);
+  const [templateToEdit, setTemplateToEdit] = useState<CertificateTemplate | null | undefined>(null);
+  const [templateToRemove, setTemplateToRemove] = useState<CertificateTemplate | null>(null);
+
+  const loadCertificateTemplates = () => {
+    axios
+      .post<GetCertificateTemplatesResponse>(
+        getApiUrl('/api/utils/action'),
+        { action: { type: 'certificates', value: { type: 'getCertificateTemplates' } } },
+        getApiRequestConfig(),
+      )
+      .then(
+        (response) => {
+          const templatesData = response.data.value.value;
+          setTemplates({ status: 'succeeded', data: templatesData });
+          setTitleActions(templatesData.length === 0 ? null : createButton);
+        },
+        (err: Error) => {
+          setTemplates({ status: 'failed', error: getErrorMessage(err) });
+        },
+      );
+  };
+
+  useEffect(() => {
+    if (!uiState.synced) {
+      return;
     }
-  }, []);
 
-  const [templates, setTemplates] = useState<CertificateTemplate[] | null>(null);
-  const updateTemplates = useCallback((updatedTemplates: CertificateTemplate[]) => {
-    setTemplates(updatedTemplates);
-    setTitleActions(updatedTemplates.length === 0 ? null : createButton);
-  }, []);
-
-  const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
-    { isOpen: false } | { isOpen: true; template?: CertificateTemplate }
-  >({ isOpen: false });
-  const onToggleEditFlyout = useCallback(
-    (updatedTemplates?: CertificateTemplate[]) => {
-      if (updatedTemplates) {
-        updateTemplates(updatedTemplates);
-      }
-      setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
-    },
-    [updateTemplates],
-  );
+    loadCertificateTemplates();
+  }, [uiState]);
 
   const createButton = (
     <EuiButton
       iconType={'plusInCircle'}
       title="Create a new certificate template"
       fill
-      onClick={() => onToggleEditFlyout()}
+      onClick={() => setTemplateToEdit(undefined)}
     >
       Create certificate template
     </EuiButton>
@@ -89,43 +91,42 @@ export default function CertificatesCertificateTemplates() {
     </EuiButtonEmpty>
   );
 
-  useEffect(() => {
-    if (!uiState.synced || !uiState.user) {
-      return;
-    }
+  const editFlyout =
+    templateToEdit !== null ? (
+      <SaveCertificateTemplateFlyout
+        onClose={(success) => {
+          if (success) {
+            loadCertificateTemplates();
+          }
+          setTemplateToEdit(null);
+        }}
+        template={templateToEdit}
+      />
+    ) : null;
 
-    getUserData<SerializedCertificateTemplates>(CERTIFICATE_TEMPLATES_USER_DATA_NAMESPACE).then(
-      (serializedTemplates) => updateTemplates(deserializeCertificateTemplates(serializedTemplates)),
-      (err: Error) => {
-        console.error(`Failed to load certificate templates: ${err?.message ?? err}`);
-        updateTemplates([]);
-      },
-    );
-  }, [uiState, updateTemplates]);
-
-  const editFlyout = isEditFlyoutOpen.isOpen ? (
-    <SaveCertificateTemplateFlyout onClose={onToggleEditFlyout} template={isEditFlyoutOpen.template} />
+  const generateModal = templateToGenerate ? (
+    <CertificateFormatModal onClose={() => setTemplateToGenerate(null)} template={templateToGenerate} />
   ) : null;
 
-  const generateModal = isGenerateModalOpen.isOpen ? (
-    <CertificateFormatModal onClose={() => onToggleGenerateModal()} template={isGenerateModalOpen.template} />
-  ) : null;
-
-  const [templateToRemove, setTemplateToRemove] = useState<CertificateTemplate | null>(null);
   const removeConfirmModal = templateToRemove ? (
     <EuiConfirmModal
       title={`Remove "${templateToRemove.name}"?`}
       onCancel={() => setTemplateToRemove(null)}
       onConfirm={() => {
         setTemplateToRemove(null);
-        setUserData<SerializedCertificateTemplates>(CERTIFICATE_TEMPLATES_USER_DATA_NAMESPACE, {
-          [templateToRemove.name]: null,
-        }).then(
-          (serializedCertificates) => updateTemplates(deserializeCertificateTemplates(serializedCertificates)),
-          (err: Error) => {
-            console.error(`Failed to remove certificate template: ${err?.message ?? err}`);
-          },
-        );
+        axios
+          .post(getApiUrl('/api/utils/action'), {
+            action: {
+              type: 'certificates',
+              value: { type: 'removeCertificateTemplate', value: { templateId: templateToRemove?.id } },
+            },
+          })
+          .then(
+            () => loadCertificateTemplates(),
+            (err: Error) => {
+              console.error(`Failed to remove certificate template: ${getErrorMessage(err)}`);
+            },
+          );
       }}
       cancelButtonText="Cancel"
       confirmButtonText="Remove"
@@ -134,10 +135,6 @@ export default function CertificatesCertificateTemplates() {
       The certificate template will be removed. Are you sure you want to proceed?
     </EuiConfirmModal>
   ) : null;
-
-  const onEditTemplate = useCallback((template: CertificateTemplate) => {
-    setIsEditFlyoutOpen({ isOpen: true, template });
-  }, []);
 
   const [pagination, setPagination] = useState<Pagination>({
     pageIndex: 0,
@@ -161,36 +158,28 @@ export default function CertificatesCertificateTemplates() {
     [pagination],
   );
 
-  if (!uiState.synced || !uiState.user || !templates) {
+  if (templates.status === 'pending') {
     return <PageLoadingState />;
   }
 
-  const selfSignedCertificatesProdWarning =
-    settings?.[SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY] === true ? null : (
-      <div>
-        <EuiCallOut
-          title="Don't use self-signed certificates in production environments"
-          color="warning"
-          iconType="warning"
-        >
+  if (templates.status === 'failed') {
+    return (
+      <PageErrorState
+        title="Cannot load certificate templates"
+        content={
           <p>
-            Self-signed certificates generated through Secutils.dev are intended for use in development and testing
-            environments only. Please do not use these certificates in production environments unless you are running{' '}
-            <EuiLink target="_blank" href="https://github.com/secutils-dev/secutils">
-              your own version
-            </EuiLink>{' '}
-            of the Secutils.dev in a trusted and controlled environment.
+            Cannot load certificate templates.
+            <br />
+            <br />
+            <strong>{templates.error}</strong>.
           </p>
-          <EuiButton color="accent" onClick={() => setSettings({ [SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY]: true })}>
-            Do not show again
-          </EuiButton>
-        </EuiCallOut>{' '}
-        <EuiSpacer />
-      </div>
+        }
+      />
     );
+  }
 
   let content;
-  if (templates.length === 0) {
+  if (templates.data.length === 0) {
     content = (
       <EuiFlexGroup
         direction={'column'}
@@ -218,6 +207,33 @@ export default function CertificatesCertificateTemplates() {
       </EuiFlexGroup>
     );
   } else {
+    const selfSignedCertificatesProdWarning =
+      settings?.[SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY] === true ? null : (
+        <div>
+          <EuiCallOut
+            title="Don't use self-signed certificates in production environments"
+            color="warning"
+            iconType="warning"
+          >
+            <p>
+              Self-signed certificates generated through Secutils.dev are intended for use in development and testing
+              environments only. Please do not use these certificates in production environments unless you are running{' '}
+              <EuiLink target="_blank" href="https://github.com/secutils-dev/secutils">
+                your own version
+              </EuiLink>{' '}
+              of the Secutils.dev in a trusted and controlled environment.
+            </p>
+            <EuiButton
+              color="accent"
+              onClick={() => setSettings({ [SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY]: true })}
+            >
+              Do not show again
+            </EuiButton>
+          </EuiCallOut>{' '}
+          <EuiSpacer />
+        </div>
+      );
+
     content = (
       <>
         {selfSignedCertificatesProdWarning}
@@ -226,8 +242,8 @@ export default function CertificatesCertificateTemplates() {
           allowNeutralSort={false}
           sorting={sorting}
           onTableChange={onTableChange}
-          items={templates}
-          itemId={(template) => template.name}
+          items={templates.data}
+          itemId={(template) => template.id}
           tableLayout={'auto'}
           columns={[
             {
@@ -251,39 +267,39 @@ export default function CertificatesCertificateTemplates() {
                   </span>
                 </EuiToolTip>
               ),
-              field: 'isCA',
+              field: 'isCa',
               textOnly: true,
               sortable: true,
-              render: (_, template) => <EuiText>{certificateTypeString(template)}</EuiText>,
+              render: (_, template) => <EuiText>{certificateTypeString(template.attributes)}</EuiText>,
             },
             {
               name: 'Distinguished name (DN)',
               field: 'commonName',
-              render: (_, template) => <EuiText>{getDistinguishedNameString(template)}</EuiText>,
+              render: (_, template) => <EuiText>{getDistinguishedNameString(template.attributes)}</EuiText>,
             },
             {
               name: 'Not valid before',
               field: 'notValidBefore',
               sortable: true,
-              render: (_, template) => <EuiText>{unix(template.notValidBefore).format('LL HH:mm')}</EuiText>,
+              render: (_, template) => <EuiText>{unix(template.attributes.notValidBefore).format('LL HH:mm')}</EuiText>,
             },
             {
               name: 'Not valid after',
               field: 'notValidAfter',
               sortable: true,
-              render: (_, template) => <EuiText>{unix(template.notValidAfter).format('LL HH:mm')}</EuiText>,
+              render: (_, template) => <EuiText>{unix(template.attributes.notValidAfter).format('LL HH:mm')}</EuiText>,
             },
             {
               name: 'Key algorithm',
               field: 'keyAlgorithm',
               mobileOptions: { only: true },
-              render: (_, template) => <EuiText>{privateKeyAlgString(template.keyAlgorithm)}</EuiText>,
+              render: (_, template) => <EuiText>{privateKeyAlgString(template.attributes.keyAlgorithm)}</EuiText>,
             },
             {
               name: 'Signature algorithm',
               field: 'signatureAlgorithm',
               mobileOptions: { only: true },
-              render: (_, template) => <EuiText>{signatureAlgorithmString(template)}</EuiText>,
+              render: (_, template) => <EuiText>{signatureAlgorithmString(template.attributes)}</EuiText>,
             },
             {
               name: 'Actions',
@@ -296,7 +312,7 @@ export default function CertificatesCertificateTemplates() {
                   icon: 'download',
                   type: 'icon',
                   isPrimary: true,
-                  onClick: onToggleGenerateModal,
+                  onClick: setTemplateToGenerate,
                 },
                 {
                   name: 'Edit template',
@@ -304,7 +320,7 @@ export default function CertificatesCertificateTemplates() {
                   icon: 'pencil',
                   type: 'icon',
                   isPrimary: true,
-                  onClick: onEditTemplate,
+                  onClick: setTemplateToEdit,
                 },
                 {
                   name: 'Remove template',

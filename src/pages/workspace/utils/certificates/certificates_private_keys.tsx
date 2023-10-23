@@ -91,7 +91,7 @@ export default function CertificatesPrivateKeys() {
     </EuiButtonEmpty>
   );
 
-  const detailsFlyout =
+  const editFlyout =
     privateKeyToEdit !== null ? (
       <SavePrivateKeyFlyout
         onClose={(success) => {
@@ -341,7 +341,7 @@ export default function CertificatesPrivateKeys() {
   return (
     <>
       {content}
-      {detailsFlyout}
+      {editFlyout}
       {generateModal}
       {removeConfirmModal}
     </>

@@ -60,7 +60,7 @@ export function CertificateFormatModal({ template, onClose }: CertificateFormatM
             type: 'certificates',
             value: {
               type: 'generateSelfSignedCertificate',
-              value: { templateName: template.name, format, passphrase: passphrase || null },
+              value: { templateId: template.id, format, passphrase: passphrase || null },
             },
           },
         })
