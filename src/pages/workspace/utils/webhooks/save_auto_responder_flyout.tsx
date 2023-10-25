@@ -21,7 +21,7 @@ import {
   serializeResponder,
 } from './responder';
 import type { AsyncData } from '../../../../model';
-import { getApiUrl, getUserData } from '../../../../model';
+import { getApiUrl, getErrorMessage, getUserData } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
@@ -154,7 +154,7 @@ export function SaveAutoResponderFlyout({ onClose, autoResponder }: SaveAutoResp
           onClose(deserializeResponders(items));
         },
         (err: Error) => {
-          setUpdatingStatus({ status: 'failed', error: err?.message ?? err });
+          setUpdatingStatus({ status: 'failed', error: getErrorMessage(err) });
 
           addToast({
             id: `failed-update-responder-${path}`,

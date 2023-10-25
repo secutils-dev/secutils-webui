@@ -153,7 +153,7 @@ export default function WebSecurityContentSecurityPolicies() {
           .then(
             (items) => updatePolicies(deserializeContentSecurityPolicies(items)),
             (err: Error) => {
-              console.error(`Failed to remove content security policy: ${err?.message ?? err}`);
+              console.error(`Failed to remove content security policy: ${getErrorMessage(err)}`);
             },
           );
       }}

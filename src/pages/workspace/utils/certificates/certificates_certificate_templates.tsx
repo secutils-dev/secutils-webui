@@ -20,8 +20,9 @@ import axios from 'axios';
 import { unix } from 'moment';
 
 import { certificateTypeString, getDistinguishedNameString, signatureAlgorithmString } from './certificate_attributes';
-import { CertificateFormatModal } from './certificate_format_modal';
 import type { CertificateTemplate } from './certificate_template';
+import { CertificateTemplateGenerateModal } from './certificate_template_generate_modal';
+import { CertificateTemplateShareModal } from './certificate_template_share_modal';
 import { SELF_SIGNED_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
 import { privateKeyAlgString } from './private_key_alg';
 import { SaveCertificateTemplateFlyout } from './save_certificate_template_flyout';
@@ -39,6 +40,7 @@ export default function CertificatesCertificateTemplates() {
   const [templates, setTemplates] = useState<AsyncData<CertificateTemplate[]>>({ status: 'pending' });
 
   const [templateToGenerate, setTemplateToGenerate] = useState<CertificateTemplate | null>(null);
+  const [templateToShare, setTemplateToShare] = useState<CertificateTemplate | null>(null);
   const [templateToEdit, setTemplateToEdit] = useState<CertificateTemplate | null | undefined>(null);
   const [templateToRemove, setTemplateToRemove] = useState<CertificateTemplate | null>(null);
 
@@ -105,7 +107,11 @@ export default function CertificatesCertificateTemplates() {
     ) : null;
 
   const generateModal = templateToGenerate ? (
-    <CertificateFormatModal onClose={() => setTemplateToGenerate(null)} template={templateToGenerate} />
+    <CertificateTemplateGenerateModal onClose={() => setTemplateToGenerate(null)} template={templateToGenerate} />
+  ) : null;
+
+  const shareModal = templateToShare ? (
+    <CertificateTemplateShareModal onClose={() => setTemplateToShare(null)} template={templateToShare} />
   ) : null;
 
   const removeConfirmModal = templateToRemove ? (
@@ -315,6 +321,13 @@ export default function CertificatesCertificateTemplates() {
                   onClick: setTemplateToGenerate,
                 },
                 {
+                  name: 'Share template',
+                  description: 'Share template',
+                  icon: 'share',
+                  type: 'icon',
+                  onClick: setTemplateToShare,
+                },
+                {
                   name: 'Edit template',
                   description: 'Edit template',
                   icon: 'pencil',
@@ -342,6 +355,7 @@ export default function CertificatesCertificateTemplates() {
       {content}
       {editFlyout}
       {generateModal}
+      {shareModal}
       {removeConfirmModal}
     </>
   );

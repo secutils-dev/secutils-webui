@@ -14,7 +14,7 @@ import {
 import axios from 'axios';
 
 import type { AsyncData, SearchItem, SerializedSearchItem } from '../../../model';
-import { deserializeSearchItem, getApiUrl } from '../../../model';
+import { deserializeSearchItem, getApiUrl, getErrorMessage } from '../../../model';
 import { getUtilIcon } from '../utils';
 
 function debounce(callback: (searchQuery: string) => void) {
@@ -57,7 +57,7 @@ export function SiteSearchBar() {
           });
         },
         (err: Error) => {
-          setSearchItems({ status: 'failed', error: err?.message ?? err });
+          setSearchItems({ status: 'failed', error: getErrorMessage(err) });
         },
       );
     }),

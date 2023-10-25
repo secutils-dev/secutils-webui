@@ -20,10 +20,10 @@ import axios from 'axios';
 
 import type { CertificateTemplate } from './certificate_template';
 import type { AsyncData } from '../../../../model';
-import { getApiUrl } from '../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { Downloader } from '../../../../tools/downloader';
 
-export interface CertificateFormatModalProps {
+export interface CertificateTemplateGenerateModalProps {
   template: CertificateTemplate;
   onClose: () => void;
 }
@@ -32,7 +32,7 @@ type GenerationResponse = {
   value: { value: number[] };
 };
 
-export function CertificateFormatModal({ template, onClose }: CertificateFormatModalProps) {
+export function CertificateTemplateGenerateModal({ template, onClose }: CertificateTemplateGenerateModalProps) {
   const [format, setFormat] = useState<string>('pkcs12');
   const onFormatChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setFormat(e.target.value);
@@ -55,15 +55,19 @@ export function CertificateFormatModal({ template, onClose }: CertificateFormatM
       setGeneratingStatus({ status: 'pending' });
 
       axios
-        .post<GenerationResponse>(getApiUrl('/api/utils/action'), {
-          action: {
-            type: 'certificates',
-            value: {
-              type: 'generateSelfSignedCertificate',
-              value: { templateId: template.id, format, passphrase: passphrase || null },
+        .post<GenerationResponse>(
+          getApiUrl('/api/utils/action'),
+          {
+            action: {
+              type: 'certificates',
+              value: {
+                type: 'generateSelfSignedCertificate',
+                value: { templateId: template.id, format, passphrase: passphrase || null },
+              },
             },
           },
-        })
+          getApiRequestConfig(),
+        )
         .then(
           (response) => {
             const content = new Uint8Array(response.data.value.value);
@@ -80,7 +84,7 @@ export function CertificateFormatModal({ template, onClose }: CertificateFormatM
             onClose();
           },
           (err: Error) => {
-            setGeneratingStatus({ status: 'failed', error: err?.message ?? err });
+            setGeneratingStatus({ status: 'failed', error: getErrorMessage(err) });
           },
         );
     },
@@ -94,7 +98,12 @@ export function CertificateFormatModal({ template, onClose }: CertificateFormatM
       </EuiFormRow>
     ) : generatingStatus?.status === 'failed' ? (
       <EuiFormRow>
-        <EuiCallOut size="s" title="An error occurred, please try again later" color="danger" iconType="warning" />
+        <EuiCallOut
+          size="s"
+          title={generatingStatus.error ?? 'An error occurred, please try again later'}
+          color="danger"
+          iconType="warning"
+        />
       </EuiFormRow>
     ) : undefined;
 

@@ -10,7 +10,7 @@ import type { ResponderRequest, SerializedResponderRequest } from './responder_r
 import { deserializeResponderRequest } from './responder_request';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import type { AsyncData } from '../../../../model';
-import { getApiUrl } from '../../../../model';
+import { getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface AutoResponderRequestsTableProps {
@@ -74,7 +74,7 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
           });
         },
         (err: Error) => {
-          setRequests({ status: 'failed', error: err?.message ?? err });
+          setRequests({ status: 'failed', error: getErrorMessage(err) });
         },
       );
   }, [uiState, responder]);

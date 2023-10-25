@@ -1,5 +1,7 @@
 import type { PrivateKeyAlgorithm } from './private_key_alg';
 
+export type SignatureAlgorithm = 'ed25519' | 'md5' | 'sha1' | 'sha256' | 'sha384' | 'sha512';
+
 export interface CertificateAttributes {
   commonName?: string;
   country?: string;
@@ -8,7 +10,7 @@ export interface CertificateAttributes {
   organization?: string;
   organizationalUnit?: string;
   keyAlgorithm: PrivateKeyAlgorithm;
-  signatureAlgorithm: string;
+  signatureAlgorithm: SignatureAlgorithm;
   notValidBefore: number;
   notValidAfter: number;
   isCa: boolean;

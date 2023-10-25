@@ -28,7 +28,12 @@ export interface UserShare {
 /**
  * Describes a resource that can be shared with other users.
  */
-export type UserShareResource = {
-  type: 'contentSecurityPolicy';
-  policyName: string;
-};
+export type UserShareResource =
+  | {
+      type: 'contentSecurityPolicy';
+      policyName: string;
+    }
+  | {
+      type: 'certificateTemplate';
+      templateId: string;
+    };

@@ -18,7 +18,7 @@ import axios from 'axios';
 
 import { useAppContext } from '../../hooks';
 import type { AsyncData } from '../../model';
-import { getApiUrl } from '../../model';
+import { getApiUrl, getErrorMessage } from '../../model';
 
 export interface ResetCredentialsModalProps {
   email?: string;
@@ -63,7 +63,7 @@ export function ResetCredentialsModal({ email, onClose }: ResetCredentialsModalP
           onClose();
         },
         (err: Error) => {
-          setPasswordResetStatus({ status: 'failed', error: err?.message ?? err });
+          setPasswordResetStatus({ status: 'failed', error: getErrorMessage(err) });
 
           addToast({
             id: 'end-password-reset-link',

@@ -9,7 +9,7 @@ import { ContentSecurityPolicyCopyModal } from './content_security_policy_copy_m
 import { ContentSecurityPolicyForm } from './content_security_policy_form';
 import { PageErrorState, PageLoadingState } from '../../../../../components';
 import type { AsyncData } from '../../../../../model';
-import { getApiRequestConfig, getApiUrl } from '../../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../../model';
 import { useWorkspaceContext } from '../../../hooks';
 
 type GetPolicyResponse = {
@@ -67,7 +67,7 @@ export default function WebSecuritySharedContentSecurityPolicy() {
           }
         },
         (err: Error) => {
-          setPolicy({ status: 'failed', error: err?.message ?? err });
+          setPolicy({ status: 'failed', error: getErrorMessage(err) });
         },
       );
   }, [uiState]);

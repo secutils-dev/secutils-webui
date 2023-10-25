@@ -12,6 +12,7 @@ import type { UiState, UserSettings } from '../model';
 import {
   getApiRequestConfig,
   getApiUrl,
+  getErrorMessage,
   getUserShareId,
   removeUserShareId,
   setUserData,
@@ -88,7 +89,7 @@ export function AppContainer() {
         setLocalSettings(settings ?? undefined);
       })
       .catch((err: Error) => {
-        console.error(`Failed update user settings: ${err?.message ?? err}`);
+        console.error(`Failed update user settings: ${getErrorMessage(err)}`);
       });
   }, []);
 

@@ -24,7 +24,7 @@ import type { WebPageResourcesTracker, WebPageResourcesTrackers } from './web_pa
 import { WebPageResourcesTrackerDetails } from './web_page_resources_tracker_details';
 import { WebScrapingResourcesTrackerEditFlyout } from './web_page_resources_tracker_edit_flyout';
 import { PageLoadingState } from '../../../../components';
-import { getApiUrl, getUserData } from '../../../../model';
+import { getApiUrl, getErrorMessage, getUserData } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
 type ItemType = WebPageResourcesTracker;
@@ -84,7 +84,7 @@ export default function WebScrapingResourcesTrackers() {
         updateItems(items ? Object.values(items) : []);
       },
       (err: Error) => {
-        console.error(`Failed to load web resources trackers: ${err?.message ?? err}`);
+        console.error(`Failed to load web resources trackers: ${getErrorMessage(err)}`);
         updateItems([]);
       },
     );
@@ -118,7 +118,7 @@ export default function WebScrapingResourcesTrackers() {
           .then(
             (items) => updateItems(items ? Object.values(items) : []),
             (err: Error) => {
-              console.error(`Failed to remove web resources tracker: ${err?.message ?? err}`);
+              console.error(`Failed to remove web resources tracker: ${getErrorMessage(err)}`);
             },
           );
       }}

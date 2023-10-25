@@ -29,6 +29,7 @@ export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType
 
 // Dedicated set of component overrides for user shares.
 export const UtilsShareComponents = new Map<string, LazyExoticComponent<ComponentType>>([
+  [UTIL_HANDLES.certificatesCertificateTemplates, lazy(() => import('./certificates/shared_certificate_template'))],
   [UTIL_HANDLES.webSecurityCspPolicies, lazy(() => import('./web_security/csp/web_security_csp_shared_policy'))],
 ]);
 

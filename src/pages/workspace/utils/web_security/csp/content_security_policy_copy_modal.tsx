@@ -20,7 +20,7 @@ import axios from 'axios';
 
 import type { ContentSecurityPolicy } from './content_security_policy';
 import type { AsyncData } from '../../../../../model';
-import { getApiRequestConfig, getApiUrl } from '../../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../../model';
 import { useWorkspaceContext } from '../../../hooks';
 
 export interface ContentSecurityPolicyCopyModalProps {
@@ -91,7 +91,7 @@ ${data.source === 'enforcingHeader' ? 'Content-Security-Policy' : 'Content-Secur
             setSerializingStatus({ status: 'succeeded', data: undefined });
           },
           (err: Error) => {
-            setSerializingStatus({ status: 'failed', error: err?.message ?? err });
+            setSerializingStatus({ status: 'failed', error: getErrorMessage(err) });
           },
         );
     },
@@ -109,7 +109,12 @@ ${data.source === 'enforcingHeader' ? 'Content-Security-Policy' : 'Content-Secur
   const copyStatusCallout =
     serializingStatus?.status === 'failed' ? (
       <EuiFormRow>
-        <EuiCallOut size="s" title="An error occurred, please try again later" color="danger" iconType="warning" />
+        <EuiCallOut
+          size="s"
+          title={serializingStatus.error ?? 'An error occurred, please try again later'}
+          color="danger"
+          iconType="warning"
+        />
       </EuiFormRow>
     ) : undefined;
 

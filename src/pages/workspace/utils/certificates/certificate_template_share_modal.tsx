@@ -19,27 +19,31 @@ import {
 } from '@elastic/eui';
 import axios from 'axios';
 
-import type { ContentSecurityPolicy } from './content_security_policy';
-import type { AsyncData } from '../../../../../model';
-import { getApiUrl, getErrorMessage, USER_SHARE_ID_HEADER_NAME } from '../../../../../model';
-import type { UserShare } from '../../../../../model/user_share';
-import { useWorkspaceContext } from '../../../hooks';
+import type { CertificateTemplate } from './certificate_template';
+import type { AsyncData } from '../../../../model';
+import { getApiUrl, getErrorMessage, USER_SHARE_ID_HEADER_NAME } from '../../../../model';
+import type { UserShare } from '../../../../model/user_share';
+import { useWorkspaceContext } from '../../hooks';
 
-export interface ContentSecurityPolicyShareModalProps {
-  policy: ContentSecurityPolicy;
+export interface CertificateTemplateShareModalProps {
+  template: CertificateTemplate;
   onClose: () => void;
 }
 
-type UserShareResponse = {
+type GetCertificateTemplateResponse = {
   value: { value: { userShare?: UserShare } };
 };
 
-export function ContentSecurityPolicyShareModal({ policy, onClose }: ContentSecurityPolicyShareModalProps) {
+type UserShareResponse = {
+  value: { value?: UserShare };
+};
+
+export function CertificateTemplateShareModal({ template, onClose }: CertificateTemplateShareModalProps) {
   const { uiState } = useWorkspaceContext();
 
-  const [isPolicyShared, setIsPolicyShared] = useState<boolean>(false);
-  const onIsPolicySharedChange = useCallback((e: EuiSwitchEvent) => {
-    setIsPolicyShared(e.target.checked);
+  const [isTemplateShared, setIsTemplateShared] = useState<boolean>(false);
+  const onIsTemplateSharedChange = useCallback((e: EuiSwitchEvent) => {
+    setIsTemplateShared(e.target.checked);
     onShareToggle(e.target.checked);
   }, []);
 
@@ -53,21 +57,21 @@ export function ContentSecurityPolicyShareModal({ policy, onClose }: ContentSecu
 
       setUserShare({ status: 'pending' });
 
-      const actionType = share ? 'shareContentSecurityPolicy' : 'unshareContentSecurityPolicy';
+      const actionType = share ? 'shareCertificateTemplate' : 'unshareCertificateTemplate';
       axios
         .post<UserShareResponse>(getApiUrl('/api/utils/action'), {
-          action: { type: 'webSecurity', value: { type: actionType, value: { policyName: policy.name } } },
+          action: { type: 'certificates', value: { type: actionType, value: { templateId: template.id } } },
         })
         .then(
           (response) => {
-            setUserShare({ status: 'succeeded', data: share ? response.data.value.value.userShare ?? null : null });
+            setUserShare({ status: 'succeeded', data: share ? response.data.value.value ?? null : null });
           },
           (err: Error) => {
             setUserShare({ status: 'failed', error: getErrorMessage(err) });
           },
         );
     },
-    [policy, userShare],
+    [template, userShare],
   );
 
   useEffect(() => {
@@ -76,23 +80,23 @@ export function ContentSecurityPolicyShareModal({ policy, onClose }: ContentSecu
     }
 
     axios
-      .post<UserShareResponse>(getApiUrl('/api/utils/action'), {
+      .post<GetCertificateTemplateResponse>(getApiUrl('/api/utils/action'), {
         action: {
-          type: 'webSecurity',
-          value: { type: 'getContentSecurityPolicy', value: { policyName: policy.name } },
+          type: 'certificates',
+          value: { type: 'getCertificateTemplate', value: { templateId: template.id } },
         },
       })
       .then(
         (response) => {
           const userShare = response.data.value.value.userShare ?? null;
           setUserShare({ status: 'succeeded', data: userShare });
-          setIsPolicyShared(!!userShare);
+          setIsTemplateShared(!!userShare);
         },
         (err: Error) => {
           setUserShare({ status: 'failed', error: getErrorMessage(err) });
         },
       );
-  }, [uiState, policy]);
+  }, [uiState, template]);
 
   const statusCallout =
     userShare?.status === 'failed' ? (
@@ -105,13 +109,12 @@ export function ContentSecurityPolicyShareModal({ policy, onClose }: ContentSecu
         />
       </EuiFormRow>
     ) : undefined;
-
   return (
     <EuiModal onClose={onClose}>
       <EuiModalHeader>
         <EuiModalHeaderTitle>
           <EuiTitle size={'s'}>
-            <span>{`Share "${policy.name}" policy`}</span>
+            <span>{`Share "${template.name}" template`}</span>
           </EuiTitle>
         </EuiModalHeaderTitle>
       </EuiModalHeader>
@@ -119,15 +122,15 @@ export function ContentSecurityPolicyShareModal({ policy, onClose }: ContentSecu
         <EuiForm id="share-form" component="form">
           {statusCallout}
           <EuiFormRow
-            helpText={'Anyone on the internet with the link can view the policy'}
+            helpText={'Anyone on the internet with the link can view the template'}
             isDisabled={userShare.status === 'pending'}
           >
-            <EuiSwitch label="Share policy" checked={isPolicyShared} onChange={onIsPolicySharedChange} />
+            <EuiSwitch label="Share template" checked={isTemplateShared} onChange={onIsTemplateSharedChange} />
           </EuiFormRow>
         </EuiForm>
       </EuiModalBody>
       <EuiModalFooter>
-        <EuiFlexGroup responsive={!isPolicyShared} justifyContent={'flexEnd'}>
+        <EuiFlexGroup responsive={!isTemplateShared} justifyContent={'flexEnd'}>
           {userShare.status === 'succeeded' && userShare.data?.id ? (
             <EuiFlexItem>
               <EuiCopy

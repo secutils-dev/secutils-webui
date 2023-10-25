@@ -19,7 +19,7 @@ import {
 import axios from 'axios';
 
 import type { AsyncData } from '../model';
-import { getApiUrl } from '../model';
+import { getApiUrl, getErrorMessage } from '../model';
 
 export interface ContactFormModalProps {
   onClose: () => void;
@@ -53,7 +53,7 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
           setEmail('');
         },
         (err: Error) => {
-          setSendingStatus({ status: 'failed', error: err?.message ?? err });
+          setSendingStatus({ status: 'failed', error: getErrorMessage(err) });
         },
       );
     },
@@ -67,7 +67,12 @@ export function ContactFormModal({ onClose }: ContactFormModalProps) {
       </EuiFormRow>
     ) : sendingStatus?.status === 'failed' ? (
       <EuiFormRow>
-        <EuiCallOut size="s" title="An error occurred, please try again later" color="danger" iconType="warning" />
+        <EuiCallOut
+          size="s"
+          title={sendingStatus.error ?? 'An error occurred, please try again later'}
+          color="danger"
+          iconType="warning"
+        />
       </EuiFormRow>
     ) : undefined;
 

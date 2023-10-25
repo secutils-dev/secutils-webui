@@ -25,7 +25,7 @@ import type { Responder, SerializedResponders } from './responder';
 import { deserializeHttpMethod, deserializeResponders, RESPONDERS_USER_DATA_NAMESPACE } from './responder';
 import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
 import { PageLoadingState } from '../../../../components';
-import { getApiUrl, getUserData } from '../../../../model';
+import { getApiUrl, getErrorMessage, getUserData } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
 export default function WebhooksResponders() {
@@ -90,7 +90,7 @@ export default function WebhooksResponders() {
         updateResponders(deserializeResponders(serializedResponders));
       },
       (err: Error) => {
-        console.error(`Failed to load auto responders: ${err?.message ?? err}`);
+        console.error(`Failed to load auto responders: ${getErrorMessage(err)}`);
         updateResponders([]);
       },
     );
@@ -124,7 +124,7 @@ export default function WebhooksResponders() {
           .then(
             (items) => updateResponders(deserializeResponders(items)),
             (err: Error) => {
-              console.error(`Failed to remove auto responder: ${err?.message ?? err}`);
+              console.error(`Failed to remove auto responder: ${getErrorMessage(err)}`);
             },
           );
       }}
