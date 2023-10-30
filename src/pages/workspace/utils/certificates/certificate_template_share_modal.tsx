@@ -21,7 +21,7 @@ import axios from 'axios';
 
 import type { CertificateTemplate } from './certificate_template';
 import type { AsyncData } from '../../../../model';
-import { getApiUrl, getErrorMessage, USER_SHARE_ID_HEADER_NAME } from '../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage, USER_SHARE_ID_HEADER_NAME } from '../../../../model';
 import type { UserShare } from '../../../../model/user_share';
 import { useWorkspaceContext } from '../../hooks';
 
@@ -30,13 +30,7 @@ export interface CertificateTemplateShareModalProps {
   onClose: () => void;
 }
 
-type GetCertificateTemplateResponse = {
-  value: { value: { userShare?: UserShare } };
-};
-
-type UserShareResponse = {
-  value: { value?: UserShare };
-};
+type GetCertificateTemplateResponse = { userShare?: UserShare };
 
 export function CertificateTemplateShareModal({ template, onClose }: CertificateTemplateShareModalProps) {
   const { uiState } = useWorkspaceContext();
@@ -57,14 +51,16 @@ export function CertificateTemplateShareModal({ template, onClose }: Certificate
 
       setUserShare({ status: 'pending' });
 
-      const actionType = share ? 'shareCertificateTemplate' : 'unshareCertificateTemplate';
       axios
-        .post<UserShareResponse>(getApiUrl('/api/utils/action'), {
-          action: { type: 'certificates', value: { type: actionType, value: { templateId: template.id } } },
-        })
+        .post<UserShare | null>(
+          getApiUrl(
+            `/api/utils/certificates/templates/${encodeURIComponent(template.id)}/${share ? 'share' : 'unshare'}`,
+          ),
+          getApiRequestConfig(),
+        )
         .then(
-          (response) => {
-            setUserShare({ status: 'succeeded', data: share ? response.data.value.value ?? null : null });
+          (res) => {
+            setUserShare({ status: 'succeeded', data: share ? res.data ?? null : null });
           },
           (err: Error) => {
             setUserShare({ status: 'failed', error: getErrorMessage(err) });
@@ -80,15 +76,13 @@ export function CertificateTemplateShareModal({ template, onClose }: Certificate
     }
 
     axios
-      .post<GetCertificateTemplateResponse>(getApiUrl('/api/utils/action'), {
-        action: {
-          type: 'certificates',
-          value: { type: 'getCertificateTemplate', value: { templateId: template.id } },
-        },
-      })
+      .get<GetCertificateTemplateResponse>(
+        getApiUrl(`/api/utils/certificates/templates/${encodeURIComponent(template.id)}`),
+        getApiRequestConfig(),
+      )
       .then(
-        (response) => {
-          const userShare = response.data.value.value.userShare ?? null;
+        (res) => {
+          const userShare = res.data.userShare ?? null;
           setUserShare({ status: 'succeeded', data: userShare });
           setIsTemplateShared(!!userShare);
         },

@@ -11,9 +11,7 @@ import type { AsyncData } from '../../../../model';
 import { getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
-type GetTemplateResponse = {
-  value: { value: { template?: CertificateTemplate } };
-};
+type GetTemplateResponse = { template?: CertificateTemplate };
 
 export default function SharedCertificateTemplate() {
   const { uiState, setTitle, setTitleActions } = useWorkspaceContext();
@@ -34,19 +32,13 @@ export default function SharedCertificateTemplate() {
     }
 
     axios
-      .post<GetTemplateResponse>(
-        getApiUrl('/api/utils/action'),
-        {
-          action: {
-            type: 'certificates',
-            value: { type: 'getCertificateTemplate', value: { templateId: uiState.userShare.resource.templateId } },
-          },
-        },
+      .get<GetTemplateResponse>(
+        getApiUrl(`/api/utils/certificates/templates/${encodeURIComponent(uiState.userShare.resource.templateId)}`),
         getApiRequestConfig(),
       )
       .then(
-        (response) => {
-          const loadedTemplate = response.data.value.value.template ?? null;
+        (res) => {
+          const loadedTemplate = res.data.template ?? null;
           if (loadedTemplate) {
             setTitle(`"${loadedTemplate.name}" certificate template`);
             setTitleActions(

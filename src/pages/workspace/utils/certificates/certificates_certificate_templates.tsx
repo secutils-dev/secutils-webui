@@ -30,10 +30,6 @@ import { PageErrorState, PageLoadingState } from '../../../../components';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
-type GetCertificateTemplatesResponse = {
-  value: { value: CertificateTemplate[] };
-};
-
 export default function CertificatesCertificateTemplates() {
   const { uiState, settings, setSettings, setTitleActions } = useWorkspaceContext();
 
@@ -45,22 +41,15 @@ export default function CertificatesCertificateTemplates() {
   const [templateToRemove, setTemplateToRemove] = useState<CertificateTemplate | null>(null);
 
   const loadCertificateTemplates = () => {
-    axios
-      .post<GetCertificateTemplatesResponse>(
-        getApiUrl('/api/utils/action'),
-        { action: { type: 'certificates', value: { type: 'getCertificateTemplates' } } },
-        getApiRequestConfig(),
-      )
-      .then(
-        (response) => {
-          const templatesData = response.data.value.value;
-          setTemplates({ status: 'succeeded', data: templatesData });
-          setTitleActions(templatesData.length === 0 ? null : createButton);
-        },
-        (err: Error) => {
-          setTemplates({ status: 'failed', error: getErrorMessage(err) });
-        },
-      );
+    axios.get<CertificateTemplate[]>(getApiUrl('/api/utils/certificates/templates'), getApiRequestConfig()).then(
+      (res) => {
+        setTemplates({ status: 'succeeded', data: res.data });
+        setTitleActions(res.data.length === 0 ? null : createButton);
+      },
+      (err: Error) => {
+        setTemplates({ status: 'failed', error: getErrorMessage(err) });
+      },
+    );
   };
 
   useEffect(() => {
@@ -121,12 +110,10 @@ export default function CertificatesCertificateTemplates() {
       onConfirm={() => {
         setTemplateToRemove(null);
         axios
-          .post(getApiUrl('/api/utils/action'), {
-            action: {
-              type: 'certificates',
-              value: { type: 'removeCertificateTemplate', value: { templateId: templateToRemove?.id } },
-            },
-          })
+          .delete(
+            getApiUrl(`/api/utils/certificates/templates/${encodeURIComponent(templateToRemove.id)}`),
+            getApiRequestConfig(),
+          )
           .then(
             () => loadCertificateTemplates(),
             (err: Error) => {

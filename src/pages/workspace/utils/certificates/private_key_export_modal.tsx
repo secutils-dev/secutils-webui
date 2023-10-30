@@ -21,17 +21,13 @@ import type { EncryptionMode } from './encryption_mode';
 import { EncryptionModeSelector } from './encryption_mode_selector';
 import type { PrivateKey } from './private_key';
 import type { AsyncData } from '../../../../model';
-import { getApiUrl, getErrorMessage } from '../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { Downloader } from '../../../../tools/downloader';
 
 export interface PrivateKeyExportModalProps {
   privateKey: PrivateKey;
   onClose: () => void;
 }
-
-type PrivateKeyExportResponse = {
-  value: { value: number[] };
-};
 
 export function PrivateKeyExportModal({ privateKey, onClose }: PrivateKeyExportModalProps) {
   const [format, setFormat] = useState<string>('pkcs12');
@@ -57,23 +53,18 @@ export function PrivateKeyExportModal({ privateKey, onClose }: PrivateKeyExportM
       setExportStatus({ status: 'pending' });
 
       axios
-        .post<PrivateKeyExportResponse>(getApiUrl('/api/utils/action'), {
-          action: {
-            type: 'certificates',
-            value: {
-              type: 'exportPrivateKey',
-              value: {
-                keyId: privateKey.id,
-                format,
-                passphrase: privateKey.encrypted ? currentPassphrase : null,
-                exportPassphrase: exportEncryptionMode === 'passphrase' ? exportPassphrase : null,
-              },
-            },
+        .post<number[]>(
+          getApiUrl(`/api/utils/certificates/private_keys/${encodeURIComponent(privateKey.id)}/export`),
+          {
+            format,
+            passphrase: privateKey.encrypted ? currentPassphrase : null,
+            exportPassphrase: exportEncryptionMode === 'passphrase' ? exportPassphrase : null,
           },
-        })
+          getApiRequestConfig(),
+        )
         .then(
           (response) => {
-            const keyContent = new Uint8Array(response.data.value.value);
+            const keyContent = new Uint8Array(response.data);
             if (format === 'pem') {
               Downloader.download(`${privateKey.name}.pem`, keyContent, 'application/x-pem-file');
             } else if (format === 'pkcs8') {

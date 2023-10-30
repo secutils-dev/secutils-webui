@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 import {
   EuiComboBox,
@@ -91,7 +91,7 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
     SIGNATURE_ALGORITHMS.get(attributes.keyAlgorithm?.keyType ?? 'ed25519')!,
   );
 
-  const onKeyAlgorithmChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+  const onKeyAlgorithmChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const keyType = e.target.value as PrivateKeyAlgorithm['keyType'];
 
     const newSignatureAlgorithms = SIGNATURE_ALGORITHMS.get(keyType)!;
@@ -106,7 +106,7 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
           : { keyType, keySize: '2048' },
       signatureAlgorithm: newSignatureAlgorithms[0].value,
     });
-  }, []);
+  };
 
   return (
     <EuiForm id="update-form" component="form" fullWidth>
@@ -261,7 +261,7 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
           isDisabled={isReadOnly}
         >
           <EuiFieldText
-            value={attributes.country}
+            value={attributes.country ?? ''}
             type={'text'}
             onChange={(e) => onAttributesChange({ country: e.target.value ? e.target.value : undefined })}
           />
@@ -272,7 +272,7 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
           isDisabled={isReadOnly}
         >
           <EuiFieldText
-            value={attributes.stateOrProvince}
+            value={attributes.stateOrProvince ?? ''}
             type={'text'}
             onChange={(e) => onAttributesChange({ stateOrProvince: e.target.value ? e.target.value : undefined })}
           />
@@ -283,7 +283,7 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
           isDisabled={isReadOnly}
         >
           <EuiFieldText
-            value={attributes.locality}
+            value={attributes.locality ?? ''}
             type={'text'}
             onChange={(e) => onAttributesChange({ locality: e.target.value ? e.target.value : undefined })}
           />
@@ -294,7 +294,7 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
           isDisabled={isReadOnly}
         >
           <EuiFieldText
-            value={attributes.organization}
+            value={attributes.organization ?? ''}
             type={'text'}
             onChange={(e) => onAttributesChange({ organization: e.target.value ? e.target.value : undefined })}
           />
@@ -305,7 +305,7 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
           isDisabled={isReadOnly}
         >
           <EuiFieldText
-            value={attributes.organizationalUnit}
+            value={attributes.organizationalUnit ?? ''}
             type={'text'}
             onChange={(e) => onAttributesChange({ organizationalUnit: e.target.value ? e.target.value : undefined })}
           />
@@ -316,7 +316,7 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
           isDisabled={isReadOnly}
         >
           <EuiFieldText
-            value={attributes.commonName}
+            value={attributes.commonName ?? ''}
             type={'text'}
             onChange={(e) => onAttributesChange({ commonName: e.target.value ? e.target.value : undefined })}
           />

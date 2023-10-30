@@ -10,7 +10,7 @@ import type { PrivateKey } from './private_key';
 import type { PrivateKeyAlgorithm, PrivateKeyCurveName, PrivateKeySize } from './private_key_alg';
 import { privateKeyCurveNameString } from './private_key_alg';
 import type { AsyncData } from '../../../../model';
-import { getApiUrl, getErrorMessage, isClientError } from '../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
@@ -70,27 +70,31 @@ export function SavePrivateKeyFlyout({ onClose, privateKey }: SavePrivateKeyFlyo
     // Only passphrase and name change are allowed for existing private keys.
     const newPassphraseToSend = encryptionMode === 'passphrase' ? passphrase : null;
     const currentPassphraseToSend = privateKey?.encrypted ? currentPassphrase : null;
-    const [requestPayload, successMessage, errorMessage] = privateKey
+    const [requestPromise, successMessage, errorMessage] = privateKey
       ? [
-          {
-            type: 'updatePrivateKey',
-            value: {
-              keyId: privateKey.id,
+          axios.put(
+            getApiUrl(`/api/utils/certificates/private_keys/${privateKey.id}`),
+            {
               keyName: privateKey.name !== name ? name.trim() : null,
               ...(!privateKey.encrypted || newPassphraseToSend !== currentPassphraseToSend
                 ? { passphrase: currentPassphraseToSend, newPassphrase: newPassphraseToSend }
                 : {}),
             },
-          },
+            getApiRequestConfig(),
+          ),
           `Successfully updated "${name}" private key`,
           `Unable to update "${name}" private key, please try again later`,
         ]
       : [
-          { type: 'createPrivateKey', value: { keyName: name, alg: keyAlgorithm, passphrase: newPassphraseToSend } },
+          axios.post(
+            getApiUrl('/api/utils/certificates/private_keys'),
+            { keyName: name, alg: keyAlgorithm, passphrase: newPassphraseToSend },
+            getApiRequestConfig(),
+          ),
           `Successfully saved "${name}" private key`,
           `Unable to save "${name}" private key, please try again later`,
         ];
-    axios.post(getApiUrl('/api/utils/action'), { action: { type: 'certificates', value: requestPayload } }).then(
+    requestPromise.then(
       () => {
         setUpdatingStatus({ status: 'succeeded', data: undefined });
 

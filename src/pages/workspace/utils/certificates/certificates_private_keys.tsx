@@ -16,7 +16,7 @@ import {
   EuiText,
   EuiToolTip,
 } from '@elastic/eui';
-import axios from 'axios/index';
+import axios from 'axios';
 import { unix } from 'moment';
 
 import { PRIVATE_KEYS_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
@@ -29,10 +29,6 @@ import type { AsyncData } from '../../../../model';
 import { getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
-type GetPrivateKeysResponse = {
-  value: { value: PrivateKey[] };
-};
-
 export default function CertificatesPrivateKeys() {
   const { uiState, setTitleActions, setSettings, settings } = useWorkspaceContext();
 
@@ -43,22 +39,15 @@ export default function CertificatesPrivateKeys() {
   const [privateKeyToEdit, setPrivateKeyToEdit] = useState<PrivateKey | null | undefined>(null);
 
   const loadPrivateKeys = () => {
-    axios
-      .post<GetPrivateKeysResponse>(
-        getApiUrl('/api/utils/action'),
-        { action: { type: 'certificates', value: { type: 'getPrivateKeys' } } },
-        getApiRequestConfig(),
-      )
-      .then(
-        (response) => {
-          const privateKeysData = response.data.value.value;
-          setPrivateKeys({ status: 'succeeded', data: privateKeysData });
-          setTitleActions(privateKeysData.length === 0 ? null : createButton);
-        },
-        (err: Error) => {
-          setPrivateKeys({ status: 'failed', error: getErrorMessage(err) });
-        },
-      );
+    axios.get<PrivateKey[]>(getApiUrl('/api/utils/certificates/private_keys'), getApiRequestConfig()).then(
+      (response) => {
+        setPrivateKeys({ status: 'succeeded', data: response.data });
+        setTitleActions(response.data.length === 0 ? null : createButton);
+      },
+      (err: Error) => {
+        setPrivateKeys({ status: 'failed', error: getErrorMessage(err) });
+      },
+    );
   };
 
   useEffect(() => {
@@ -116,12 +105,10 @@ export default function CertificatesPrivateKeys() {
         setPrivateKeyToRemove(null);
 
         axios
-          .post(getApiUrl('/api/utils/action'), {
-            action: {
-              type: 'certificates',
-              value: { type: 'removePrivateKey', value: { keyId: privateKeyToRemove?.id } },
-            },
-          })
+          .delete(
+            getApiUrl(`/api/utils/certificates/private_keys/${encodeURIComponent(privateKeyToRemove?.id)}`),
+            getApiRequestConfig(),
+          )
           .then(
             () => loadPrivateKeys(),
             (err: Error) => {

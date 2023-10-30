@@ -28,10 +28,6 @@ export interface CertificateTemplateGenerateModalProps {
   onClose: () => void;
 }
 
-type GenerationResponse = {
-  value: { value: number[] };
-};
-
 export function CertificateTemplateGenerateModal({ template, onClose }: CertificateTemplateGenerateModalProps) {
   const [format, setFormat] = useState<string>('pkcs12');
   const onFormatChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
@@ -55,22 +51,14 @@ export function CertificateTemplateGenerateModal({ template, onClose }: Certific
       setGeneratingStatus({ status: 'pending' });
 
       axios
-        .post<GenerationResponse>(
-          getApiUrl('/api/utils/action'),
-          {
-            action: {
-              type: 'certificates',
-              value: {
-                type: 'generateSelfSignedCertificate',
-                value: { templateId: template.id, format, passphrase: passphrase || null },
-              },
-            },
-          },
+        .post<number[]>(
+          getApiUrl(`/api/utils/certificates/templates/${encodeURIComponent(template.id)}/generate`),
+          { format, passphrase: passphrase || null },
           getApiRequestConfig(),
         )
         .then(
-          (response) => {
-            const content = new Uint8Array(response.data.value.value);
+          (res) => {
+            const content = new Uint8Array(res.data);
             if (format === 'pem') {
               Downloader.download(`${template.name}.zip`, content, 'application/zip');
             } else if (format === 'pkcs8') {

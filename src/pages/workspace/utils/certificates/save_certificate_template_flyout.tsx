@@ -6,7 +6,7 @@ import moment from 'moment';
 import type { CertificateTemplate } from './certificate_template';
 import { CertificateTemplateForm } from './certificate_template_form';
 import type { AsyncData } from '../../../../model';
-import { getApiUrl, getErrorMessage, isClientError } from '../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
 
@@ -46,28 +46,29 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
 
     setUpdatingStatus({ status: 'pending' });
 
-    const [requestPayload, successMessage, errorMessage] = templateToSave.id
+    const [requestPromise, successMessage, errorMessage] = templateToSave.id
       ? [
-          {
-            type: 'updateCertificateTemplate',
-            value: {
-              templateId: templateToSave.id,
+          axios.put(
+            getApiUrl(`/api/utils/certificates/templates/${templateToSave.id}`),
+            {
               templateName: templateToSave.name !== template?.name ? templateToSave.name : null,
               attributes: templateToSave.attributes,
             },
-          },
+            getApiRequestConfig(),
+          ),
           `Successfully updated "${templateToSave.name}" certificate template`,
           `Unable to update "${templateToSave.name}" certificate template, please try again later`,
         ]
       : [
-          {
-            type: 'createCertificateTemplate',
-            value: { templateName: templateToSave.name, attributes: templateToSave.attributes },
-          },
+          axios.post(
+            getApiUrl('/api/utils/certificates/templates'),
+            { templateName: templateToSave.name, attributes: templateToSave.attributes },
+            getApiRequestConfig(),
+          ),
           `Successfully saved "${templateToSave.name}" certificate template`,
           `Unable to save "${templateToSave.name}" certificate template, please try again later`,
         ];
-    axios.post(getApiUrl('/api/utils/action'), { action: { type: 'certificates', value: requestPayload } }).then(
+    requestPromise.then(
       () => {
         setUpdatingStatus({ status: 'succeeded', data: undefined });
 
