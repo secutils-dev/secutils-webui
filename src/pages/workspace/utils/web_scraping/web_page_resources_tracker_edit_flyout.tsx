@@ -14,10 +14,9 @@ import {
 import type { EuiSwitchEvent } from '@elastic/eui';
 import axios from 'axios';
 
-import type { WebPageResourcesTracker, WebPageResourcesTrackers } from './web_page_resources_tracker';
-import { WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE } from './web_page_resources_tracker';
+import type { WebPageResourcesTracker } from './web_page_resources_tracker';
 import WebScrapingResourcesTrackerScriptEditor from './web_page_resources_tracker_script_editor';
-import { type AsyncData, getApiUrl, getErrorMessage, getUserData } from '../../../../model';
+import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { isValidURL } from '../../../../tools/url';
 import { EditorFlyout } from '../../components/editor_flyout';
 import { useWorkspaceContext } from '../../hooks';
@@ -31,19 +30,19 @@ const SCHEDULES = [
 ];
 
 export interface Props {
-  onClose: (items?: WebPageResourcesTracker[]) => void;
-  item?: WebPageResourcesTracker;
+  onClose: (success?: boolean) => void;
+  tracker?: WebPageResourcesTracker;
 }
 
-export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) {
+export function WebScrapingResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
   const { addToast } = useWorkspaceContext();
 
-  const [name, setName] = useState<string>(item?.name ?? '');
+  const [name, setName] = useState<string>(tracker?.name ?? '');
   const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
   }, []);
 
-  const [url, setUrl] = useState<string>(item?.url ?? '');
+  const [url, setUrl] = useState<string>(tracker?.url ?? '');
   const onUrlChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
   }, []);
@@ -53,24 +52,24 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
     setSendNotification(e.target.checked);
   }, []);
 
-  const [delay, setDelay] = useState<number>(item?.delay ?? 5000);
+  const [delay, setDelay] = useState<number>(tracker?.settings.delay ?? 5000);
   const onDelayChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setDelay(+e.target.value);
   }, []);
 
-  const [schedule, setSchedule] = useState<string>(item?.schedule ?? '@');
+  const [schedule, setSchedule] = useState<string>(tracker?.settings.schedule ?? '@');
   const onScheduleChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
     setSchedule(e.target.value);
   }, []);
 
   const [resourceFilterMapScript, setResourceFilterMapScript] = useState<string | undefined>(
-    item?.scripts?.resourceFilterMap,
+    tracker?.settings.scripts?.resourceFilterMap,
   );
   const onResourceFilterMapScriptChange = useCallback((value?: string) => {
     setResourceFilterMapScript(value);
   }, []);
 
-  const [revisions, setRevisions] = useState<number>(item?.revisions ?? 3);
+  const [revisions, setRevisions] = useState<number>(tracker?.settings.revisions ?? 3);
   const onRevisionsChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setRevisions(+e.target.value);
   }, []);
@@ -83,55 +82,63 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
 
     setUpdatingStatus({ status: 'pending' });
 
-    axios
-      .post(getApiUrl('/api/utils/action'), {
-        action: {
-          type: 'webScraping',
-          value: {
-            type: 'saveWebPageResourcesTracker',
-            value: {
-              tracker: {
-                name,
-                url,
-                revisions,
-                delay,
-                schedule: schedule === '@' ? undefined : schedule,
-                scripts: resourceFilterMapScript ? { resourceFilterMap: resourceFilterMapScript } : undefined,
-              },
-            },
-          },
-        },
-      })
-      .then(() => getUserData<WebPageResourcesTrackers>(WEB_PAGE_RESOURCES_TRACKERS_USER_DATA_NAMESPACE))
-      .then(
-        (items) => {
-          setUpdatingStatus({ status: 'succeeded', data: undefined });
+    const trackerToUpdate = {
+      name: tracker ? (tracker.name !== name ? name.trim() : null) : name.trim(),
+      url: tracker ? (tracker.url !== url ? url : null) : url,
+      settings: {
+        revisions,
+        delay,
+        schedule: schedule === '@' ? undefined : schedule,
+        scripts: resourceFilterMapScript ? { resourceFilterMap: resourceFilterMapScript } : undefined,
+        enableNotifications: sendNotification,
+      },
+    };
 
-          addToast({
-            id: `success-update-tracker-${name}`,
-            iconType: 'check',
-            color: 'success',
-            title: `Successfully saved "${name}" web page resource tracker`,
-          });
+    const [requestPromise, successMessage, errorMessage] = tracker
+      ? [
+          axios.put(
+            getApiUrl(`/api/utils/web_scraping/resources/${tracker.id}`),
+            trackerToUpdate,
+            getApiRequestConfig(),
+          ),
+          `Successfully updated "${name}" web page resources tracker`,
+          `Unable to update "${name}" web page resources tracker, please try again later`,
+        ]
+      : [
+          axios.post(getApiUrl('/api/utils/web_scraping/resources'), trackerToUpdate, getApiRequestConfig()),
+          `Successfully saved "${name}" web page resources tracker`,
+          `Unable to save "${name}" web page resources tracker, please try again later`,
+        ];
+    requestPromise.then(
+      () => {
+        setUpdatingStatus({ status: 'succeeded', data: undefined });
 
-          onClose(items ? Object.values(items) : []);
-        },
-        (err: Error) => {
-          setUpdatingStatus({ status: 'failed', error: getErrorMessage(err) });
+        addToast({
+          id: `success-save-tracker-${name}`,
+          iconType: 'check',
+          color: 'success',
+          title: successMessage,
+        });
 
-          addToast({
-            id: `failed-update-tracker-${name}`,
-            iconType: 'warning',
-            color: 'danger',
-            title: `Unable to save "${name}" web page resource tracker: ${getErrorMessage(err)}`,
-          });
-        },
-      );
-  }, [name, url, delay, revisions, schedule, resourceFilterMapScript, updatingStatus]);
+        onClose(true);
+      },
+      (err: Error) => {
+        const remoteErrorMessage = getErrorMessage(err);
+        setUpdatingStatus({ status: 'failed', error: remoteErrorMessage });
+
+        addToast({
+          id: `failed-save-tracker-${name}`,
+          iconType: 'warning',
+          color: 'danger',
+          title: isClientError(err) ? remoteErrorMessage : errorMessage,
+        });
+      },
+    );
+  }, [name, url, delay, revisions, schedule, resourceFilterMapScript, sendNotification, updatingStatus]);
 
   return (
     <EditorFlyout
-      title={`${item ? 'Edit' : 'Add'} tracker`}
+      title={`${tracker ? 'Edit' : 'Add'} tracker`}
       onClose={() => onClose()}
       onSave={onSave}
       canSave={name.trim().length > 0 && isValidURL(url.trim())}
@@ -142,7 +149,7 @@ export function WebScrapingResourcesTrackerEditFlyout({ onClose, item }: Props) 
           title={<h3>General</h3>}
           description={'General properties of the web page resource tracker'}
         >
-          <EuiFormRow label="Name" helpText="Arbitrary web page resources tracker name." fullWidth isDisabled={!!item}>
+          <EuiFormRow label="Name" helpText="Arbitrary web page resources tracker name." fullWidth>
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
           <EuiFormRow label="URL" helpText="Fully-qualified URL of the web page for resource tracking" fullWidth>

@@ -21,15 +21,16 @@ import type { WebPageResourcesRevision } from './web_page_resources_revision';
 import { WebPageResourcesRevisionSelector } from './web_page_resources_revision_selector';
 import type { WebPageResourcesTracker } from './web_page_resources_tracker';
 import { PageErrorState, PageLoadingState } from '../../../../components';
-import { type AsyncData, getApiUrl, getErrorMessage } from '../../../../model';
+import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface WebPageResourcesTrackerDetailsProps {
-  item: WebPageResourcesTracker;
+  tracker: WebPageResourcesTracker;
 }
 
 export interface ItemDetailsType {
-  timestamp: number;
+  id: string;
+  createdAt: number;
   combinedResources: Array<WebPageResource & { type: 'js' | 'css' }>;
   scriptsCount: number;
   scriptsTotalSize: number;
@@ -54,17 +55,15 @@ function formatBytes(bytes: number, decimals = 2) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(decimals))} ${sizes[i]}`;
 }
 
-interface WebPageResourcesResponse {
-  value: { value: { revisions: WebPageResourcesRevision[] } };
-}
-function transformWebPageResourcesResponse(response: WebPageResourcesResponse) {
-  if (response.value.value.revisions.length === 0) {
+function transformWebPageResourcesResponse(revisions: WebPageResourcesRevision[]) {
+  if (revisions.length === 0) {
     return null;
   }
 
-  return response.value.value.revisions.map((revision) => {
+  return revisions.map((revision) => {
     const itemDetails: ItemDetailsType = {
-      timestamp: revision.timestamp,
+      id: revision.id,
+      createdAt: revision.createdAt,
       scriptsCount: revision.scripts?.length ?? 0,
       scriptsTotalSize: 0,
       stylesCount: revision.styles?.length ?? 0,
@@ -105,7 +104,7 @@ const COLUMNS: EuiDataGridColumn[] = [
   },
 ];
 
-export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTrackerDetailsProps) {
+export function WebPageResourcesTrackerDetails({ tracker }: WebPageResourcesTrackerDetailsProps) {
   const { uiState, addToast } = useWorkspaceContext();
 
   const [revisions, setRevisions] = useState<AsyncData<ItemDetailsType[] | null>>({ status: 'pending' });
@@ -113,12 +112,11 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
     ({ refresh }: { refresh: boolean } = { refresh: false }) => {
       setRevisions({ status: 'pending' });
       axios
-        .post<WebPageResourcesResponse>(getApiUrl('/api/utils/action'), {
-          action: {
-            type: 'webScraping',
-            value: { type: 'fetchWebPageResources', value: { trackerName: item.name, refresh, calculateDiff: true } },
-          },
-        })
+        .post<WebPageResourcesRevision[]>(
+          getApiUrl(`/api/utils/web_scraping/resources/${encodeURIComponent(tracker.id)}/history`),
+          { refresh, calculateDiff: true },
+          getApiRequestConfig(),
+        )
         .then(
           (response) => {
             const transformedRevisions = transformWebPageResourcesResponse(response.data);
@@ -144,13 +142,13 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
     }
 
     fetchResources();
-  }, [uiState, item]);
+  }, [uiState, tracker]);
 
   const [revision, setRevision] = useState<ItemDetailsType | null>(null);
   const onRevisionChange = useCallback(
-    (index: number) => {
+    (revisionId: string) => {
       if (revisions.status === 'succeeded') {
-        setRevision(revisions.data?.[index] ?? null);
+        setRevision(revisions.data?.find((revision) => revision.id === revisionId) ?? null);
       }
     },
     [revisions],
@@ -235,31 +233,30 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         setClearHistoryStatus((currentStatus) => ({ ...currentStatus, isInProgress: true }));
 
         axios
-          .post<{ value: { value: { resources: WebPageResourcesRevision[] } } }>(getApiUrl('/api/utils/action'), {
-            action: {
-              type: 'webScraping',
-              value: { type: 'removeWebPageResources', value: { trackerName: item.name } },
-            },
-          })
+          .post(
+            getApiUrl(`/api/utils/web_scraping/resources/${encodeURIComponent(tracker.id)}/clear`),
+            undefined,
+            getApiRequestConfig(),
+          )
           .then(
             () => {
               setRevisions({ status: 'succeeded', data: null });
 
               addToast({
-                id: `success-clear-tracker-history-${item.name}`,
+                id: `success-clear-tracker-history-${tracker.name}`,
                 iconType: 'check',
                 color: 'success',
-                title: `Successfully cleared web resources history for ${item.url}`,
+                title: `Successfully cleared web resources history for ${tracker.url}`,
               });
 
               setClearHistoryStatus({ isModalVisible: false, isInProgress: false });
             },
             () => {
               addToast({
-                id: `failed-clear-tracker-history-${item.name}`,
+                id: `failed-clear-tracker-history-${tracker.name}`,
                 iconType: 'warning',
                 color: 'danger',
-                title: `Unable to clear web resources history for ${item.url}, please try again later`,
+                title: `Unable to clear web resources history for ${tracker.url}, please try again later`,
               });
               setClearHistoryStatus((currentStatus) => ({ ...currentStatus, isInProgress: false }));
             },
@@ -271,14 +268,14 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
     >
       The web resources history for{' '}
       <b>
-        {item.url} ({item.name})
+        {tracker.url} ({tracker.name})
       </b>{' '}
       will be cleared. Are you sure you want to proceed?
     </EuiConfirmModal>
   ) : null;
 
   if (revisions.status === 'pending') {
-    return <PageLoadingState title={`Loading resources for ${item.url}…`} />;
+    return <PageLoadingState title={`Loading resources for ${tracker.url}…`} />;
   }
 
   if (revisions.status === 'failed') {
@@ -287,7 +284,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         title="Cannot load web page resources"
         content={
           <p>
-            Cannot load web page resources for {item.url}
+            Cannot load web page resources for {tracker.url}
             <br />
             <br />
             <strong>{revisions.error}</strong>.
@@ -324,7 +321,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
             body={
               <div>
                 <p>
-                  Go ahead and fetch resources for <b>{item.url}</b>
+                  Go ahead and fetch resources for <b>{tracker.url}</b>
                 </p>
                 {fetchButton}
               </div>
@@ -343,7 +340,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
         <EuiFlexGroup>
           <EuiFlexItem>
             <EuiStat
-              title={<b>{unix(revision.timestamp).format('LL HH:mm:ss')}</b>}
+              title={<b>{unix(revision.createdAt).format('LL HH:mm:ss')}</b>}
               titleSize={'xs'}
               description={'Last updated'}
             />
@@ -413,7 +410,7 @@ export function WebPageResourcesTrackerDetails({ item }: WebPageResourcesTracker
             additionalControls: (
               <>
                 <WebPageResourcesRevisionSelector
-                  value={revisions.data.findIndex((rev) => rev.timestamp === revision.timestamp)}
+                  value={revisions.data.findIndex((rev) => rev.id === revision.id)}
                   values={revisions.data}
                   onChange={onRevisionChange}
                 />

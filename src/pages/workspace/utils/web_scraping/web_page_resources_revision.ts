@@ -1,7 +1,8 @@
 import type { WebPageResource } from './web_page_resource';
 
 export interface WebPageResourcesRevision {
-  timestamp: number;
+  id: string;
   scripts?: WebPageResource[];
   styles?: WebPageResource[];
+  createdAt: number;
 }
