@@ -7,7 +7,7 @@ import type { WebPageResourcesRevision } from './web_page_resources_revision';
 
 interface Props {
   value: number;
-  values: WebPageResourcesRevision[];
+  values: Array<Pick<WebPageResourcesRevision, 'id' | 'createdAt'>>;
   onChange: (value: string) => void;
 }
 

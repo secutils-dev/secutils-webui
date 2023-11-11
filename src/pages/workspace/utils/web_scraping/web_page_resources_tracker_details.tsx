@@ -64,22 +64,22 @@ function transformWebPageResourcesResponse(revisions: WebPageResourcesRevision[]
     const itemDetails: ItemDetailsType = {
       id: revision.id,
       createdAt: revision.createdAt,
-      scriptsCount: revision.scripts?.length ?? 0,
+      scriptsCount: revision.data.scripts?.length ?? 0,
       scriptsTotalSize: 0,
-      stylesCount: revision.styles?.length ?? 0,
+      stylesCount: revision.data.styles?.length ?? 0,
       stylesTotalSize: 0,
       combinedResources: [],
     };
 
-    if (revision.scripts) {
-      for (const resource of revision.scripts) {
+    if (revision.data.scripts) {
+      for (const resource of revision.data.scripts) {
         itemDetails.combinedResources.push({ ...resource, type: 'js' });
         itemDetails.scriptsTotalSize += resource.content?.size ?? 0;
       }
     }
 
-    if (revision.styles) {
-      for (const resource of revision.styles) {
+    if (revision.data.styles) {
+      for (const resource of revision.data.styles) {
         itemDetails.combinedResources.push({ ...resource, type: 'css' });
         itemDetails.stylesTotalSize += resource.content?.size ?? 0;
       }
