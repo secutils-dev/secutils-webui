@@ -21,23 +21,25 @@ import {
 import axios from 'axios';
 import { unix } from 'moment/moment';
 
-import type { WebPageResourcesTracker } from './web_page_resources_tracker';
-import { WebPageResourcesTrackerDetails } from './web_page_resources_tracker_details';
-import { WebScrapingResourcesTrackerEditFlyout } from './web_page_resources_tracker_edit_flyout';
+import type { WebPageResourcesRevision } from './web_page_data_revision';
+import { WebPageResourcesTrackerEditFlyout } from './web_page_resources_tracker_edit_flyout';
+import { WebPageResourcesTrackerRevision } from './web_page_resources_tracker_revision';
+import type { WebPageResourcesTracker, WebPageTracker } from './web_page_tracker';
+import { WebPageTrackerHistory } from './web_page_tracker_history';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
-export default function WebScrapingResourcesTrackers() {
+export default function WebPageResourcesTrackers() {
   const { uiState, setTitleActions } = useWorkspaceContext();
 
-  const [trackers, setTrackers] = useState<AsyncData<WebPageResourcesTracker[]>>({ status: 'pending' });
+  const [trackers, setTrackers] = useState<AsyncData<WebPageTracker[]>>({ status: 'pending' });
 
-  const [trackerToRemove, setTrackerToRemove] = useState<WebPageResourcesTracker | null>(null);
-  const [trackerToEdit, setTrackerToEdit] = useState<WebPageResourcesTracker | null | undefined>(null);
+  const [trackerToRemove, setTrackerToRemove] = useState<WebPageTracker | null>(null);
+  const [trackerToEdit, setTrackerToEdit] = useState<WebPageTracker | null | undefined>(null);
 
   const loadTrackers = () => {
-    axios.get<WebPageResourcesTracker[]>(getApiUrl('/api/utils/web_scraping/resources'), getApiRequestConfig()).then(
+    axios.get<WebPageTracker[]>(getApiUrl('/api/utils/web_scraping/resources'), getApiRequestConfig()).then(
       (response) => {
         setTrackers({ status: 'succeeded', data: response.data });
         setTitleActions(response.data.length === 0 ? null : createButton);
@@ -70,7 +72,7 @@ export default function WebScrapingResourcesTrackers() {
   const docsButton = (
     <EuiButtonEmpty
       iconType={'documentation'}
-      title="Learn how to create and use web resources trackers"
+      title="Learn how to create and use web page trackers"
       target={'_blank'}
       href={'/docs/guides/web_scraping/resources'}
     >
@@ -80,14 +82,14 @@ export default function WebScrapingResourcesTrackers() {
 
   const editFlyout =
     trackerToEdit !== null ? (
-      <WebScrapingResourcesTrackerEditFlyout
+      <WebPageResourcesTrackerEditFlyout
         onClose={(success) => {
           if (success) {
             loadTrackers();
           }
           setTrackerToEdit(null);
         }}
-        tracker={trackerToEdit}
+        tracker={trackerToEdit as WebPageResourcesTracker}
       />
     ) : null;
 
@@ -108,7 +110,7 @@ export default function WebScrapingResourcesTrackers() {
           .then(
             () => loadTrackers(),
             (err: Error) => {
-              console.error(`Failed to remove resources tracker: ${getErrorMessage(err)}`);
+              console.error(`Failed to remove web page tracker: ${getErrorMessage(err)}`);
             },
           );
       }}
@@ -116,11 +118,11 @@ export default function WebScrapingResourcesTrackers() {
       confirmButtonText="Remove"
       buttonColor="danger"
     >
-      The web resources tracker for{' '}
+      The web page tracker for{' '}
       <b>
         {trackerToRemove.url} ({trackerToRemove.name})
       </b>{' '}
-      will be deactivated, and the tracked resources history will be cleared. Are you sure you want to proceed?
+      will be deactivated, and the tracked history will be cleared. Are you sure you want to proceed?
     </EuiConfirmModal>
   ) : null;
 
@@ -132,7 +134,7 @@ export default function WebScrapingResourcesTrackers() {
   });
   const [sorting, setSorting] = useState<{ sort: PropertySort }>({ sort: { field: 'name', direction: 'asc' } });
   const onTableChange = useCallback(
-    ({ page, sort }: Criteria<WebPageResourcesTracker>) => {
+    ({ page, sort }: Criteria<WebPageTracker>) => {
       setPagination({
         ...pagination,
         pageIndex: page?.index ?? 0,
@@ -146,12 +148,16 @@ export default function WebScrapingResourcesTrackers() {
     [pagination],
   );
 
-  const toggleItemDetails = (tracker: WebPageResourcesTracker) => {
+  const toggleItemDetails = (tracker: WebPageTracker) => {
     const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
     if (itemIdToExpandedRowMapValues[tracker.name]) {
       delete itemIdToExpandedRowMapValues[tracker.name];
     } else {
-      itemIdToExpandedRowMapValues[tracker.name] = <WebPageResourcesTrackerDetails tracker={tracker} />;
+      itemIdToExpandedRowMapValues[tracker.name] = (
+        <WebPageTrackerHistory kind={'resources'} tracker={tracker}>
+          {(revision) => <WebPageResourcesTrackerRevision revision={revision as WebPageResourcesRevision} />}
+        </WebPageTrackerHistory>
+      );
     }
     setItemIdToExpandedRowMap(itemIdToExpandedRowMapValues);
   };
@@ -163,10 +169,10 @@ export default function WebScrapingResourcesTrackers() {
   if (trackers.status === 'failed') {
     return (
       <PageErrorState
-        title="Cannot load web page resources trackers"
+        title="Cannot load web page trackers"
         content={
           <p>
-            Cannot load web page resources trackers
+            Cannot load web page trackers
             <br />
             <br />
             <strong>{trackers.error}</strong>.
@@ -189,7 +195,7 @@ export default function WebScrapingResourcesTrackers() {
         <EuiFlexItem>
           <EuiEmptyPrompt
             icon={<EuiIcon type={'cut'} size={'xl'} />}
-            title={<h2>You don't have any web page resources trackers yet</h2>}
+            title={<h2>You don't have any web page trackers yet</h2>}
             titleSize="s"
             style={{ maxWidth: '60em', display: 'flex' }}
             body={
@@ -219,7 +225,7 @@ export default function WebScrapingResourcesTrackers() {
         columns={[
           {
             name: (
-              <EuiToolTip content="Name of the resources tracker">
+              <EuiToolTip content="Name of the web page tracker">
                 <span>
                   Name <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
                 </span>
@@ -228,11 +234,11 @@ export default function WebScrapingResourcesTrackers() {
             field: 'name',
             sortable: true,
             textOnly: true,
-            render: (_, tracker: WebPageResourcesTracker) => tracker.name,
+            render: (_, tracker: WebPageTracker) => tracker.name,
           },
           {
             name: (
-              <EuiToolTip content="URL of the web page for resource tracking">
+              <EuiToolTip content="URL of the web page to track">
                 <span>
                   URL <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
                 </span>
@@ -240,7 +246,7 @@ export default function WebScrapingResourcesTrackers() {
             ),
             field: 'url',
             sortable: true,
-            render: (_, tracker: WebPageResourcesTracker) => (
+            render: (_, tracker: WebPageTracker) => (
               <EuiLink href={tracker.url} target="_blank">
                 {tracker.url}
               </EuiLink>
@@ -252,9 +258,7 @@ export default function WebScrapingResourcesTrackers() {
             width: '230px',
             mobileOptions: { width: 'unset' },
             sortable: (tracker) => tracker.createdAt,
-            render: (_, tracker: WebPageResourcesTracker) => (
-              <EuiText>{unix(tracker.createdAt).format('LL HH:mm')}</EuiText>
-            ),
+            render: (_, tracker: WebPageTracker) => <EuiText>{unix(tracker.createdAt).format('LL HH:mm')}</EuiText>,
           },
           {
             name: 'Actions',
@@ -283,15 +287,15 @@ export default function WebScrapingResourcesTrackers() {
             isExpander: true,
             name: (
               <EuiScreenReaderOnly>
-                <span>Show resources</span>
+                <span>Show history</span>
               </EuiScreenReaderOnly>
             ),
-            render: (tracker: WebPageResourcesTracker) => {
+            render: (tracker: WebPageTracker) => {
               const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
               return (
                 <EuiButtonIcon
                   onClick={() => toggleItemDetails(tracker)}
-                  aria-label={itemIdToExpandedRowMapValues[tracker.name] ? 'Hide resources' : 'Show resources'}
+                  aria-label={itemIdToExpandedRowMapValues[tracker.name] ? 'Hide history' : 'Show history'}
                   iconType={itemIdToExpandedRowMapValues[tracker.name] ? 'arrowDown' : 'arrowRight'}
                 />
               );

@@ -15,7 +15,7 @@ import type { EuiSwitchEvent } from '@elastic/eui';
 import axios from 'axios';
 
 import { WEB_PAGE_TRACKER_SCHEDULES } from './consts';
-import type { WebPageResourcesTracker } from './web_page_tracker';
+import type { WebPageContentTracker } from './web_page_tracker';
 import WebPageTrackerScriptEditor from './web_page_tracker_script_editor';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { isValidURL } from '../../../../tools/url';
@@ -24,10 +24,10 @@ import { useWorkspaceContext } from '../../hooks';
 
 export interface Props {
   onClose: (success?: boolean) => void;
-  tracker?: WebPageResourcesTracker;
+  tracker?: WebPageContentTracker;
 }
 
-export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
+export function WebPageContentTrackerEditFlyout({ onClose, tracker }: Props) {
   const { addToast } = useWorkspaceContext();
 
   const [name, setName] = useState<string>(tracker?.name ?? '');
@@ -55,11 +55,11 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
     setSchedule(e.target.value);
   }, []);
 
-  const [resourceFilterMapScript, setResourceFilterMapScript] = useState<string | undefined>(
-    tracker?.settings.scripts?.resourceFilterMap,
+  const [extractContentScript, setExtractContentScript] = useState<string | undefined>(
+    tracker?.settings.scripts?.extractContent,
   );
-  const onResourceFilterMapScriptChange = useCallback((value?: string) => {
-    setResourceFilterMapScript(value);
+  const onExtractContentScriptChange = useCallback((value?: string) => {
+    setExtractContentScript(value);
   }, []);
 
   const [revisions, setRevisions] = useState<number>(tracker?.settings.revisions ?? 3);
@@ -82,23 +82,19 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
         revisions,
         delay,
         schedule: schedule === '@' ? undefined : schedule,
-        scripts: resourceFilterMapScript ? { resourceFilterMap: resourceFilterMapScript } : undefined,
+        scripts: extractContentScript ? { extractContent: extractContentScript } : undefined,
         enableNotifications: sendNotification,
       },
     };
 
     const [requestPromise, successMessage, errorMessage] = tracker
       ? [
-          axios.put(
-            getApiUrl(`/api/utils/web_scraping/resources/${tracker.id}`),
-            trackerToUpdate,
-            getApiRequestConfig(),
-          ),
+          axios.put(getApiUrl(`/api/utils/web_scraping/content/${tracker.id}`), trackerToUpdate, getApiRequestConfig()),
           `Successfully updated "${name}" web page tracker`,
           `Unable to update "${name}" web page tracker, please try again later`,
         ]
       : [
-          axios.post(getApiUrl('/api/utils/web_scraping/resources'), trackerToUpdate, getApiRequestConfig()),
+          axios.post(getApiUrl('/api/utils/web_scraping/content'), trackerToUpdate, getApiRequestConfig()),
           `Successfully saved "${name}" web page tracker`,
           `Unable to save "${name}" web page tracker, please try again later`,
         ];
@@ -127,7 +123,7 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
         });
       },
     );
-  }, [name, url, delay, revisions, schedule, resourceFilterMapScript, sendNotification, updatingStatus]);
+  }, [name, url, delay, revisions, schedule, extractContentScript, sendNotification, updatingStatus]);
 
   return (
     <EditorFlyout
@@ -150,7 +146,7 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
           </EuiFormRow>
           <EuiFormRow
             label="Delay"
-            helpText="Tracker will begin analyzing web page only after a specified number of milliseconds after the page is loaded. This feature can be particularly useful for pages that have dynamically loaded resources"
+            helpText="Tracker will begin analyzing web page only after a specified number of milliseconds after the page is loaded. This feature can be particularly useful for pages that have dynamically loaded content"
           >
             <EuiFieldNumber fullWidth min={0} max={60000} step={1000} value={delay} onChange={onDelayChange} />
           </EuiFormRow>
@@ -181,30 +177,33 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
         </EuiDescribedFormGroup>
         <EuiDescribedFormGroup
           title={<h3>Scripts</h3>}
-          description={
-            'Custom JavaScript scripts that will be injected into the web page before resources are extracted'
-          }
+          description={'Custom JavaScript scripts that will be injected into the web page before content is extracted'}
         >
           <EuiFormRow
-            label="Resource filter/mapper"
+            label="Content extractor"
             helpText={
               <span>
-                The script accepts "resource" as an argument and returns it, either with or without modifications, if
-                the resource should be tracked, or "null" if it should not. Refer to the{' '}
+                The script accepts optional "previousContent" argument for the previously extracted content, and should
+                return any portion of the web page content that should be tracked. The function can return any value as
+                long as it can be{' '}
                 <EuiLink
                   target="_blank"
-                  href="/docs/guides/web_scraping/resources#annex-resource-filtermapper-script-examples"
+                  href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description"
+                >
+                  <b>serialized to a JSON string</b>
+                </EuiLink>
+                . Refer to the{' '}
+                <EuiLink
+                  target="_blank"
+                  href="/docs/guides/web_scraping/content#annex-content-extractor-script-examples"
                 >
                   <b>documentation</b>
                 </EuiLink>{' '}
-                for a list of available "resource" properties and script examples.
+                for a list of script examples.
               </span>
             }
           >
-            <WebPageTrackerScriptEditor
-              onChange={onResourceFilterMapScriptChange}
-              defaultValue={resourceFilterMapScript}
-            />
+            <WebPageTrackerScriptEditor onChange={onExtractContentScriptChange} defaultValue={extractContentScript} />
           </EuiFormRow>
         </EuiDescribedFormGroup>
       </EuiForm>

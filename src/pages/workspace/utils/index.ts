@@ -13,6 +13,7 @@ export const UTIL_HANDLES = Object.freeze({
   webSecurityCspPolicies: 'web_security__csp__policies',
   webScraping: 'web_scraping',
   webScrapingResources: 'web_scraping__resources',
+  webScrapingContent: 'web_scraping__content',
 });
 
 export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType>>([
@@ -24,7 +25,8 @@ export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType
   ],
   [UTIL_HANDLES.certificatesPrivateKeys, lazy(() => import('./certificates/certificates_private_keys'))],
   [UTIL_HANDLES.webSecurityCspPolicies, lazy(() => import('./web_security/csp/web_security_csp_policies'))],
-  [UTIL_HANDLES.webScrapingResources, lazy(() => import('./web_scraping/web_scraping_resources_trackers'))],
+  [UTIL_HANDLES.webScrapingResources, lazy(() => import('./web_scraping/web_page_resources_trackers'))],
+  [UTIL_HANDLES.webScrapingContent, lazy(() => import('./web_scraping/web_page_content_trackers'))],
 ]);
 
 // Dedicated set of component overrides for user shares.
@@ -51,9 +53,10 @@ export function getUtilIcon(utilHandle: string, purpose: 'navigation' | 'search'
     case UTIL_HANDLES.webSecurityCsp:
     case UTIL_HANDLES.webSecurityCspPolicies:
       return purpose === 'search' || purpose === 'share' ? 'globe' : undefined;
-    case 'web_scraping':
+    case UTIL_HANDLES.webScraping:
       return 'cut';
-    case 'web_scraping__resources':
+    case UTIL_HANDLES.webScrapingResources:
+    case UTIL_HANDLES.webScrapingContent:
       return purpose === 'search' || purpose === 'share' ? 'cut' : undefined;
     default:
       return;
