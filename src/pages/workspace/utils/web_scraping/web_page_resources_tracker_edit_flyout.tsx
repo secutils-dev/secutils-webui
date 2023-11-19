@@ -2,6 +2,7 @@ import type { ChangeEvent } from 'react';
 import { useCallback, useState } from 'react';
 
 import {
+  EuiComboBox,
   EuiDescribedFormGroup,
   EuiFieldNumber,
   EuiFieldText,
@@ -27,6 +28,10 @@ export interface Props {
   tracker?: WebPageResourcesTracker;
 }
 
+const isHeaderValid = (header: string) => {
+  return header.length >= 3 && header.includes(':') && !header.startsWith(':') && !header.endsWith(':');
+};
+
 export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
   const { addToast } = useWorkspaceContext();
 
@@ -49,6 +54,13 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
   const onDelayChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setDelay(+e.target.value);
   }, []);
+
+  const [headers, setHeaders] = useState<{ values: Array<{ label: string }>; invalid: boolean }>({
+    values: Object.entries(tracker?.settings.headers ?? {}).map(([header, value]) => ({
+      label: `${header}: ${value}`,
+    })),
+    invalid: false,
+  });
 
   const [schedule, setSchedule] = useState<string>(tracker?.settings.schedule ?? '@');
   const onScheduleChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
@@ -83,6 +95,18 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
         delay,
         schedule: schedule === '@' ? undefined : schedule,
         scripts: resourceFilterMapScript ? { resourceFilterMap: resourceFilterMapScript } : undefined,
+        headers:
+          headers.values.length > 0
+            ? Object.fromEntries(
+                headers.values.map((headerValue) => {
+                  const separatorIndex = headerValue.label.indexOf(':');
+                  return [
+                    headerValue.label.substring(0, separatorIndex).trim(),
+                    headerValue.label.substring(separatorIndex + 1).trim(),
+                  ] as [string, string];
+                }),
+              )
+            : undefined,
         enableNotifications: sendNotification,
       },
     };
@@ -127,14 +151,14 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
         });
       },
     );
-  }, [name, url, delay, revisions, schedule, resourceFilterMapScript, sendNotification, updatingStatus]);
+  }, [name, url, delay, revisions, schedule, resourceFilterMapScript, headers, sendNotification, updatingStatus]);
 
   return (
     <EditorFlyout
       title={`${tracker ? 'Edit' : 'Add'} tracker`}
       onClose={() => onClose()}
       onSave={onSave}
-      canSave={name.trim().length > 0 && isValidURL(url.trim())}
+      canSave={name.trim().length > 0 && isValidURL(url.trim()) && !headers.invalid}
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm fullWidth>
@@ -153,6 +177,33 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
             helpText="Tracker will begin analyzing web page only after a specified number of milliseconds after the page is loaded. This feature can be particularly useful for pages that have dynamically loaded resources"
           >
             <EuiFieldNumber fullWidth min={0} max={60000} step={1000} value={delay} onChange={onDelayChange} />
+          </EuiFormRow>
+          <EuiFormRow
+            label="Headers"
+            helpText="Optional list of the HTTP headers to send with every tracker request, e.g `X-Header: X-Value`"
+            fullWidth
+          >
+            <EuiComboBox
+              fullWidth
+              selectedOptions={headers.values}
+              onCreateOption={(headerValue) => {
+                if (!isHeaderValid(headerValue)) {
+                  return false;
+                }
+
+                setHeaders({ values: [...headers.values, { label: headerValue }], invalid: false });
+              }}
+              onChange={(selectedHeaders: Array<{ label: string }>) => {
+                setHeaders({ values: selectedHeaders, invalid: false });
+              }}
+              onSearchChange={(headerValue: string) => {
+                setHeaders((currentHeaders) => ({
+                  ...currentHeaders,
+                  invalid: headerValue ? !isHeaderValid(headerValue) : false,
+                }));
+              }}
+              isInvalid={headers.invalid}
+            />
           </EuiFormRow>
         </EuiDescribedFormGroup>
         <EuiDescribedFormGroup

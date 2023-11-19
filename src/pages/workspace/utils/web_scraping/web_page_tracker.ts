@@ -8,6 +8,7 @@ export interface WebPageTracker<S = unknown> {
     delay: number;
     schedule?: string;
     scripts?: S;
+    headers?: Record<string, string>;
   };
 }
 
