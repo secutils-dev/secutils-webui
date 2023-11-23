@@ -73,7 +73,7 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
         setUpdatingStatus({ status: 'succeeded', data: undefined });
 
         addToast({
-          id: `success-save-private-key-${templateToSave.name}`,
+          id: `success-save-certificate-template-${templateToSave.name}`,
           iconType: 'check',
           color: 'success',
           title: successMessage,
@@ -86,7 +86,7 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
         setUpdatingStatus({ status: 'failed', error: remoteErrorMessage });
 
         addToast({
-          id: `failed-save-private-key-${templateToSave.name}`,
+          id: `failed-save-certificate-template-${templateToSave.name}`,
           iconType: 'warning',
           color: 'danger',
           title: isClientError(err) ? remoteErrorMessage : errorMessage,

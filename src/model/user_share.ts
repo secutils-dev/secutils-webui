@@ -31,7 +31,7 @@ export interface UserShare {
 export type UserShareResource =
   | {
       type: 'contentSecurityPolicy';
-      policyName: string;
+      policyId: string;
     }
   | {
       type: 'certificateTemplate';

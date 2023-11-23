@@ -19,7 +19,7 @@ import { ContentSecurityPolicySourcesCombobox } from './content_security_policy_
 import { ContentSecurityPolicyTrustedTypesCombobox } from './content_security_policy_trusted_types_combobox';
 
 export interface ContentSecurityPolicyFormProps {
-  policy?: ContentSecurityPolicy;
+  policy: ContentSecurityPolicy;
   onChange?: (policy: ContentSecurityPolicy) => void;
   isReadOnly?: boolean;
 }
@@ -116,7 +116,7 @@ export function ContentSecurityPolicyForm({ policy, onChange, isReadOnly = false
   const [name, setName] = useState<string>(policy?.name ?? '');
   const onNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
-    onChange?.({ name: e.target.value, directives });
+    onChange?.({ ...policy, name: e.target.value, directives });
   };
 
   const [directives, setDirectives] = useState<Map<string, string[]>>(new Map(policy?.directives ?? []));
@@ -130,7 +130,7 @@ export function ContentSecurityPolicyForm({ policy, onChange, isReadOnly = false
 
       const updatedDirectives = new Map(currentDirectives);
 
-      onChange?.({ name, directives: updatedDirectives });
+      onChange?.({ ...policy, name, directives: updatedDirectives });
 
       return updatedDirectives;
     });
@@ -379,7 +379,7 @@ export function ContentSecurityPolicyForm({ policy, onChange, isReadOnly = false
         title={<h3>General</h3>}
         description={'General properties of the content security policy (CSP)'}
       >
-        <EuiFormRow label="Name" helpText="Arbitrary CSP policy name." fullWidth isDisabled={!!policy}>
+        <EuiFormRow label="Name" helpText="Arbitrary CSP policy name." fullWidth isDisabled={isReadOnly}>
           <EuiFieldText value={name} required type={'text'} onChange={onNameChange} readOnly={isReadOnly} />
         </EuiFormRow>
       </EuiDescribedFormGroup>

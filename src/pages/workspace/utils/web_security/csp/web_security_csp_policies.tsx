@@ -15,19 +15,16 @@ import {
   EuiToolTip,
 } from '@elastic/eui';
 import axios from 'axios';
+import { unix } from 'moment';
 
-import type { ContentSecurityPolicy, SerializedItemCollectionType } from './content_security_policy';
-import {
-  CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE,
-  deserializeContentSecurityPolicies,
-  getContentSecurityPolicyString,
-} from './content_security_policy';
+import type { ContentSecurityPolicy, SerializedContentSecurityPolicyDirectives } from './content_security_policy';
+import { deserializeContentSecurityPolicyDirectives, getContentSecurityPolicyString } from './content_security_policy';
 import { ContentSecurityPolicyCopyModal } from './content_security_policy_copy_modal';
-import { ContentSecurityPolicyEditFlyout } from './content_security_policy_edit_flyout';
 import { ContentSecurityPolicyImportModal } from './content_security_policy_import_modal';
 import { ContentSecurityPolicyShareModal } from './content_security_policy_share_modal';
-import { PageLoadingState } from '../../../../../components';
-import { getApiUrl, getErrorMessage, getUserData } from '../../../../../model';
+import { SaveContentSecurityPolicyFlyout } from './save_content_security_policy_flyout';
+import { PageErrorState, PageLoadingState } from '../../../../../components';
+import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../../model';
 import { useWorkspaceContext } from '../../../hooks';
 
 export default function WebSecurityContentSecurityPolicies() {
@@ -36,38 +33,40 @@ export default function WebSecurityContentSecurityPolicies() {
   const [policyToCopy, setPolicyToCopy] = useState<ContentSecurityPolicy | null>(null);
   const [policyToShare, setPolicyToShare] = useState<ContentSecurityPolicy | null>(null);
   const [policyToRemove, setPolicyToRemove] = useState<ContentSecurityPolicy | null>(null);
+  const [policyToEdit, setPolicyToEdit] = useState<ContentSecurityPolicy | null | undefined>(null);
 
-  const [policies, setPolicies] = useState<ContentSecurityPolicy[] | null>(null);
-  const updatePolicies = (updatedPolicies: ContentSecurityPolicy[]) => {
-    setPolicies(updatedPolicies);
-    setTitleActions(updatedPolicies.length === 0 ? null : createButton);
+  const [policies, setPolicies] = useState<AsyncData<ContentSecurityPolicy[]>>({ status: 'pending' });
+
+  const loadPolicies = () => {
+    axios
+      .get<ContentSecurityPolicy<SerializedContentSecurityPolicyDirectives>[]>(
+        getApiUrl('/api/utils/web_security/csp'),
+        getApiRequestConfig(),
+      )
+      .then(
+        (res) => {
+          setPolicies({
+            status: 'succeeded',
+            data: res.data.map((policy) => ({
+              ...policy,
+              directives: deserializeContentSecurityPolicyDirectives(policy.directives),
+            })),
+          });
+          setTitleActions(res.data.length === 0 ? null : createButton);
+        },
+        (err: Error) => {
+          setPolicies({ status: 'failed', error: getErrorMessage(err) });
+        },
+      );
   };
 
-  const refreshPolicies = () => {
-    getUserData<SerializedItemCollectionType>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE).then(
-      (serializedPolicies) => updatePolicies(deserializeContentSecurityPolicies(serializedPolicies)),
-      (err: Error) => {
-        console.error(`Failed to load content security policies: ${getErrorMessage(err)}`);
-        updatePolicies([]);
-      },
-    );
-  };
-
-  const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
-    { isOpen: false } | { isOpen: true; policy?: ContentSecurityPolicy }
-  >({ isOpen: false });
-  const onToggleEditFlyout = (updatedPolicies?: ContentSecurityPolicy[]) => {
-    if (updatedPolicies) {
-      updatePolicies(updatedPolicies);
+  useEffect(() => {
+    if (!uiState.synced) {
+      return;
     }
-    setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
-  };
 
-  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
-
-  const onEditPolicy = useCallback((policy: ContentSecurityPolicy) => {
-    setIsEditFlyoutOpen({ isOpen: true, policy });
-  }, []);
+    loadPolicies();
+  }, [uiState]);
 
   const createButton = (
     <EuiFlexGroup responsive={false} gutterSize="s" alignItems="center" justifyContent={'center'}>
@@ -85,7 +84,7 @@ export default function WebSecurityContentSecurityPolicies() {
           iconType={'plusInCircle'}
           fill
           title="Create new content security policy"
-          onClick={() => onToggleEditFlyout()}
+          onClick={() => setPolicyToEdit(undefined)}
         >
           Create policy
         </EuiButton>
@@ -104,17 +103,20 @@ export default function WebSecurityContentSecurityPolicies() {
     </EuiButtonEmpty>
   );
 
-  useEffect(() => {
-    if (!uiState.synced || !uiState.user) {
-      return;
-    }
+  const editFlyout =
+    policyToEdit !== null ? (
+      <SaveContentSecurityPolicyFlyout
+        onClose={(success) => {
+          if (success) {
+            loadPolicies();
+          }
+          setPolicyToEdit(null);
+        }}
+        policy={policyToEdit}
+      />
+    ) : null;
 
-    refreshPolicies();
-  }, [uiState]);
-
-  const editFlyout = isEditFlyoutOpen.isOpen ? (
-    <ContentSecurityPolicyEditFlyout onClose={onToggleEditFlyout} policy={isEditFlyoutOpen.policy} />
-  ) : null;
+  const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
 
   const copyModal = policyToCopy ? (
     <ContentSecurityPolicyCopyModal onClose={() => setPolicyToCopy(null)} policy={policyToCopy} />
@@ -129,7 +131,7 @@ export default function WebSecurityContentSecurityPolicies() {
       onClose={(success) => {
         setIsImportModalOpen(false);
         if (success) {
-          refreshPolicies();
+          loadPolicies();
         }
       }}
     />
@@ -143,15 +145,12 @@ export default function WebSecurityContentSecurityPolicies() {
         setPolicyToRemove(null);
 
         axios
-          .post(getApiUrl('/api/utils/action'), {
-            action: {
-              type: 'webSecurity',
-              value: { type: 'removeContentSecurityPolicy', value: { policyName: policyToRemove?.name } },
-            },
-          })
-          .then(() => getUserData<SerializedItemCollectionType>(CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE))
+          .delete(
+            getApiUrl(`/api/utils/web_security/csp/${encodeURIComponent(policyToRemove.id)}`),
+            getApiRequestConfig(),
+          )
           .then(
-            (items) => updatePolicies(deserializeContentSecurityPolicies(items)),
+            () => loadPolicies(),
             (err: Error) => {
               console.error(`Failed to remove content security policy: ${getErrorMessage(err)}`);
             },
@@ -187,12 +186,28 @@ export default function WebSecurityContentSecurityPolicies() {
     [pagination],
   );
 
-  if (!uiState.synced || !uiState.user || !policies) {
+  if (policies.status === 'pending') {
     return <PageLoadingState />;
   }
 
+  if (policies.status === 'failed') {
+    return (
+      <PageErrorState
+        title="Cannot load content security policies"
+        content={
+          <p>
+            Cannot load content security policies.
+            <br />
+            <br />
+            <strong>{policies.error}</strong>.
+          </p>
+        }
+      />
+    );
+  }
+
   let content;
-  if (policies.length === 0) {
+  if (policies.data.length === 0) {
     content = (
       <EuiFlexGroup
         direction={'column'}
@@ -226,8 +241,8 @@ export default function WebSecurityContentSecurityPolicies() {
         allowNeutralSort={false}
         sorting={sorting}
         onTableChange={onTableChange}
-        items={policies}
-        itemId={(item) => item.name}
+        items={policies.data}
+        itemId={(item) => item.id}
         tableLayout={'auto'}
         columns={[
           {
@@ -241,9 +256,7 @@ export default function WebSecurityContentSecurityPolicies() {
             field: 'name',
             sortable: true,
             textOnly: true,
-            render: (_, item: ContentSecurityPolicy) => {
-              return item.name;
-            },
+            render: (_, item: ContentSecurityPolicy) => <EuiText>{item.name}</EuiText>,
           },
           {
             name: (
@@ -255,6 +268,16 @@ export default function WebSecurityContentSecurityPolicies() {
             ),
             field: 'directives',
             render: (_, policy: ContentSecurityPolicy) => <EuiText>{getContentSecurityPolicyString(policy)}</EuiText>,
+          },
+          {
+            name: 'Created',
+            field: 'createdAt',
+            width: '230px',
+            mobileOptions: { width: 'unset' },
+            sortable: (policy) => policy.createdAt,
+            render: (_, policy: ContentSecurityPolicy) => (
+              <EuiText>{unix(policy.createdAt).format('LL HH:mm')}</EuiText>
+            ),
           },
           {
             name: 'Actions',
@@ -281,7 +304,7 @@ export default function WebSecurityContentSecurityPolicies() {
                 description: 'Edit policy',
                 icon: 'pencil',
                 type: 'icon',
-                onClick: onEditPolicy,
+                onClick: setPolicyToEdit,
               },
               {
                 name: 'Remove policy',

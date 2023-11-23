@@ -1,15 +1,11 @@
-export const CONTENT_SECURITY_POLICIES_USER_DATA_NAMESPACE = 'contentSecurityPolicies';
+export type ContentSecurityPolicyDirectives = Map<string, string[]>;
+export type SerializedContentSecurityPolicyDirectives = Array<{ name: string; value: string[] }>;
 
-export type SerializedItemCollectionType = Record<string, SerializedContentSecurityPolicy>;
-
-export interface SerializedContentSecurityPolicy {
-  n: string;
-  d: Array<{ n: string; v: string[] }>;
-}
-
-export interface ContentSecurityPolicy {
+export interface ContentSecurityPolicy<Directives = ContentSecurityPolicyDirectives> {
+  id: string;
   name: string;
-  directives: Map<string, string[]>;
+  directives: Directives;
+  createdAt: number;
 }
 
 export function getContentSecurityPolicyString(policy: ContentSecurityPolicy) {
@@ -20,39 +16,21 @@ export function getContentSecurityPolicyString(policy: ContentSecurityPolicy) {
     .join('; ');
 }
 
-export function deserializeContentSecurityPolicy(
-  serializedPolicy: SerializedContentSecurityPolicy,
-): ContentSecurityPolicy {
-  return {
-    name: serializedPolicy.n,
-    directives: new Map(
-      serializedPolicy.d.map((directive) => {
-        return [directive.n, directive.v ?? []];
-      }),
-    ),
-  };
+export function deserializeContentSecurityPolicyDirectives(
+  serializedDirectives: SerializedContentSecurityPolicyDirectives,
+): ContentSecurityPolicyDirectives {
+  return new Map(
+    serializedDirectives.map((directive) => {
+      return [directive.name, directive.value ?? []];
+    }),
+  );
 }
 
-export function deserializeContentSecurityPolicies(
-  serializedPolicies: SerializedItemCollectionType | null,
-): ContentSecurityPolicy[] {
-  if (!serializedPolicies) {
-    return [];
-  }
-
-  try {
-    return Object.values(serializedPolicies).map(deserializeContentSecurityPolicy);
-  } catch {
-    return [];
-  }
-}
-
-export function serializeContentSecurityPolicy(policy: ContentSecurityPolicy): SerializedContentSecurityPolicy {
-  return {
-    n: policy.name,
-    d: Array.from(policy.directives).map(([directiveName, directiveValues]) => ({
-      n: directiveName,
-      v: directiveValues,
-    })),
-  };
+export function serializeContentSecurityPolicyDirectives(
+  directives: ContentSecurityPolicyDirectives,
+): SerializedContentSecurityPolicyDirectives {
+  return Array.from(directives).map(([directiveName, directiveValues]) => ({
+    name: directiveName,
+    value: directiveValues,
+  }));
 }

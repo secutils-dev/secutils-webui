@@ -3,7 +3,6 @@ import { useCallback, useState } from 'react';
 import {
   EuiButton,
   EuiButtonEmpty,
-  EuiCallOut,
   EuiFieldText,
   EuiForm,
   EuiFormRow,
@@ -24,7 +23,7 @@ import {
 import axios from 'axios';
 
 import type { AsyncData } from '../../../../../model';
-import { getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../../model';
 import { isValidURL } from '../../../../../tools/url';
 import { useWorkspaceContext } from '../../../hooks';
 
@@ -32,23 +31,24 @@ export interface ContentSecurityPolicyImportModalProps {
   onClose: (success?: boolean) => void;
 }
 
-type ImportType = 'text' | 'url';
+type ImportType = 'serialized' | 'remote';
 type ImportSource = 'enforcingHeader' | 'reportOnlyHeader' | 'meta';
 
 export function ContentSecurityPolicyImportModal({ onClose }: ContentSecurityPolicyImportModalProps) {
   const { uiState, addToast } = useWorkspaceContext();
 
-  const [importType, setImportType] = useState<ImportType>('text');
+  const [importType, setImportType] = useState<ImportType>('serialized');
   const [name, setName] = useState<string>('');
-  const [textParameters, setTextParameters] = useState<{ text: string }>({ text: '' });
-  const [urlParameters, setUrlParameters] = useState<{ url: string; followRedirects: boolean; source: ImportSource }>({
+  const [serializedPolicy, setSerializedPolicy] = useState<string>('');
+  const [remotePolicy, setRemotePolicy] = useState<{ url: string; followRedirects: boolean; source: ImportSource }>({
     url: '',
     followRedirects: true,
     source: 'enforcingHeader',
   });
 
   const canImport =
-    name.trim().length > 0 && (importType === 'text' ? textParameters.text.length > 0 : isValidURL(urlParameters.url));
+    name.trim().length > 0 &&
+    (importType === 'serialized' ? serializedPolicy.length > 0 : isValidURL(remotePolicy.url));
 
   const [importStatus, setImportStatus] = useState<AsyncData<undefined> | null>(null);
   const onImportPolicy = useCallback(() => {
@@ -60,18 +60,10 @@ export function ContentSecurityPolicyImportModal({ onClose }: ContentSecurityPol
 
     axios
       .post(
-        getApiUrl('/api/utils/action'),
+        getApiUrl('/api/utils/web_security/csp'),
         {
-          action: {
-            type: 'webSecurity',
-            value: {
-              type: 'importContentSecurityPolicy',
-              value: {
-                policyName: name,
-                importType: { type: importType, ...(importType === 'text' ? textParameters : urlParameters) },
-              },
-            },
-          },
+          name,
+          content: { type: importType, value: importType === 'serialized' ? serializedPolicy : remotePolicy },
         },
         getApiRequestConfig(),
       )
@@ -89,25 +81,23 @@ export function ContentSecurityPolicyImportModal({ onClose }: ContentSecurityPol
           onClose(true /** success **/);
         },
         (err: Error) => {
-          setImportStatus({ status: 'failed', error: getErrorMessage(err) });
+          const remoteErrorMessage = getErrorMessage(err);
+          setImportStatus({ status: 'failed', error: remoteErrorMessage });
+
+          addToast({
+            id: `failed-import-policy-${name}`,
+            iconType: 'warning',
+            color: 'danger',
+            title: isClientError(err)
+              ? remoteErrorMessage
+              : `Unable to import "${name}" policy, please try again later`,
+          });
         },
       );
-  }, [uiState, importType, name, textParameters, urlParameters, importStatus]);
+  }, [uiState, importType, name, serializedPolicy, remotePolicy, importStatus]);
 
-  const importStatusCallout =
-    importStatus?.status === 'failed' ? (
-      <EuiFormRow>
-        <EuiCallOut
-          size="s"
-          title={`An error occurred, please try again later ("${importStatus.error}")`}
-          color="danger"
-          iconType="warning"
-        />
-      </EuiFormRow>
-    ) : undefined;
-
-  const serializedPolicy =
-    importType === 'text' ? (
+  const serializedPolicyInput =
+    importType === 'serialized' ? (
       <EuiFormRow
         label="Serialized policy"
         helpText={
@@ -122,29 +112,29 @@ export function ContentSecurityPolicyImportModal({ onClose }: ContentSecurityPol
       >
         <EuiTextArea
           fullWidth
-          value={textParameters.text}
+          value={serializedPolicy}
           required
           placeholder={"E.g, default-src 'none'; script-src 'self'"}
-          onChange={(e) => setTextParameters((parameters) => ({ ...parameters, text: e.target.value }))}
+          onChange={(e) => setSerializedPolicy(e.target.value)}
         />
       </EuiFormRow>
     ) : null;
 
   const urlInput =
-    importType === 'url' ? (
+    importType === 'remote' ? (
       <EuiFormRow label="URL" helpText="Web page URL to fetch the policy from" fullWidth>
         <EuiFieldText
           placeholder="E.g., https://secutils.dev"
-          value={urlParameters.url}
+          value={remotePolicy.url}
           type="url"
           required
-          onChange={(e) => setUrlParameters((parameters) => ({ ...parameters, url: e.target.value }))}
+          onChange={(e) => setRemotePolicy((parameters) => ({ ...parameters, url: e.target.value }))}
         />
       </EuiFormRow>
     ) : null;
 
   const sourceInput =
-    importType === 'url' ? (
+    importType === 'remote' ? (
       <EuiFormRow
         fullWidth
         label="Policy source"
@@ -165,22 +155,20 @@ export function ContentSecurityPolicyImportModal({ onClose }: ContentSecurityPol
             { value: 'reportOnlyHeader', text: 'HTTP header (report only)' },
             { value: 'meta', text: 'HTML meta tag' },
           ]}
-          value={urlParameters.source}
-          onChange={(e) =>
-            setUrlParameters((parameters) => ({ ...parameters, source: e.target.value as ImportSource }))
-          }
+          value={remotePolicy.source}
+          onChange={(e) => setRemotePolicy((parameters) => ({ ...parameters, source: e.target.value as ImportSource }))}
         />
       </EuiFormRow>
     ) : null;
 
   const followRedirectSwitch =
-    importType === 'url' ? (
+    importType === 'remote' ? (
       <EuiFormRow label="Follow redirects" fullWidth>
         <EuiSwitch
           showLabel={false}
           label="Follow redirects"
-          checked={urlParameters.followRedirects}
-          onChange={(e) => setUrlParameters((parameters) => ({ ...parameters, followRedirects: e.target.checked }))}
+          checked={remotePolicy.followRedirects}
+          onChange={(e) => setRemotePolicy((parameters) => ({ ...parameters, followRedirects: e.target.checked }))}
         />
       </EuiFormRow>
     ) : null;
@@ -209,26 +197,25 @@ export function ContentSecurityPolicyImportModal({ onClose }: ContentSecurityPol
             onImportPolicy();
           }}
         >
-          {importStatusCallout}
           <EuiTabs>
             <EuiTab
-              isSelected={importType === 'text'}
+              isSelected={importType === 'serialized'}
               title={'Import a new policy from a serialized policy string'}
-              onClick={() => setImportType('text')}
+              onClick={() => setImportType('serialized')}
             >
               Serialized policy
             </EuiTab>
             <EuiTab
-              isSelected={importType === 'url'}
+              isSelected={importType === 'remote'}
               title={'Import a new policy from external URL'}
-              onClick={() => setImportType('url')}
+              onClick={() => setImportType('remote')}
             >
               URL
             </EuiTab>
           </EuiTabs>
           <EuiSpacer />
           {policyNameInput}
-          {serializedPolicy}
+          {serializedPolicyInput}
           {urlInput}
           {followRedirectSwitch}
           {sourceInput}

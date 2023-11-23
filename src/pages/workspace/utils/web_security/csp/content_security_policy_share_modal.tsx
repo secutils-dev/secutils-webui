@@ -21,7 +21,7 @@ import axios from 'axios';
 
 import type { ContentSecurityPolicy } from './content_security_policy';
 import type { AsyncData } from '../../../../../model';
-import { getApiUrl, getErrorMessage, USER_SHARE_ID_HEADER_NAME } from '../../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage, USER_SHARE_ID_HEADER_NAME } from '../../../../../model';
 import type { UserShare } from '../../../../../model/user_share';
 import { useWorkspaceContext } from '../../../hooks';
 
@@ -30,9 +30,7 @@ export interface ContentSecurityPolicyShareModalProps {
   onClose: () => void;
 }
 
-type UserShareResponse = {
-  value: { value: { userShare?: UserShare } };
-};
+type GetContentSecurityPolicyResponse = { userShare?: UserShare };
 
 export function ContentSecurityPolicyShareModal({ policy, onClose }: ContentSecurityPolicyShareModalProps) {
   const { uiState } = useWorkspaceContext();
@@ -53,14 +51,14 @@ export function ContentSecurityPolicyShareModal({ policy, onClose }: ContentSecu
 
       setUserShare({ status: 'pending' });
 
-      const actionType = share ? 'shareContentSecurityPolicy' : 'unshareContentSecurityPolicy';
       axios
-        .post<UserShareResponse>(getApiUrl('/api/utils/action'), {
-          action: { type: 'webSecurity', value: { type: actionType, value: { policyName: policy.name } } },
-        })
+        .post<UserShare | null>(
+          getApiUrl(`/api/utils/web_security/csp/${encodeURIComponent(policy.id)}/${share ? 'share' : 'unshare'}`),
+          getApiRequestConfig(),
+        )
         .then(
-          (response) => {
-            setUserShare({ status: 'succeeded', data: share ? response.data.value.value.userShare ?? null : null });
+          (res) => {
+            setUserShare({ status: 'succeeded', data: share ? res.data ?? null : null });
           },
           (err: Error) => {
             setUserShare({ status: 'failed', error: getErrorMessage(err) });
@@ -76,15 +74,13 @@ export function ContentSecurityPolicyShareModal({ policy, onClose }: ContentSecu
     }
 
     axios
-      .post<UserShareResponse>(getApiUrl('/api/utils/action'), {
-        action: {
-          type: 'webSecurity',
-          value: { type: 'getContentSecurityPolicy', value: { policyName: policy.name } },
-        },
-      })
+      .get<GetContentSecurityPolicyResponse>(
+        getApiUrl(`/api/utils/web_security/csp/${encodeURIComponent(policy.id)}`),
+        getApiRequestConfig(),
+      )
       .then(
-        (response) => {
-          const userShare = response.data.value.value.userShare ?? null;
+        (res) => {
+          const userShare = res.data.userShare ?? null;
           setUserShare({ status: 'succeeded', data: userShare });
           setIsPolicyShared(!!userShare);
         },

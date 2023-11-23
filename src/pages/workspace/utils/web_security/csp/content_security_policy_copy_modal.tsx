@@ -28,10 +28,6 @@ export interface ContentSecurityPolicyCopyModalProps {
   onClose: () => void;
 }
 
-type SerializeResponse = {
-  value: { value: { policy: string; source: string } };
-};
-
 export function ContentSecurityPolicyCopyModal({ policy, onClose }: ContentSecurityPolicyCopyModalProps) {
   const { uiState } = useWorkspaceContext();
 
@@ -52,25 +48,17 @@ export function ContentSecurityPolicyCopyModal({ policy, onClose }: ContentSecur
 
       setSerializingStatus({ status: 'pending' });
 
+      const sourceToUse = currentSource ?? source;
       axios
-        .post<SerializeResponse>(
-          getApiUrl('/api/utils/action'),
-          {
-            action: {
-              type: 'webSecurity',
-              value: {
-                type: 'serializeContentSecurityPolicy',
-                value: { policyName: policy.name, source: currentSource ?? source },
-              },
-            },
-          },
+        .post<string>(
+          getApiUrl(`/api/utils/web_security/csp/${encodeURIComponent(policy.id)}/serialize`),
+          { source: sourceToUse },
           getApiRequestConfig(),
         )
         .then(
-          (response) => {
-            const data = response.data.value.value;
-            if (data.source === 'meta') {
-              setSnippet(`<meta http-equiv="Content-Security-Policy" content="${data.policy}">`);
+          (res) => {
+            if (sourceToUse === 'meta') {
+              setSnippet(`<meta http-equiv="Content-Security-Policy" content="${res.data}">`);
             } else {
               const endpointGroup = policy.directives.get('report-to')?.[0];
               const reportToHeader = endpointGroup
@@ -82,9 +70,7 @@ Reporting-Endpoints: default="https://secutils.dev/csp_reports/default
 
               setSnippet(
                 `${reportToHeader}## Policy header
-${data.source === 'enforcingHeader' ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only'}: ${
-                  data.policy
-                }`,
+${sourceToUse === 'enforcingHeader' ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only'}: ${res.data}`,
               );
             }
 
