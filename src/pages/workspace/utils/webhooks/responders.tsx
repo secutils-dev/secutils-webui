@@ -19,52 +19,62 @@ import {
   EuiToolTip,
 } from '@elastic/eui';
 import axios from 'axios';
+import { unix } from 'moment';
 
-import { AutoResponderRequestsTable } from './auto_responder_requests_table';
-import type { Responder, SerializedResponders } from './responder';
-import { deserializeHttpMethod, deserializeResponders, RESPONDERS_USER_DATA_NAMESPACE } from './responder';
-import { SaveAutoResponderFlyout } from './save_auto_responder_flyout';
-import { PageLoadingState } from '../../../../components';
-import { getApiUrl, getErrorMessage, getUserData } from '../../../../model';
+import type { Responder } from './responder';
+import { ResponderEditFlyout } from './responder_edit_flyout';
+import { ResponderRequestsTable } from './responder_requests_table';
+import { PageErrorState, PageLoadingState } from '../../../../components';
+import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
-export default function WebhooksResponders() {
+export default function Responders() {
   const { uiState, setTitleActions } = useWorkspaceContext();
 
+  const [responders, setResponders] = useState<AsyncData<Responder[]>>({ status: 'pending' });
+  const [responderToRemove, setResponderToRemove] = useState<Responder | null>(null);
+  const [responderToEdit, setResponderToEdit] = useState<Responder | null | undefined>(null);
+
+  const loadResponders = () => {
+    axios.get<Responder[]>(getApiUrl('/api/utils/webhooks/responders'), getApiRequestConfig()).then(
+      (res) => {
+        setResponders({ status: 'succeeded', data: res.data });
+        setTitleActions(res.data.length === 0 ? null : createButton);
+      },
+      (err: Error) => {
+        setResponders({ status: 'failed', error: getErrorMessage(err) });
+      },
+    );
+  };
+
+  useEffect(() => {
+    if (!uiState.synced) {
+      return;
+    }
+
+    loadResponders();
+  }, [uiState]);
+
   const getResponderUrl = useCallback(
-    (autoResponder: Responder) => {
+    (responder: Responder) => {
       if (!uiState.user) {
         return '-';
       }
 
       return uiState.webhookUrlType === 'path'
-        ? `${location.origin}/api/webhooks/${uiState.user.handle}${autoResponder.path}`
-        : `${location.protocol}//${uiState.user.handle}.webhooks.${location.host}${autoResponder.path}`;
+        ? `${location.origin}/api/webhooks/${uiState.user.handle}${responder.path}`
+        : `${location.protocol}//${uiState.user.handle}.webhooks.${location.host}${responder.path}`;
     },
     [uiState],
   );
 
-  const [autoResponders, setAutoResponders] = useState<Responder[] | null>(null);
-  const updateResponders = useCallback((updatedResponders: Responder[]) => {
-    setAutoResponders(updatedResponders);
-    setTitleActions(updatedResponders.length === 0 ? null : createButton);
-  }, []);
-
-  const [isEditFlyoutOpen, setIsEditFlyoutOpen] = useState<
-    { isOpen: false } | { isOpen: true; responderToEdit?: Responder }
-  >({ isOpen: false });
-  const onToggleEditFlyout = useCallback(
-    (updatedResponders?: Responder[]) => {
-      if (updatedResponders) {
-        updateResponders(updatedResponders);
-      }
-      setIsEditFlyoutOpen((currentValue) => ({ isOpen: !currentValue.isOpen }));
-    },
-    [updateResponders],
-  );
-
   const createButton = (
-    <EuiButton iconType={'plusInCircle'} title="Create new responder" fill onClick={() => onToggleEditFlyout()}>
+    <EuiButton
+      iconType={'plusInCircle'}
+      title="Create new responder"
+      fill
+      onClick={() => setResponderToEdit(undefined)}
+    >
       Create responder
     </EuiButton>
   );
@@ -80,51 +90,36 @@ export default function WebhooksResponders() {
     </EuiButtonEmpty>
   );
 
-  useEffect(() => {
-    if (!uiState.synced || !uiState.user) {
-      return;
-    }
-
-    getUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE).then(
-      (serializedResponders) => {
-        updateResponders(deserializeResponders(serializedResponders));
-      },
-      (err: Error) => {
-        console.error(`Failed to load auto responders: ${getErrorMessage(err)}`);
-        updateResponders([]);
-      },
-    );
-  }, [uiState, updateResponders]);
-
   const [itemIdToExpandedRowMap, setItemIdToExpandedRowMap] = useState<Record<string, ReactNode>>({});
-  const editFlyout = isEditFlyoutOpen.isOpen ? (
-    <SaveAutoResponderFlyout onClose={onToggleEditFlyout} autoResponder={isEditFlyoutOpen.responderToEdit} />
-  ) : null;
+  const editFlyout =
+    responderToEdit !== null ? (
+      <ResponderEditFlyout
+        onClose={(success) => {
+          if (success) {
+            loadResponders();
+          }
+          setResponderToEdit(null);
+        }}
+        responder={responderToEdit}
+      />
+    ) : null;
 
-  const onEditResponder = useCallback((responder: Responder) => {
-    setIsEditFlyoutOpen({ isOpen: true, responderToEdit: responder });
-  }, []);
-
-  const [responderToRemove, setResponderToRemove] = useState<Responder | null>(null);
   const removeConfirmModal = responderToRemove ? (
     <EuiConfirmModal
-      title={`Remove "${responderToRemove.path}"?`}
+      title={`Remove "${responderToRemove.name}"?`}
       onCancel={() => setResponderToRemove(null)}
       onConfirm={() => {
         setResponderToRemove(null);
 
         axios
-          .post(getApiUrl('/api/utils/action'), {
-            action: {
-              type: 'webhooks',
-              value: { type: 'removeAutoResponder', value: { responderPath: responderToRemove.path } },
-            },
-          })
-          .then(() => getUserData<SerializedResponders>(RESPONDERS_USER_DATA_NAMESPACE))
+          .delete(
+            getApiUrl(`/api/utils/webhooks/responders/${encodeURIComponent(responderToRemove?.id)}`),
+            getApiRequestConfig(),
+          )
           .then(
-            (items) => updateResponders(deserializeResponders(items)),
+            () => loadResponders(),
             (err: Error) => {
-              console.error(`Failed to remove auto responder: ${getErrorMessage(err)}`);
+              console.error(`Failed to remove responder: ${getErrorMessage(err)}`);
             },
           );
       }}
@@ -161,20 +156,36 @@ export default function WebhooksResponders() {
 
   const toggleResponderRequests = (responder: Responder) => {
     const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
-    if (itemIdToExpandedRowMapValues[responder.path]) {
-      delete itemIdToExpandedRowMapValues[responder.path];
+    if (itemIdToExpandedRowMapValues[responder.id]) {
+      delete itemIdToExpandedRowMapValues[responder.id];
     } else {
-      itemIdToExpandedRowMapValues[responder.path] = <AutoResponderRequestsTable responder={responder} />;
+      itemIdToExpandedRowMapValues[responder.id] = <ResponderRequestsTable responder={responder} />;
     }
     setItemIdToExpandedRowMap(itemIdToExpandedRowMapValues);
   };
 
-  if (!uiState.synced || !uiState.user || !autoResponders) {
+  if (responders.status === 'pending') {
     return <PageLoadingState />;
   }
 
+  if (responders.status === 'failed') {
+    return (
+      <PageErrorState
+        title="Cannot load responders"
+        content={
+          <p>
+            Cannot load responders
+            <br />
+            <br />
+            <strong>{responders.error}</strong>.
+          </p>
+        }
+      />
+    );
+  }
+
   let content;
-  if (autoResponders.length === 0) {
+  if (responders.data.length === 0) {
     content = (
       <EuiFlexGroup
         direction={'column'}
@@ -208,19 +219,32 @@ export default function WebhooksResponders() {
         allowNeutralSort={false}
         sorting={sorting}
         onTableChange={onTableChange}
-        items={autoResponders}
-        itemId={(autoResponder) => autoResponder.path}
+        items={responders.data}
+        itemId={(responder) => responder.id}
         isExpandable={true}
         itemIdToExpandedRowMap={itemIdToExpandedRowMap}
         tableLayout={'auto'}
         columns={[
+          {
+            name: (
+              <EuiToolTip content="Name of the responder">
+                <span>
+                  Name <EuiIcon size="s" color="subdued" type="questionInCircle" className="eui-alignTop" />
+                </span>
+              </EuiToolTip>
+            ),
+            field: 'name',
+            sortable: true,
+            textOnly: true,
+            render: (_, responder: Responder) => responder.name,
+          },
           {
             name: 'Method',
             field: 'method',
             width: '100px',
             render: (_, { method }: Responder) => (
               <EuiText>
-                <b>{deserializeHttpMethod(method)}</b>
+                <b>{method}</b>
               </EuiText>
             ),
             sortable: true,
@@ -230,9 +254,11 @@ export default function WebhooksResponders() {
             field: 'statusCode',
             sortable: true,
             width: '75px',
-            render: (_, { statusCode }: Responder) => (
-              <EuiText color={statusCode <= 200 ? '#5cb800' : statusCode < 400 ? '#aea300' : 'danger'}>
-                <b>{statusCode.toString().toUpperCase()}</b>
+            render: (_, { settings }: Responder) => (
+              <EuiText
+                color={settings.statusCode <= 200 ? '#5cb800' : settings.statusCode < 400 ? '#aea300' : 'danger'}
+              >
+                <b>{settings.statusCode.toString().toUpperCase()}</b>
               </EuiText>
             ),
           },
@@ -241,8 +267,8 @@ export default function WebhooksResponders() {
             field: 'body',
             width: '50px',
             align: 'center',
-            render: (_, { body }: Responder) => (
-              <EuiIcon color={body ? '#5cb800' : undefined} type={body ? 'dot' : 'minus'} />
+            render: (_, { settings }: Responder) => (
+              <EuiIcon color={settings.body ? '#5cb800' : undefined} type={settings.body ? 'dot' : 'minus'} />
             ),
           },
           {
@@ -250,10 +276,10 @@ export default function WebhooksResponders() {
             field: 'headers',
             width: '50px',
             align: 'center',
-            render: (_, { headers }: Responder) => (
+            render: (_, { settings }: Responder) => (
               <EuiIcon
-                color={headers && headers.length > 0 ? '#5cb800' : undefined}
-                type={headers && headers.length > 0 ? 'dot' : 'minus'}
+                color={settings.headers && settings.headers.length > 0 ? '#5cb800' : undefined}
+                type={settings.headers && settings.headers.length > 0 ? 'dot' : 'minus'}
               />
             ),
           },
@@ -267,8 +293,8 @@ export default function WebhooksResponders() {
             ),
             field: 'path',
             sortable: true,
-            render: (_, autoResponder: Responder) => {
-              const url = getResponderUrl(autoResponder);
+            render: (_, responder: Responder) => {
+              const url = getResponderUrl(responder);
               return url ? (
                 <EuiLink href={url} target="_blank">
                   {url}
@@ -277,6 +303,14 @@ export default function WebhooksResponders() {
                 <EuiIcon type="minus" />
               );
             },
+          },
+          {
+            name: 'Created',
+            field: 'createdAt',
+            width: '230px',
+            mobileOptions: { width: 'unset' },
+            sortable: (responder) => responder.createdAt,
+            render: (_, responder: Responder) => <EuiText>{unix(responder.createdAt).format('LL HH:mm')}</EuiText>,
           },
           {
             name: 'Actions',
@@ -288,7 +322,7 @@ export default function WebhooksResponders() {
                 description: 'Edit responder',
                 icon: 'pencil',
                 type: 'icon',
-                onClick: onEditResponder,
+                onClick: setResponderToEdit,
               },
               {
                 name: 'Remove responder',
@@ -313,8 +347,8 @@ export default function WebhooksResponders() {
               return (
                 <EuiButtonIcon
                   onClick={() => toggleResponderRequests(item)}
-                  aria-label={itemIdToExpandedRowMapValues[item.path] ? 'Hide requests' : 'Show requests'}
-                  iconType={itemIdToExpandedRowMapValues[item.path] ? 'arrowDown' : 'arrowRight'}
+                  aria-label={itemIdToExpandedRowMapValues[item.id] ? 'Hide requests' : 'Show requests'}
+                  iconType={itemIdToExpandedRowMapValues[item.id] ? 'arrowDown' : 'arrowRight'}
                 />
               );
             },

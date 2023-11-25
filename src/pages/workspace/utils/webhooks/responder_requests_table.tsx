@@ -6,20 +6,15 @@ import axios from 'axios';
 import { unix } from 'moment';
 
 import type { Responder } from './responder';
-import type { ResponderRequest, SerializedResponderRequest } from './responder_request';
-import { deserializeResponderRequest } from './responder_request';
+import type { ResponderRequest } from './responder_request';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import type { AsyncData } from '../../../../model';
-import { getApiUrl, getErrorMessage } from '../../../../model';
+import { getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
 
-export interface AutoResponderRequestsTableProps {
+export interface ResponderRequestsTableProps {
   responder: Responder;
 }
-
-type GetAutoRespondersRequestsResponse = {
-  value: { value: { requests: SerializedResponderRequest[] } };
-};
 
 const TEXT_DECODER = new TextDecoder();
 function binaryToText(binary: number[]) {
@@ -40,41 +35,37 @@ function guessBodyContentType(request: ResponderRequest) {
   return 'http';
 }
 
-export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsTableProps) {
+export function ResponderRequestsTable({ responder }: ResponderRequestsTableProps) {
   const { uiState } = useWorkspaceContext();
 
   const [requests, setRequests] = useState<AsyncData<ResponderRequest[]>>(
-    responder.trackingRequests > 0 ? { status: 'pending' } : { status: 'succeeded', data: [] },
+    responder.settings.requestsToTrack > 0 ? { status: 'pending' } : { status: 'succeeded', data: [] },
   );
   useEffect(() => {
     if (!uiState.synced || !uiState.user) {
       return;
     }
 
-    if (responder.trackingRequests === 0) {
+    if (responder.settings.requestsToTrack === 0) {
       setRequests({ status: 'succeeded', data: [] });
       return;
     }
 
     axios
-      .post<GetAutoRespondersRequestsResponse>(getApiUrl('/api/utils/action'), {
-        action: {
-          type: 'webhooks',
-          value: { type: 'getAutoRespondersRequests', value: { responderPath: responder.path } },
-        },
-      })
+      .post<ResponderRequest[]>(
+        getApiUrl(`/api/utils/webhooks/responders/${encodeURIComponent(responder.id)}/history`),
+        getApiRequestConfig(),
+      )
       .then(
         (response) => {
-          const data = response.data.value.value;
-          setRequests({
-            status: 'succeeded',
-            data: data.requests.map((serializedResponderRequest) =>
-              deserializeResponderRequest(serializedResponderRequest),
-            ),
-          });
+          setRequests({ status: 'succeeded', data: response.data });
         },
         (err: Error) => {
-          setRequests({ status: 'failed', error: getErrorMessage(err) });
+          setRequests((currentRevisions) => ({
+            status: 'failed',
+            error: getErrorMessage(err),
+            state: currentRevisions.state,
+          }));
         },
       );
   }, [uiState, responder]);
@@ -126,11 +117,11 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
 
       const request = requests.data[rowIndex];
       if (columnId === 'timestamp') {
-        return unix(request.timestamp).format('L HH:mm:ss');
+        return unix(request.createdAt).format('L HH:mm:ss');
       }
 
       if (columnId === 'address') {
-        return request.address ?? '-';
+        return request.clientAddress ?? '-';
       }
 
       if (columnId === 'method') {
@@ -175,7 +166,7 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
   );
 
   if (requests.status === 'pending') {
-    return <PageLoadingState title={`Loading requests for "${responder.path}"…`} />;
+    return <PageLoadingState title={`Loading requests for "${responder.name}" (${responder.path})…`} />;
   }
 
   if (requests.status === 'failed') {
@@ -184,7 +175,7 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
         title="Cannot load requests"
         content={
           <p>
-            Cannot load recorded requests for <strong>{responder.path}</strong> auto responder.
+            Cannot load recorded requests for <strong>{responder.name}</strong> responder.
           </p>
         }
       />
@@ -192,7 +183,7 @@ export function AutoResponderRequestsTable({ responder }: AutoResponderRequestsT
   }
 
   if (requests.data.length === 0) {
-    const tracksRequests = responder.trackingRequests > 0;
+    const tracksRequests = responder.settings.requestsToTrack > 0;
     return (
       <EuiFlexGroup
         direction={'column'}

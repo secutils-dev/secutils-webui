@@ -18,7 +18,7 @@ export const UTIL_HANDLES = Object.freeze({
 
 export const UtilsComponents = new Map<string, LazyExoticComponent<ComponentType>>([
   [UTIL_HANDLES.home, lazy(() => import('./home/home'))],
-  [UTIL_HANDLES.webhooksResponders, lazy(() => import('./webhooks/webhooks_responders'))],
+  [UTIL_HANDLES.webhooksResponders, lazy(() => import('./webhooks/responders'))],
   [
     UTIL_HANDLES.certificatesCertificateTemplates,
     lazy(() => import('./certificates/certificates_certificate_templates')),
