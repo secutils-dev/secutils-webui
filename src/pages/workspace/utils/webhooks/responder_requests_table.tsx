@@ -1,7 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { EuiDataGridCellValueElementProps, EuiDataGridColumn, Pagination } from '@elastic/eui';
-import { EuiCodeBlock, EuiDataGrid, EuiEmptyPrompt, EuiFlexGroup, EuiFlexItem, EuiIcon } from '@elastic/eui';
+import {
+  EuiButton,
+  EuiCodeBlock,
+  EuiConfirmModal,
+  EuiDataGrid,
+  EuiEmptyPrompt,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiFormRow,
+  EuiIcon,
+  EuiPanel,
+  EuiSpacer,
+} from '@elastic/eui';
 import axios from 'axios';
 import { unix } from 'moment';
 
@@ -36,7 +48,7 @@ function guessBodyContentType(request: ResponderRequest) {
 }
 
 export function ResponderRequestsTable({ responder }: ResponderRequestsTableProps) {
-  const { uiState } = useWorkspaceContext();
+  const { uiState, addToast } = useWorkspaceContext();
 
   const [requests, setRequests] = useState<AsyncData<ResponderRequest[]>>(
     responder.settings.requestsToTrack > 0 ? { status: 'pending' } : { status: 'succeeded', data: [] },
@@ -108,6 +120,11 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
     (pageIndex: number) => setPagination({ ...pagination, pageIndex }),
     [setPagination, pagination],
   );
+
+  const [clearHistoryStatus, setClearHistoryStatus] = useState<{ isModalVisible: boolean; isInProgress: boolean }>({
+    isInProgress: false,
+    isModalVisible: false,
+  });
 
   const renderCellValue = useCallback(
     ({ rowIndex, columnId, isDetails }: EuiDataGridCellValueElementProps) => {
@@ -210,26 +227,100 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
     );
   }
 
+  const clearConfirmModal = clearHistoryStatus.isModalVisible ? (
+    <EuiConfirmModal
+      title={`Clear responder history?`}
+      onCancel={() => setClearHistoryStatus({ isModalVisible: false, isInProgress: false })}
+      isLoading={clearHistoryStatus.isInProgress}
+      onConfirm={() => {
+        setClearHistoryStatus((currentStatus) => ({ ...currentStatus, isInProgress: true }));
+
+        axios
+          .post(
+            getApiUrl(`/api/utils/webhooks/responders/${encodeURIComponent(responder.id)}/clear`),
+            undefined,
+            getApiRequestConfig(),
+          )
+          .then(
+            () => {
+              setRequests({ status: 'succeeded', data: [] });
+
+              addToast({
+                id: `success-clear-responder-history-${responder.name}`,
+                iconType: 'check',
+                color: 'success',
+                title: `Successfully cleared request history for "${responder.name}" responder`,
+              });
+
+              setClearHistoryStatus({ isModalVisible: false, isInProgress: false });
+            },
+            () => {
+              addToast({
+                id: `failed-clear-responder-history-${responder.name}`,
+                iconType: 'warning',
+                color: 'danger',
+                title: `Unable to clear request history for "${responder.name}" responder, please try again later`,
+              });
+              setClearHistoryStatus((currentStatus) => ({ ...currentStatus, isInProgress: false }));
+            },
+          );
+      }}
+      cancelButtonText="Cancel"
+      confirmButtonText="Clear"
+      buttonColor="danger"
+    >
+      The request history for{' '}
+      <b>
+        {responder.name} ({responder.path})
+      </b>{' '}
+      will be cleared. Are you sure you want to proceed?
+    </EuiConfirmModal>
+  ) : null;
+
+  const shouldDisplayControlPanel = requests.status === 'succeeded' && requests.data.length > 0;
+  const controlPanel = shouldDisplayControlPanel ? (
+    <EuiFlexItem>
+      <EuiSpacer size={'m'} />
+      <EuiFlexGroup justifyContent={'flexEnd'}>
+        <EuiFlexItem grow={false}>
+          <EuiFormRow>
+            <EuiButton
+              iconType="cross"
+              color={'danger'}
+              onClick={() => setClearHistoryStatus({ isModalVisible: true, isInProgress: false })}
+            >
+              Clear
+            </EuiButton>
+          </EuiFormRow>
+        </EuiFlexItem>
+      </EuiFlexGroup>
+    </EuiFlexItem>
+  ) : null;
+
   return (
     <EuiFlexGroup direction={'column'} style={{ height: '100%' }}>
+      {controlPanel}
       <EuiFlexItem>
-        <EuiDataGrid
-          width="100%"
-          aria-label="Requests"
-          columns={columns}
-          columnVisibility={{ visibleColumns, setVisibleColumns }}
-          rowCount={requests.data.length}
-          renderCellValue={renderCellValue}
-          inMemory={{ level: 'sorting' }}
-          sorting={{ columns: sortingColumns, onSort }}
-          pagination={{
-            ...pagination,
-            onChangeItemsPerPage: onChangeItemsPerPage,
-            onChangePage: onChangePage,
-          }}
-          gridStyle={{ border: 'all', fontSize: 's', stripes: true }}
-          toolbarVisibility
-        />
+        <EuiPanel hasShadow={false} hasBorder={true}>
+          <EuiDataGrid
+            width="100%"
+            aria-label="Requests"
+            columns={columns}
+            columnVisibility={{ visibleColumns, setVisibleColumns }}
+            rowCount={requests.data.length}
+            renderCellValue={renderCellValue}
+            inMemory={{ level: 'sorting' }}
+            sorting={{ columns: sortingColumns, onSort }}
+            pagination={{
+              ...pagination,
+              onChangeItemsPerPage: onChangeItemsPerPage,
+              onChangePage: onChangePage,
+            }}
+            gridStyle={{ border: 'all', fontSize: 's', stripes: true }}
+            toolbarVisibility
+          />
+        </EuiPanel>
+        {clearConfirmModal}
       </EuiFlexItem>
     </EuiFlexGroup>
   );
