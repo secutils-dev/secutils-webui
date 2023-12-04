@@ -102,8 +102,8 @@ export function CertificateTemplateForm({ template, onChange, isReadOnly }: Cert
         keyType === 'ed25519'
           ? { keyType }
           : keyType === 'ecdsa'
-          ? { keyType, curve: 'secp256r1' }
-          : { keyType, keySize: '2048' },
+            ? { keyType, curve: 'secp256r1' }
+            : { keyType, keySize: '2048' },
       signatureAlgorithm: newSignatureAlgorithms[0].value,
     });
   };
