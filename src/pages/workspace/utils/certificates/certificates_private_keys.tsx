@@ -246,7 +246,7 @@ export default function CertificatesPrivateKeys() {
               field: 'name',
               textOnly: true,
               sortable: true,
-              render: (_, privateKey: PrivateKey) => <EuiText>{privateKey.name}</EuiText>,
+              render: (_, privateKey: PrivateKey) => privateKey.name,
             },
             {
               name: (
@@ -261,7 +261,7 @@ export default function CertificatesPrivateKeys() {
               sortable: true,
               width: '400px',
               mobileOptions: { width: 'unset' },
-              render: (_, privateKey: PrivateKey) => <EuiText>{privateKeyAlgString(privateKey.alg)}</EuiText>,
+              render: (_, privateKey: PrivateKey) => privateKeyAlgString(privateKey.alg),
             },
             {
               name: (
@@ -276,7 +276,7 @@ export default function CertificatesPrivateKeys() {
               sortable: true,
               width: '110px',
               render: (_, privateKey: PrivateKey) => (
-                <EuiText color={privateKey.encrypted ? 'success' : 'danger'}>
+                <EuiText size={'s'} color={privateKey.encrypted ? 'success' : 'danger'}>
                   {privateKey.encrypted ? 'Passphrase' : <b>None</b>}
                 </EuiText>
               ),
@@ -284,10 +284,10 @@ export default function CertificatesPrivateKeys() {
             {
               name: 'Created',
               field: 'createdAt',
-              width: '230px',
+              width: '160px',
               mobileOptions: { width: 'unset' },
               sortable: (privateKey) => privateKey.createdAt,
-              render: (_, privateKey: PrivateKey) => <EuiText>{unix(privateKey.createdAt).format('LL HH:mm')}</EuiText>,
+              render: (_, privateKey: PrivateKey) => unix(privateKey.createdAt).format('ll HH:mm'),
             },
             {
               name: 'Actions',

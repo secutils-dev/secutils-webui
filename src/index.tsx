@@ -16,6 +16,7 @@ import { icon as EuiIconArrowUp } from '@elastic/eui/es/components/icon/assets/a
 import { icon as EuiIconArrowEnd } from '@elastic/eui/es/components/icon/assets/arrowEnd';
 import { icon as EuiIconArrowStart } from '@elastic/eui/es/components/icon/assets/arrowStart';
 import { icon as EuiIconBoxesHorizontal } from '@elastic/eui/es/components/icon/assets/boxes_horizontal';
+import { icon as EuiIconBoxesVertical } from '@elastic/eui/es/components/icon/assets/boxes_vertical';
 import { icon as EuiIconCalendar } from '@elastic/eui/es/components/icon/assets/calendar';
 import { icon as EuiIconCheck } from '@elastic/eui/es/components/icon/assets/check';
 import { icon as EuiIconCheer } from '@elastic/eui/es/components/icon/assets/cheer';
@@ -93,6 +94,7 @@ appendIconComponentCache({
   arrowStart: EuiIconArrowStart,
   arrowEnd: EuiIconArrowEnd,
   boxesHorizontal: EuiIconBoxesHorizontal,
+  boxesVertical: EuiIconBoxesVertical,
   calendar: EuiIconCalendar,
   check: EuiIconCheck,
   cheer: EuiIconCheer,

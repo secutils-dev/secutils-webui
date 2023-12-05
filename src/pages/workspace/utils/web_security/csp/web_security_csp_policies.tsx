@@ -11,7 +11,6 @@ import {
   EuiIcon,
   EuiInMemoryTable,
   EuiSpacer,
-  EuiText,
   EuiToolTip,
 } from '@elastic/eui';
 import axios from 'axios';
@@ -256,7 +255,7 @@ export default function WebSecurityContentSecurityPolicies() {
             field: 'name',
             sortable: true,
             textOnly: true,
-            render: (_, item: ContentSecurityPolicy) => <EuiText>{item.name}</EuiText>,
+            render: (_, item: ContentSecurityPolicy) => item.name,
           },
           {
             name: (
@@ -267,17 +266,15 @@ export default function WebSecurityContentSecurityPolicies() {
               </EuiToolTip>
             ),
             field: 'directives',
-            render: (_, policy: ContentSecurityPolicy) => <EuiText>{getContentSecurityPolicyString(policy)}</EuiText>,
+            render: (_, policy: ContentSecurityPolicy) => getContentSecurityPolicyString(policy),
           },
           {
             name: 'Created',
             field: 'createdAt',
-            width: '230px',
+            width: '160px',
             mobileOptions: { width: 'unset' },
             sortable: (policy) => policy.createdAt,
-            render: (_, policy: ContentSecurityPolicy) => (
-              <EuiText>{unix(policy.createdAt).format('LL HH:mm')}</EuiText>
-            ),
+            render: (_, policy: ContentSecurityPolicy) => unix(policy.createdAt).format('ll HH:mm'),
           },
           {
             name: 'Actions',

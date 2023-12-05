@@ -242,11 +242,7 @@ export default function Responders() {
             name: 'Method',
             field: 'method',
             width: '100px',
-            render: (_, { method }: Responder) => (
-              <EuiText>
-                <b>{method}</b>
-              </EuiText>
-            ),
+            render: (_, { method }: Responder) => <b>{method}</b>,
             sortable: true,
           },
           {
@@ -256,6 +252,7 @@ export default function Responders() {
             width: '75px',
             render: (_, { settings }: Responder) => (
               <EuiText
+                size={'s'}
                 color={settings.statusCode <= 200 ? '#5cb800' : settings.statusCode < 400 ? '#aea300' : 'danger'}
               >
                 <b>{settings.statusCode.toString().toUpperCase()}</b>
@@ -307,10 +304,10 @@ export default function Responders() {
           {
             name: 'Created',
             field: 'createdAt',
-            width: '230px',
+            width: '160px',
             mobileOptions: { width: 'unset' },
             sortable: (responder) => responder.createdAt,
-            render: (_, responder: Responder) => <EuiText>{unix(responder.createdAt).format('LL HH:mm')}</EuiText>,
+            render: (_, responder: Responder) => unix(responder.createdAt).format('ll HH:mm'),
           },
           {
             name: 'Actions',

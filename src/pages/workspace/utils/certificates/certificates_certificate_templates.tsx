@@ -13,7 +13,6 @@ import {
   EuiInMemoryTable,
   EuiLink,
   EuiSpacer,
-  EuiText,
   EuiToolTip,
 } from '@elastic/eui';
 import axios from 'axios';
@@ -250,7 +249,7 @@ export default function CertificatesCertificateTemplates() {
               field: 'name',
               textOnly: true,
               sortable: true,
-              render: (_, template) => <EuiText>{template.name}</EuiText>,
+              render: (_, template) => template.name,
             },
             {
               name: (
@@ -263,36 +262,36 @@ export default function CertificatesCertificateTemplates() {
               field: 'isCa',
               textOnly: true,
               sortable: true,
-              render: (_, template) => <EuiText>{certificateTypeString(template.attributes)}</EuiText>,
+              render: (_, template) => certificateTypeString(template.attributes),
             },
             {
               name: 'Distinguished name (DN)',
               field: 'commonName',
-              render: (_, template) => <EuiText>{getDistinguishedNameString(template.attributes)}</EuiText>,
+              render: (_, template) => getDistinguishedNameString(template.attributes),
             },
             {
               name: 'Not valid before',
               field: 'notValidBefore',
               sortable: true,
-              render: (_, template) => <EuiText>{unix(template.attributes.notValidBefore).format('LL HH:mm')}</EuiText>,
+              render: (_, template) => unix(template.attributes.notValidBefore).format('ll HH:mm'),
             },
             {
               name: 'Not valid after',
               field: 'notValidAfter',
               sortable: true,
-              render: (_, template) => <EuiText>{unix(template.attributes.notValidAfter).format('LL HH:mm')}</EuiText>,
+              render: (_, template) => unix(template.attributes.notValidAfter).format('ll HH:mm'),
             },
             {
               name: 'Key algorithm',
               field: 'keyAlgorithm',
               mobileOptions: { only: true },
-              render: (_, template) => <EuiText>{privateKeyAlgString(template.attributes.keyAlgorithm)}</EuiText>,
+              render: (_, template) => privateKeyAlgString(template.attributes.keyAlgorithm),
             },
             {
               name: 'Signature algorithm',
               field: 'signatureAlgorithm',
               mobileOptions: { only: true },
-              render: (_, template) => <EuiText>{signatureAlgorithmString(template.attributes)}</EuiText>,
+              render: (_, template) => signatureAlgorithmString(template.attributes),
             },
             {
               name: 'Actions',

@@ -15,7 +15,6 @@ import {
   EuiLink,
   EuiScreenReaderOnly,
   EuiSpacer,
-  EuiText,
   EuiToolTip,
 } from '@elastic/eui';
 import axios from 'axios';
@@ -255,10 +254,10 @@ export default function WebPageResourcesTrackers() {
           {
             name: 'Created',
             field: 'createdAt',
-            width: '230px',
+            width: '160px',
             mobileOptions: { width: 'unset' },
             sortable: (tracker) => tracker.createdAt,
-            render: (_, tracker: WebPageTracker) => <EuiText>{unix(tracker.createdAt).format('LL HH:mm')}</EuiText>,
+            render: (_, tracker: WebPageTracker) => unix(tracker.createdAt).format('ll HH:mm'),
           },
           {
             name: 'Actions',
