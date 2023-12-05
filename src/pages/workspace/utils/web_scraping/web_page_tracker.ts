@@ -10,6 +10,19 @@ export interface WebPageTracker<S = unknown> {
     scripts?: S;
     headers?: Record<string, string>;
   };
+  jobConfig?: SchedulerJobConfig;
+}
+
+export interface SchedulerJobConfig {
+  schedule: string;
+  retryStrategy?: SchedulerJobRetryStrategy;
+  notifications: boolean;
+}
+
+export interface SchedulerJobRetryStrategy {
+  type: 'constant';
+  interval: number;
+  maxAttempts: number;
 }
 
 export interface WebPageResourcesTracker

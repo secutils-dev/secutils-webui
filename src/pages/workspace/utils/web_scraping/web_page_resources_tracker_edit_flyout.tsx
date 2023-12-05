@@ -9,14 +9,15 @@ import {
   EuiForm,
   EuiFormRow,
   EuiLink,
+  EuiRange,
   EuiSelect,
   EuiSwitch,
 } from '@elastic/eui';
-import type { EuiSwitchEvent } from '@elastic/eui';
 import axios from 'axios';
 
-import { WEB_PAGE_TRACKER_SCHEDULES } from './consts';
-import type { WebPageResourcesTracker } from './web_page_tracker';
+import { getDefaultRetryStrategy, WEB_PAGE_TRACKER_SCHEDULES } from './consts';
+import type { SchedulerJobConfig, WebPageResourcesTracker } from './web_page_tracker';
+import { WebPageTrackerRetryStrategy } from './web_page_tracker_retry_strategy';
 import WebPageTrackerScriptEditor from './web_page_tracker_script_editor';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { isValidURL } from '../../../../tools/url';
@@ -45,10 +46,7 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
     setUrl(e.target.value);
   }, []);
 
-  const [sendNotification, setSendNotification] = useState<boolean>(true);
-  const onSendNotificationChange = useCallback((e: EuiSwitchEvent) => {
-    setSendNotification(e.target.checked);
-  }, []);
+  const [jobConfig, setJobConfig] = useState<SchedulerJobConfig | null>(tracker?.jobConfig ?? null);
 
   const [delay, setDelay] = useState<number>(tracker?.settings.delay ?? 5000);
   const onDelayChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -62,11 +60,6 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
     invalid: false,
   });
 
-  const [schedule, setSchedule] = useState<string>(tracker?.settings.schedule ?? '@');
-  const onScheduleChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-    setSchedule(e.target.value);
-  }, []);
-
   const [resourceFilterMapScript, setResourceFilterMapScript] = useState<string | undefined>(
     tracker?.settings.scripts?.resourceFilterMap,
   );
@@ -75,9 +68,6 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
   }, []);
 
   const [revisions, setRevisions] = useState<number>(tracker?.settings.revisions ?? 3);
-  const onRevisionsChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setRevisions(+e.target.value);
-  }, []);
 
   const [updatingStatus, setUpdatingStatus] = useState<AsyncData<void>>();
   const onSave = useCallback(() => {
@@ -93,7 +83,6 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
       settings: {
         revisions,
         delay,
-        schedule: schedule === '@' ? undefined : schedule,
         scripts: resourceFilterMapScript ? { resourceFilterMap: resourceFilterMapScript } : undefined,
         headers:
           headers.values.length > 0
@@ -107,8 +96,8 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
                 }),
               )
             : undefined,
-        enableNotifications: sendNotification,
       },
+      jobConfig: jobConfig ? jobConfig : tracker?.jobConfig ? null : undefined,
     };
 
     const [requestPromise, successMessage, errorMessage] = tracker
@@ -151,7 +140,21 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
         });
       },
     );
-  }, [name, url, delay, revisions, schedule, resourceFilterMapScript, headers, sendNotification, updatingStatus]);
+  }, [name, url, delay, revisions, resourceFilterMapScript, headers, jobConfig, tracker, updatingStatus]);
+
+  const notifications = jobConfig ? (
+    <EuiFormRow
+      label={'Notifications'}
+      helpText={'Send an email notification when a change is detected or a check fails.'}
+    >
+      <EuiSwitch
+        showLabel={false}
+        label="Notification on change"
+        checked={jobConfig.notifications}
+        onChange={(e) => setJobConfig({ ...jobConfig, notifications: e.target.checked })}
+      />
+    </EuiFormRow>
+  ) : null;
 
   return (
     <EditorFlyout
@@ -170,7 +173,15 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
             <EuiFieldText value={url} required type={'url'} onChange={onUrlChange} />
           </EuiFormRow>
           <EuiFormRow label="Revisions" helpText="Tracker will persist only specified number of revisions">
-            <EuiFieldNumber fullWidth min={0} max={10} step={1} value={revisions} onChange={onRevisionsChange} />
+            <EuiRange
+              min={0}
+              max={10}
+              step={1}
+              value={revisions}
+              fullWidth
+              onChange={(e) => setRevisions(+e.currentTarget.value)}
+              showTicks
+            />
           </EuiFormRow>
           <EuiFormRow
             label="Delay"
@@ -216,20 +227,41 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
             label="Frequency"
             helpText="How often web page should be checked for changes. By default, automatic checks are disabled and can be initiated manually"
           >
-            <EuiSelect options={WEB_PAGE_TRACKER_SCHEDULES} value={schedule} onChange={onScheduleChange} />
-          </EuiFormRow>
-          <EuiFormRow
-            label={'Notifications'}
-            helpText={"Send notification to user's primary email when a change is detected"}
-          >
-            <EuiSwitch
-              showLabel={false}
-              label="Notification on change"
-              checked={sendNotification}
-              onChange={onSendNotificationChange}
+            <EuiSelect
+              options={WEB_PAGE_TRACKER_SCHEDULES}
+              value={jobConfig?.schedule ?? '@'}
+              onChange={(e) =>
+                setJobConfig(
+                  e.target.value === '@'
+                    ? null
+                    : {
+                        ...(jobConfig ?? {
+                          retryStrategy: getDefaultRetryStrategy(e.target.value),
+                          notifications: true,
+                        }),
+                        schedule: e.target.value,
+                      },
+                )
+              }
             />
           </EuiFormRow>
+          {notifications}
         </EuiDescribedFormGroup>
+        {jobConfig ? (
+          <EuiDescribedFormGroup
+            title={<h3>Retries</h3>}
+            description={'Properties defining how failed automatic checks should be retried'}
+          >
+            <WebPageTrackerRetryStrategy
+              jobConfig={jobConfig}
+              onChange={(newStrategy) => {
+                if (jobConfig) {
+                  setJobConfig({ ...jobConfig, retryStrategy: newStrategy ?? undefined });
+                }
+              }}
+            />
+          </EuiDescribedFormGroup>
+        ) : null}
         <EuiDescribedFormGroup
           title={<h3>Scripts</h3>}
           description={
