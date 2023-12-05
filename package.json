@@ -24,7 +24,7 @@
   "dependencies": {
     "@babel/runtime": "^7.23.5",
     "@elastic/datemath": "^5.0.3",
-    "@elastic/eui": "^91.1.0",
+    "@elastic/eui": "^91.2.0",
     "@emotion/css": "^11.11.2",
     "@emotion/react": "^11.11.1",
     "@monaco-editor/react": "^4.6.0",
@@ -50,7 +50,7 @@
     "@parcel/transformer-typescript-tsc": "^2.10.3",
     "@parcel/transformer-webmanifest": "^2.10.3",
     "@parcel/validator-typescript": "^2.10.3",
-    "@types/react": "^18.2.41",
+    "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
     "@typescript-eslint/parser": "^6.13.2",
