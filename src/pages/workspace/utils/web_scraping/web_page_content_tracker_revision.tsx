@@ -11,7 +11,7 @@ export function WebPageContentTrackerRevision({ revision }: WebPageContentTracke
   if (parsedData && typeof parsedData === 'object') {
     return (
       <EuiCodeBlock fontSize={'l'} language={'json'} isCopyable>
-        {revision.data}
+        {JSON.stringify(parsedData, null, 2)}
       </EuiCodeBlock>
     );
   }
