@@ -12,7 +12,6 @@ import {
   EuiFormRow,
   EuiIcon,
   EuiPanel,
-  EuiSpacer,
 } from '@elastic/eui';
 import axios from 'axios';
 import { unix } from 'moment';
@@ -280,7 +279,6 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
   const shouldDisplayControlPanel = requests.status === 'succeeded' && requests.data.length > 0;
   const controlPanel = shouldDisplayControlPanel ? (
     <EuiFlexItem>
-      <EuiSpacer size={'m'} />
       <EuiFlexGroup justifyContent={'flexEnd'}>
         <EuiFlexItem grow={false}>
           <EuiFormRow>
@@ -298,7 +296,7 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
   ) : null;
 
   return (
-    <EuiFlexGroup direction={'column'} style={{ height: '100%' }}>
+    <EuiFlexGroup direction={'column'} style={{ height: '100%' }} gutterSize={'s'}>
       {controlPanel}
       <EuiFlexItem>
         <EuiPanel hasShadow={false} hasBorder={true}>

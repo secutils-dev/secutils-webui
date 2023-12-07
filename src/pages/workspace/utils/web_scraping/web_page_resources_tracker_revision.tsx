@@ -155,7 +155,7 @@ export function WebPageResourcesTrackerRevision({ revision }: WebPageResourcesTr
         <EuiFlexGroup>
           <EuiFlexItem>
             <EuiStat
-              title={<b>{unix(revision.createdAt).format('LL HH:mm:ss')}</b>}
+              title={<b>{unix(revision.createdAt).format('ll HH:mm:ss')}</b>}
               titleSize={'xs'}
               description={'Last updated'}
             />

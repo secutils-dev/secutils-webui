@@ -7,12 +7,12 @@ import {
   EuiEmptyPrompt,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiFormRow,
   EuiIcon,
   EuiPanel,
   EuiSelect,
-  EuiSpacer,
+  EuiSwitch,
 } from '@elastic/eui';
+import { css } from '@emotion/react';
 import axios from 'axios';
 import { unix } from 'moment';
 
@@ -25,17 +25,22 @@ import { useWorkspaceContext } from '../../hooks';
 export interface WebPageTrackerHistoryProps {
   tracker: WebPageTracker;
   kind: 'content' | 'resources';
-  children: (revision: WebPageDataRevision) => ReactNode;
+  children: (
+    revision: WebPageDataRevision,
+    previousRevision: WebPageDataRevision | undefined,
+    showDiff: boolean,
+  ) => ReactNode;
 }
 
 export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTrackerHistoryProps) {
   const { uiState, addToast } = useWorkspaceContext();
 
+  const [showDiff, setShowDiff] = useState<boolean>(true);
   const [revisions, setRevisions] = useState<AsyncData<WebPageContentRevision[], WebPageContentRevision[] | null>>({
     status: 'pending',
     state: null,
   });
-  const [revision, setRevision] = useState<WebPageContentRevision | null>(null);
+  const [revisionIndex, setRevisionIndex] = useState<number | null>(null);
   const fetchHistory = useCallback(
     ({ refresh }: { refresh: boolean } = { refresh: false }) => {
       setRevisions((currentRevisions) =>
@@ -46,13 +51,17 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
       axios
         .post<WebPageContentRevision[]>(
           getApiUrl(`/api/utils/web_scraping/${kind}/${encodeURIComponent(tracker.id)}/history`),
-          { refresh, calculateDiff: true },
+          { refresh, calculateDiff: showDiff },
           getApiRequestConfig(),
         )
         .then(
           (response) => {
             setRevisions({ status: 'succeeded', data: response.data });
-            setRevision(response.data.length > 0 ? response.data[response.data.length - 1] : null);
+
+            // Reset revision index only if it's not set or doesn't exist in the new data.
+            if (revisionIndex === null || revisionIndex >= response.data.length) {
+              setRevisionIndex(response.data.length > 0 ? response.data.length - 1 : null);
+            }
           },
           (err: Error) => {
             setRevisions((currentRevisions) => ({
@@ -60,11 +69,11 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
               error: getErrorMessage(err),
               state: currentRevisions.state,
             }));
-            setRevision(null);
+            setRevisionIndex(null);
           },
         );
     },
-    [getApiUrl],
+    [getApiUrl, revisionIndex, showDiff],
   );
 
   useEffect(() => {
@@ -73,12 +82,12 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
     }
 
     fetchHistory();
-  }, [uiState, tracker]);
+  }, [uiState, tracker, showDiff]);
 
   const onRevisionChange = useCallback(
     (revisionId: string) => {
       if (revisions.status === 'succeeded') {
-        setRevision(revisions.data?.find((revision) => revision.id === revisionId) ?? null);
+        setRevisionIndex(revisions.data?.findIndex((revision) => revision.id === revisionId) ?? null);
       }
     },
     [revisions],
@@ -106,7 +115,7 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
           .then(
             () => {
               setRevisions({ status: 'succeeded', data: [] });
-              setRevision(null);
+              setRevisionIndex(null);
 
               addToast({
                 id: `success-clear-tracker-history-${tracker.name}`,
@@ -157,8 +166,12 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
         }
       />
     );
-  } else if (revision) {
-    history = children(revision);
+  } else if (revisionIndex !== null) {
+    history = children(
+      revisions.data[revisionIndex],
+      revisionIndex > 0 ? revisions.data[revisionIndex - 1] : undefined,
+      showDiff,
+    );
   } else {
     const updateButton = (
       <EuiButton
@@ -203,44 +216,56 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
     (revisions.status === 'succeeded' && revisions.data.length > 0) || (revisions.state?.length ?? 0 > 0);
   const controlPanel = shouldDisplayControlPanel ? (
     <EuiFlexItem>
-      <EuiSpacer size={'m'} />
-      <EuiFlexGroup>
-        <EuiFlexItem>
-          <EuiFormRow>
-            <EuiSelect
-              options={revisionsToSelect.map((rev) => ({
-                value: rev.id,
-                text: unix(rev.createdAt).format('LL HH:mm:ss'),
-              }))}
-              disabled={revisions.status === 'pending'}
-              value={revision?.id}
-              onChange={(e) => onRevisionChange(e.target.value)}
-            />
-          </EuiFormRow>
+      <EuiFlexGroup alignItems={'center'}>
+        <EuiFlexItem
+          css={css`
+            min-width: 200px;
+          `}
+        >
+          <EuiSelect
+            options={revisionsToSelect.map((rev) => ({
+              value: rev.id,
+              text: unix(rev.createdAt).format('ll HH:mm:ss'),
+            }))}
+            disabled={revisions.status === 'pending'}
+            value={
+              revisionsToSelect.length > 0 && revisionIndex !== null ? revisionsToSelect[revisionIndex].id : undefined
+            }
+            onChange={(e) => onRevisionChange(e.target.value)}
+          />
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
-          <EuiFormRow isDisabled={revisions.status === 'pending'}>
-            <EuiButton iconType="refresh" onClick={() => fetchHistory({ refresh: true })}>
-              Update
-            </EuiButton>
-          </EuiFormRow>
+          <EuiSwitch
+            label="Show diff"
+            disabled={revisions.status === 'pending' || (revisions.status === 'succeeded' && revisions.data.length < 2)}
+            checked={showDiff}
+            onChange={(e) => setShowDiff(e.target.checked)}
+          />
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
-          <EuiFormRow isDisabled={revisions.status === 'pending'}>
-            <EuiButton
-              iconType="cross"
-              color={'danger'}
-              onClick={() => setClearHistoryStatus({ isModalVisible: true, isInProgress: false })}
-            >
-              Clear
-            </EuiButton>
-          </EuiFormRow>
+          <EuiButton
+            iconType="refresh"
+            isDisabled={revisions.status === 'pending'}
+            onClick={() => fetchHistory({ refresh: true })}
+          >
+            Update
+          </EuiButton>
+        </EuiFlexItem>
+        <EuiFlexItem grow={false}>
+          <EuiButton
+            iconType="cross"
+            color={'danger'}
+            isDisabled={revisions.status === 'pending'}
+            onClick={() => setClearHistoryStatus({ isModalVisible: true, isInProgress: false })}
+          >
+            Clear
+          </EuiButton>
         </EuiFlexItem>
       </EuiFlexGroup>
     </EuiFlexItem>
   ) : null;
   return (
-    <EuiFlexGroup direction={'column'} style={{ height: '100%' }}>
+    <EuiFlexGroup direction={'column'} style={{ height: '100%' }} gutterSize={'s'}>
       {controlPanel}
       <EuiFlexItem>
         <EuiPanel hasShadow={false} hasBorder={true}>
