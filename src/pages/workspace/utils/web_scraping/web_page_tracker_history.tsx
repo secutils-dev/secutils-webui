@@ -25,11 +25,7 @@ import { useWorkspaceContext } from '../../hooks';
 export interface WebPageTrackerHistoryProps {
   tracker: WebPageTracker;
   kind: 'content' | 'resources';
-  children: (
-    revision: WebPageDataRevision,
-    previousRevision: WebPageDataRevision | undefined,
-    showDiff: boolean,
-  ) => ReactNode;
+  children: (revision: WebPageDataRevision, showDiff: boolean) => ReactNode;
 }
 
 export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTrackerHistoryProps) {
@@ -59,7 +55,7 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
             setRevisions({ status: 'succeeded', data: response.data });
 
             // Reset revision index only if it's not set or doesn't exist in the new data.
-            if (revisionIndex === null || revisionIndex >= response.data.length) {
+            if (refresh || revisionIndex === null || revisionIndex >= response.data.length) {
               setRevisionIndex(response.data.length > 0 ? response.data.length - 1 : null);
             }
           },
@@ -167,11 +163,7 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
       />
     );
   } else if (revisionIndex !== null) {
-    history = children(
-      revisions.data[revisionIndex],
-      revisionIndex > 0 ? revisions.data[revisionIndex - 1] : undefined,
-      showDiff,
-    );
+    history = children(revisions.data[revisionIndex], showDiff);
   } else {
     const updateButton = (
       <EuiButton
