@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import {
   EuiButton,
+  EuiButtonGroup,
   EuiConfirmModal,
   EuiEmptyPrompt,
   EuiFlexGroup,
@@ -10,7 +11,6 @@ import {
   EuiIcon,
   EuiPanel,
   EuiSelect,
-  EuiSwitch,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
 import axios from 'axios';
@@ -25,20 +25,35 @@ import { useWorkspaceContext } from '../../hooks';
 export interface WebPageTrackerHistoryProps {
   tracker: WebPageTracker;
   kind: 'content' | 'resources';
-  children: (revision: WebPageDataRevision, showDiff: boolean) => ReactNode;
+  children: (revision: WebPageDataRevision, mode: WebPageTrackerHistoryMode) => ReactNode;
 }
+
+export type WebPageTrackerHistoryMode = 'default' | 'diff' | 'source';
 
 export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTrackerHistoryProps) {
   const { uiState, addToast } = useWorkspaceContext();
 
-  const [showDiff, setShowDiff] = useState<boolean>(true);
   const [revisions, setRevisions] = useState<AsyncData<WebPageContentRevision[], WebPageContentRevision[] | null>>({
     status: 'pending',
     state: null,
   });
   const [revisionIndex, setRevisionIndex] = useState<number | null>(null);
+
+  const modes = [
+    { id: 'default' as const, label: 'Default', isDisabled: revisions.status !== 'succeeded' },
+    { id: 'diff' as const, label: 'Diff', isDisabled: revisionIndex === 0 || revisions.status !== 'succeeded' },
+    ...(kind === 'content'
+      ? [{ id: 'source' as const, label: 'Source', isDisabled: revisions.status !== 'succeeded' }]
+      : []),
+  ];
+  const [mode, setMode] = useState<WebPageTrackerHistoryMode>('default');
+
   const fetchHistory = useCallback(
-    ({ refresh }: { refresh: boolean } = { refresh: false }) => {
+    (
+      { refresh, forceMode }: { refresh: boolean; forceMode?: WebPageTrackerHistoryMode } = {
+        refresh: false,
+      },
+    ) => {
       setRevisions((currentRevisions) =>
         currentRevisions.status === 'succeeded'
           ? { status: 'pending', state: currentRevisions.data }
@@ -47,7 +62,7 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
       axios
         .post<WebPageContentRevision[]>(
           getApiUrl(`/api/utils/web_scraping/${kind}/${encodeURIComponent(tracker.id)}/history`),
-          { refresh, calculateDiff: showDiff },
+          { refresh, calculateDiff: (forceMode ?? mode) === 'diff' },
           getApiRequestConfig(),
         )
         .then(
@@ -57,6 +72,12 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
             // Reset revision index only if it's not set or doesn't exist in the new data.
             if (refresh || revisionIndex === null || revisionIndex >= response.data.length) {
               setRevisionIndex(response.data.length > 0 ? response.data.length - 1 : null);
+            }
+
+            if (response.data.length < 2) {
+              setMode('default');
+            } else if (forceMode && forceMode !== mode) {
+              setMode(forceMode);
             }
           },
           (err: Error) => {
@@ -69,7 +90,7 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
           },
         );
     },
-    [getApiUrl, revisionIndex, showDiff],
+    [getApiUrl, revisionIndex, mode],
   );
 
   useEffect(() => {
@@ -78,7 +99,7 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
     }
 
     fetchHistory();
-  }, [uiState, tracker, showDiff]);
+  }, [uiState, tracker]);
 
   const onRevisionChange = useCallback(
     (revisionId: string) => {
@@ -163,7 +184,7 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
       />
     );
   } else if (revisionIndex !== null) {
-    history = children(revisions.data[revisionIndex], showDiff);
+    history = children(revisions.data[revisionIndex], mode);
   } else {
     const updateButton = (
       <EuiButton
@@ -227,13 +248,23 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
           />
         </EuiFlexItem>
         <EuiFlexItem grow={false}>
-          <EuiSwitch
-            label="Show diff"
-            disabled={
-              revisions.status !== 'succeeded' || (revisions.status === 'succeeded' && revisions.data.length < 2)
+          <EuiButtonGroup
+            legend="View mode"
+            options={modes}
+            idSelected={mode}
+            isDisabled={
+              revisions.status !== 'succeeded' ||
+              (kind === 'resources' && revisions.status === 'succeeded' && revisions.data.length < 2)
             }
-            checked={showDiff}
-            onChange={(e) => setShowDiff(e.target.checked)}
+            onChange={(id) => {
+              const newMode = id as WebPageTrackerHistoryMode;
+              setMode(newMode);
+
+              const shouldFetch = (mode === 'diff' && id !== 'diff') || (mode !== 'diff' && id === 'diff');
+              if (shouldFetch) {
+                fetchHistory({ forceMode: newMode, refresh: false });
+              }
+            }}
           />
         </EuiFlexItem>
         <EuiFlexItem grow={false}>

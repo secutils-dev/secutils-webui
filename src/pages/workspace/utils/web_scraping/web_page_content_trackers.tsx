@@ -154,8 +154,8 @@ export default function WebPageContentTrackers() {
     } else {
       itemIdToExpandedRowMapValues[tracker.name] = (
         <WebPageTrackerHistory kind={'content'} tracker={tracker}>
-          {(revision, showDiff) => (
-            <WebPageContentTrackerRevision revision={revision as WebPageContentRevision} showDiff={showDiff} />
+          {(revision, mode) => (
+            <WebPageContentTrackerRevision revision={revision as WebPageContentRevision} mode={mode} />
           )}
         </WebPageTrackerHistory>
       );
