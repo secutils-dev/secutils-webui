@@ -229,7 +229,9 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
         <EuiFlexItem grow={false}>
           <EuiSwitch
             label="Show diff"
-            disabled={revisions.status === 'pending' || (revisions.status === 'succeeded' && revisions.data.length < 2)}
+            disabled={
+              revisions.status !== 'succeeded' || (revisions.status === 'succeeded' && revisions.data.length < 2)
+            }
             checked={showDiff}
             onChange={(e) => setShowDiff(e.target.checked)}
           />
