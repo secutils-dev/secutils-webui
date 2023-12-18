@@ -74,7 +74,7 @@ export default function CertificatesPrivateKeys() {
       iconType={'documentation'}
       title="Learn how to create and use private keys"
       target={'_blank'}
-      href={'/docs/guides/digital_certificates'}
+      href={'/docs/guides/digital_certificates/private_keys'}
     >
       Learn how to
     </EuiButtonEmpty>

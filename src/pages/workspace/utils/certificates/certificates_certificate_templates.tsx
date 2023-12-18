@@ -75,7 +75,7 @@ export default function CertificatesCertificateTemplates() {
       iconType={'documentation'}
       title="Learn how to create and use certificate templates"
       target={'_blank'}
-      href={'/docs/guides/digital_certificates'}
+      href={'/docs/guides/digital_certificates/certificate_templates'}
     >
       Learn how to
     </EuiButtonEmpty>
