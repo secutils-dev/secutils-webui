@@ -340,12 +340,11 @@ export default function Responders() {
               </EuiScreenReaderOnly>
             ),
             render: (item: Responder) => {
-              const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
               return (
                 <EuiButtonIcon
                   onClick={() => toggleResponderRequests(item)}
-                  aria-label={itemIdToExpandedRowMapValues[item.id] ? 'Hide requests' : 'Show requests'}
-                  iconType={itemIdToExpandedRowMapValues[item.id] ? 'arrowDown' : 'arrowRight'}
+                  aria-label={itemIdToExpandedRowMap[item.id] ? 'Hide requests' : 'Show requests'}
+                  iconType={itemIdToExpandedRowMap[item.id] ? 'arrowDown' : 'arrowRight'}
                 />
               );
             },

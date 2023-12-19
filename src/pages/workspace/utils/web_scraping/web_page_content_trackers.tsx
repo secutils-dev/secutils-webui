@@ -149,10 +149,10 @@ export default function WebPageContentTrackers() {
 
   const toggleItemDetails = (tracker: WebPageTracker) => {
     const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
-    if (itemIdToExpandedRowMapValues[tracker.name]) {
-      delete itemIdToExpandedRowMapValues[tracker.name];
+    if (itemIdToExpandedRowMapValues[tracker.id]) {
+      delete itemIdToExpandedRowMapValues[tracker.id];
     } else {
-      itemIdToExpandedRowMapValues[tracker.name] = (
+      itemIdToExpandedRowMapValues[tracker.id] = (
         <WebPageTrackerHistory kind={'content'} tracker={tracker}>
           {(revision, mode) => (
             <WebPageContentTrackerRevision revision={revision as WebPageContentRevision} mode={mode} />
@@ -219,7 +219,7 @@ export default function WebPageContentTrackers() {
         sorting={sorting}
         onTableChange={onTableChange}
         items={trackers.data}
-        itemId={(item) => item.name}
+        itemId={(item) => item.id}
         isExpandable={true}
         itemIdToExpandedRowMap={itemIdToExpandedRowMap}
         tableLayout={'auto'}
@@ -292,12 +292,11 @@ export default function WebPageContentTrackers() {
               </EuiScreenReaderOnly>
             ),
             render: (tracker: WebPageTracker) => {
-              const itemIdToExpandedRowMapValues = { ...itemIdToExpandedRowMap };
               return (
                 <EuiButtonIcon
                   onClick={() => toggleItemDetails(tracker)}
-                  aria-label={itemIdToExpandedRowMapValues[tracker.name] ? 'Hide history' : 'Show history'}
-                  iconType={itemIdToExpandedRowMapValues[tracker.name] ? 'arrowDown' : 'arrowRight'}
+                  aria-label={itemIdToExpandedRowMap[tracker.id] ? 'Hide history' : 'Show history'}
+                  iconType={itemIdToExpandedRowMap[tracker.id] ? 'arrowDown' : 'arrowRight'}
                 />
               );
             },
