@@ -15,6 +15,7 @@ import { icon as EuiIconArrowRight } from '@elastic/eui/es/components/icon/asset
 import { icon as EuiIconArrowUp } from '@elastic/eui/es/components/icon/assets/arrow_up';
 import { icon as EuiIconArrowEnd } from '@elastic/eui/es/components/icon/assets/arrowEnd';
 import { icon as EuiIconArrowStart } from '@elastic/eui/es/components/icon/assets/arrowStart';
+import { icon as EuiIconBell } from '@elastic/eui/es/components/icon/assets/bell';
 import { icon as EuiIconBoxesHorizontal } from '@elastic/eui/es/components/icon/assets/boxes_horizontal';
 import { icon as EuiIconBoxesVertical } from '@elastic/eui/es/components/icon/assets/boxes_vertical';
 import { icon as EuiIconCalendar } from '@elastic/eui/es/components/icon/assets/calendar';
@@ -69,6 +70,7 @@ import { icon as EuiIconStarFilled } from '@elastic/eui/es/components/icon/asset
 import { icon as EuiIconTableDensityCompact } from '@elastic/eui/es/components/icon/assets/table_density_compact';
 import { icon as EuiIconTableDensityExpanded } from '@elastic/eui/es/components/icon/assets/table_density_expanded';
 import { icon as EuiIconTableDensityNormal } from '@elastic/eui/es/components/icon/assets/table_density_normal';
+import { icon as EuiIconTimeRefresh } from '@elastic/eui/es/components/icon/assets/timeRefresh';
 import { icon as EuiIconTokenNumber } from '@elastic/eui/es/components/icon/assets/tokenNumber';
 import { icon as EuiIconTokenString } from '@elastic/eui/es/components/icon/assets/tokenString';
 import { icon as EuiIconTraining } from '@elastic/eui/es/components/icon/assets/training';
@@ -93,6 +95,7 @@ appendIconComponentCache({
   arrowUp: EuiIconArrowUp,
   arrowStart: EuiIconArrowStart,
   arrowEnd: EuiIconArrowEnd,
+  bell: EuiIconBell,
   boxesHorizontal: EuiIconBoxesHorizontal,
   boxesVertical: EuiIconBoxesVertical,
   calendar: EuiIconCalendar,
@@ -148,6 +151,7 @@ appendIconComponentCache({
   tableDensityCompact: EuiIconTableDensityCompact,
   tableDensityExpanded: EuiIconTableDensityExpanded,
   tableDensityNormal: EuiIconTableDensityNormal,
+  timeRefresh: EuiIconTimeRefresh,
   tokenNumber: EuiIconTokenNumber,
   tokenString: EuiIconTokenString,
   training: EuiIconTraining,

@@ -25,6 +25,7 @@ import { WebPageContentTrackerRevision } from './web_page_content_tracker_revisi
 import type { WebPageContentRevision } from './web_page_data_revision';
 import type { WebPageContentTracker, WebPageTracker } from './web_page_tracker';
 import { WebPageTrackerHistory } from './web_page_tracker_history';
+import { WebPageTrackerName } from './web_page_tracker_name';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
@@ -235,7 +236,7 @@ export default function WebPageContentTrackers() {
             field: 'name',
             sortable: true,
             textOnly: true,
-            render: (_, tracker: WebPageTracker) => tracker.name,
+            render: (_, tracker: WebPageTracker) => <WebPageTrackerName tracker={tracker} />,
           },
           {
             name: (

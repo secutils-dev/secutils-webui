@@ -25,6 +25,7 @@ import { WebPageResourcesTrackerEditFlyout } from './web_page_resources_tracker_
 import { WebPageResourcesTrackerRevision } from './web_page_resources_tracker_revision';
 import type { WebPageResourcesTracker, WebPageTracker } from './web_page_tracker';
 import { WebPageTrackerHistory } from './web_page_tracker_history';
+import { WebPageTrackerName } from './web_page_tracker_name';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
@@ -233,7 +234,7 @@ export default function WebPageResourcesTrackers() {
             field: 'name',
             sortable: true,
             textOnly: true,
-            render: (_, tracker: WebPageTracker) => tracker.name,
+            render: (_, tracker: WebPageTracker) => <WebPageTrackerName tracker={tracker} />,
           },
           {
             name: (
