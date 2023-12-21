@@ -266,14 +266,18 @@ export function WebPageContentTrackerEditFlyout({ onClose, tracker }: Props) {
             label="Content extractor"
             helpText={
               <span>
-                The script accepts optional "previousContent" argument for the previously extracted content, and should
-                return any portion of the web page content that should be tracked. The function can return any value as
-                long as it can be{' '}
+                The script accepts a single "context" object argument, and should return the content intended for
+                tracking. The returned value can be anything as long as it can be serialized to a{' '}
                 <EuiLink
                   target="_blank"
                   href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description"
                 >
-                  <b>serialized to a JSON string</b>
+                  <b>JSON string</b>
+                </EuiLink>
+                {', '}
+                including any{' '}
+                <EuiLink target="_blank" href="https://eui.elastic.co/#/editors-syntax/markdown-format#kitchen-sink">
+                  <b>valid markdown-style content</b>
                 </EuiLink>
                 . Refer to the{' '}
                 <EuiLink
@@ -282,7 +286,7 @@ export function WebPageContentTrackerEditFlyout({ onClose, tracker }: Props) {
                 >
                   <b>documentation</b>
                 </EuiLink>{' '}
-                for a list of script examples.
+                for a list of script examples and properties available in the "context" object argument.
               </span>
             }
           >
