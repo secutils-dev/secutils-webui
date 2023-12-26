@@ -5,7 +5,7 @@
     "name": "Secutils.dev",
     "email": "dev@secutils.dev"
   },
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "engines": {
     "node": "20.x"
   },
