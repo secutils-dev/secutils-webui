@@ -91,8 +91,9 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
       isExpandable: false,
       isResizable: false,
     },
-    { id: 'address', display: 'Address', displayAsText: 'Address', isExpandable: false },
+    { id: 'address', display: 'Client address', displayAsText: 'Client address', isExpandable: false },
     { id: 'method', display: 'Method', displayAsText: 'Method', initialWidth: 80, isExpandable: false },
+    { id: 'url', display: 'URL', displayAsText: 'URL', isSortable: true },
     { id: 'headers', display: 'Headers', displayAsText: 'Body' },
     { id: 'body', display: 'Body', displayAsText: 'Body' },
   ];
@@ -142,6 +143,10 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
 
       if (columnId === 'method') {
         return request.method;
+      }
+
+      if (columnId === 'url') {
+        return request.url;
       }
 
       if (columnId === 'headers') {
