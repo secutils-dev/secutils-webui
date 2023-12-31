@@ -87,7 +87,7 @@ export interface Props {
   defaultValue?: string;
 }
 
-export default function WebPageTrackerScriptEditor({ onChange, defaultValue }: Props) {
+export function ScriptEditor({ onChange, defaultValue }: Props) {
   const { colorMode } = useEuiTheme();
 
   const monacoTheme = createTheme(

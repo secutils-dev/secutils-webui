@@ -18,10 +18,10 @@ import axios from 'axios';
 import { getDefaultRetryStrategy, WEB_PAGE_TRACKER_SCHEDULES } from './consts';
 import type { SchedulerJobConfig, WebPageContentTracker } from './web_page_tracker';
 import { WebPageTrackerRetryStrategy } from './web_page_tracker_retry_strategy';
-import WebPageTrackerScriptEditor from './web_page_tracker_script_editor';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { isValidURL } from '../../../../tools/url';
 import { EditorFlyout } from '../../components/editor_flyout';
+import { ScriptEditor } from '../../components/script_editor';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface Props {
@@ -290,7 +290,7 @@ export function WebPageContentTrackerEditFlyout({ onClose, tracker }: Props) {
               </span>
             }
           >
-            <WebPageTrackerScriptEditor onChange={onExtractContentScriptChange} defaultValue={extractContentScript} />
+            <ScriptEditor onChange={onExtractContentScriptChange} defaultValue={extractContentScript} />
           </EuiFormRow>
         </EuiDescribedFormGroup>
       </EuiForm>

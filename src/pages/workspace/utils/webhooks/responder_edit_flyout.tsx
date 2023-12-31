@@ -8,6 +8,7 @@ import {
   EuiFieldText,
   EuiForm,
   EuiFormRow,
+  EuiLink,
   EuiSelect,
   EuiTextArea,
 } from '@elastic/eui';
@@ -17,6 +18,7 @@ import type { Responder } from './responder';
 import type { AsyncData } from '../../../../model';
 import { getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
+import { ScriptEditor } from '../../components/script_editor';
 import { useWorkspaceContext } from '../../hooks';
 
 export interface ResponderEditFlyoutProps {
@@ -66,6 +68,11 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
   );
   const [areHeadersInvalid, setAreHeadersInvalid] = useState(false);
 
+  const [script, setScript] = useState<string | undefined>(responder?.settings.script);
+  const onUserScriptChange = useCallback((value?: string) => {
+    setScript(value);
+  }, []);
+
   const onCreateHeader = (headerValue: string) => {
     if (!isHeaderValid(headerValue)) {
       return false;
@@ -91,11 +98,6 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
   const [body, setBody] = useState<string>(responder?.settings.body ?? '');
   const onBodyChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     setBody(e.target.value);
-  }, []);
-
-  const [delay, setDelay] = useState<number>(responder?.settings.delay ?? 0);
-  const onDelayChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setDelay(+e.target.value);
   }, []);
 
   const [updatingStatus, setUpdatingStatus] = useState<AsyncData<void>>();
@@ -124,7 +126,7 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
                 ] as [string, string];
               })
             : undefined,
-        delay,
+        script: script?.trim() ? script.trim() : undefined,
       },
     };
 
@@ -168,7 +170,7 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
         });
       },
     );
-  }, [name, method, path, requestsToTrack, statusCode, body, headers, delay, responder, updatingStatus]);
+  }, [name, method, path, requestsToTrack, statusCode, body, headers, script, responder, updatingStatus]);
 
   return (
     <EditorFlyout
@@ -246,10 +248,24 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
             <EuiTextArea value={body} onChange={onBodyChange} />
           </EuiFormRow>
           <EuiFormRow
-            label="Delay"
-            helpText="Responder will handle an incoming request only after specified number of milliseconds"
+            label="Script"
+            helpText={
+              <span>
+                The script is executed within a constrained version of the{' '}
+                <EuiLink target="_blank" href="https://deno.com/">
+                  <b>Deno JavaScript runtime</b>
+                </EuiLink>{' '}
+                for every received request. It returns an object that can override the default response status code,
+                headers, or body. Request information is available through the global "context" variable. Refer to the{' '}
+                <EuiLink target="_blank" href="/docs/guides/webhooks#annex-responder-script-examples">
+                  <b>documentation</b>
+                </EuiLink>{' '}
+                for a list of script examples, expected return value and properties available in the "context" object
+                argument.
+              </span>
+            }
           >
-            <EuiFieldNumber fullWidth min={0} step={1} value={delay} onChange={onDelayChange} />
+            <ScriptEditor onChange={onUserScriptChange} defaultValue={script} />
           </EuiFormRow>
         </EuiDescribedFormGroup>
       </EuiForm>

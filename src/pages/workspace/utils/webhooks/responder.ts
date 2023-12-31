@@ -8,7 +8,7 @@ export interface Responder {
     statusCode: number;
     headers?: Array<[string, string]>;
     body?: string;
-    delay?: number;
+    script?: string;
   };
   createdAt: number;
 }
