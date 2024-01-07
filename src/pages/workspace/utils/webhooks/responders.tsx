@@ -23,6 +23,7 @@ import { unix } from 'moment';
 
 import type { Responder } from './responder';
 import { ResponderEditFlyout } from './responder_edit_flyout';
+import { ResponderName } from './responder_name';
 import { ResponderRequestsTable } from './responder_requests_table';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
@@ -236,7 +237,7 @@ export default function Responders() {
             field: 'name',
             sortable: true,
             textOnly: true,
-            render: (_, responder: Responder) => responder.name,
+            render: (_, responder: Responder) => <ResponderName responder={responder} />,
           },
           {
             name: 'Method',

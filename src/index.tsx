@@ -37,6 +37,7 @@ import { icon as EuiIconExpandMini } from '@elastic/eui/es/components/icon/asset
 import { icon as EuiIconEyeClosed } from '@elastic/eui/es/components/icon/assets/eye_closed';
 import { icon as EuiIconFullScreen } from '@elastic/eui/es/components/icon/assets/full_screen';
 import { icon as EuiIconFullScreenExit } from '@elastic/eui/es/components/icon/assets/fullScreenExit';
+import { icon as EuiIconFunction } from '@elastic/eui/es/components/icon/assets/function';
 import { icon as EuiIconGear } from '@elastic/eui/es/components/icon/assets/gear';
 import { icon as EuiIconGlobe } from '@elastic/eui/es/components/icon/assets/globe';
 import { icon as EuiIconGrab } from '@elastic/eui/es/components/icon/assets/grab';
@@ -117,6 +118,7 @@ appendIconComponentCache({
   expandMini: EuiIconExpandMini,
   fullScreen: EuiIconFullScreen,
   fullScreenExit: EuiIconFullScreenExit,
+  function: EuiIconFunction,
   gear: EuiIconGear,
   globe: EuiIconGlobe,
   grab: EuiIconGrab,
