@@ -249,7 +249,7 @@ export function WorkspacePage() {
     setIsAccountPopoverOpen(false);
     axios.post(getApiUrl('/api/signout')).then(
       () => {
-        window.location.replace('/');
+        window.location.replace('/signin');
         setTimeout(() => window.location.reload(), 500);
       },
       () => {
