@@ -59,12 +59,12 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
           ? { status: 'pending', state: currentRevisions.data }
           : { status: 'pending', state: currentRevisions.state },
       );
+
+      const historyUrl = getApiUrl(`/api/utils/web_scraping/${kind}/${encodeURIComponent(tracker.id)}/history`);
       axios
-        .post<WebPageContentRevision[]>(
-          getApiUrl(`/api/utils/web_scraping/${kind}/${encodeURIComponent(tracker.id)}/history`),
-          { refresh, calculateDiff: (forceMode ?? mode) === 'diff' },
-          getApiRequestConfig(),
-        )
+        .post<
+          WebPageContentRevision[]
+        >(historyUrl, { refresh, calculateDiff: (forceMode ?? mode) === 'diff' }, getApiRequestConfig())
         .then(
           (response) => {
             setRevisions({ status: 'succeeded', data: response.data });

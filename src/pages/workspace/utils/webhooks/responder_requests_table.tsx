@@ -63,10 +63,9 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
     }
 
     axios
-      .post<ResponderRequest[]>(
-        getApiUrl(`/api/utils/webhooks/responders/${encodeURIComponent(responder.id)}/history`),
-        getApiRequestConfig(),
-      )
+      .post<
+        ResponderRequest[]
+      >(getApiUrl(`/api/utils/webhooks/responders/${encodeURIComponent(responder.id)}/history`), getApiRequestConfig())
       .then(
         (response) => {
           setRequests({ status: 'succeeded', data: response.data });

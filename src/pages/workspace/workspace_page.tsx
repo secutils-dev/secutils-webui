@@ -299,7 +299,7 @@ export function WorkspacePage() {
           href={'/docs'}
         />,
         <EuiPopover
-          anchorClassName="eui-fullWidth"
+          className="eui-fullWidth"
           button={
             <EuiButtonIcon
               aria-label={'Account menu'}

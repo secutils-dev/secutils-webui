@@ -38,10 +38,9 @@ export default function WebSecurityContentSecurityPolicies() {
 
   const loadPolicies = () => {
     axios
-      .get<ContentSecurityPolicy<SerializedContentSecurityPolicyDirectives>[]>(
-        getApiUrl('/api/utils/web_security/csp'),
-        getApiRequestConfig(),
-      )
+      .get<
+        ContentSecurityPolicy<SerializedContentSecurityPolicyDirectives>[]
+      >(getApiUrl('/api/utils/web_security/csp'), getApiRequestConfig())
       .then(
         (res) => {
           setPolicies({
