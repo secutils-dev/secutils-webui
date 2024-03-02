@@ -4,6 +4,7 @@ import type { ChangeEvent } from 'react';
 import type { EuiThemeColorMode } from '@elastic/eui';
 import {
   EuiButton,
+  EuiButtonEmpty,
   EuiConfirmModal,
   EuiDescribedFormGroup,
   EuiFieldText,
@@ -13,14 +14,18 @@ import {
   EuiFlyoutBody,
   EuiFlyoutHeader,
   EuiFormRow,
+  EuiLink,
   EuiSelect,
   EuiSpacer,
   EuiTab,
   EuiTabs,
+  EuiText,
   EuiTitle,
 } from '@elastic/eui';
+import { css } from '@emotion/react';
 import type { AxiosError } from 'axios';
 import axios from 'axios';
+import { unix, utc } from 'moment/moment';
 
 import { useAppContext } from '../hooks';
 import type { AsyncData } from '../model';
@@ -237,9 +242,10 @@ export function SettingsFlyout({ onClose }: Props) {
       </EuiFormRow>
     ) : null;
 
-  const [selectedTab, setSelectedTab] = useState<'general' | 'security'>('general');
-  const selectedTabContent =
-    selectedTab === 'general' ? (
+  const [selectedTab, setSelectedTab] = useState<'general' | 'security' | 'account'>('general');
+  let selectedTabContent;
+  if (selectedTab === 'general') {
+    selectedTabContent = (
       <EuiDescribedFormGroup title={<h3>Appearance</h3>} description={'Customize Secutils.dev appearance'}>
         <EuiFormRow label="Theme" fullWidth>
           <EuiSelect
@@ -252,60 +258,117 @@ export function SettingsFlyout({ onClose }: Props) {
           />
         </EuiFormRow>
       </EuiDescribedFormGroup>
-    ) : (
-      <>
-        <EuiDescribedFormGroup title={<h3>Credentials</h3>} description={'Configure your Secutils.dev credentials'}>
-          <EuiFormRow fullWidth isDisabled={changeInProgress}>
-            <EuiFieldText
-              placeholder={uiState.user?.credentials.password ? 'New password' : 'Password'}
-              type={'password'}
-              autoComplete="new-password"
-              onChange={onPasswordChange}
-              minLength={8}
-              value={password}
-            />
-          </EuiFormRow>
-          <EuiFormRow fullWidth isDisabled={changeInProgress}>
-            <EuiFieldText
-              placeholder={uiState.user?.credentials.password ? 'Repeat new password' : 'Repeat password'}
-              type={'password'}
-              autoComplete="new-password"
-              onChange={onRepeatPasswordChange}
-              minLength={8}
-              isInvalid={repeatPassword !== password}
-              value={repeatPassword}
-            />
-          </EuiFormRow>
-          <EuiFormRow fullWidth>
-            <EuiFlexGroup justifyContent={'spaceBetween'} wrap>
+    );
+  } else if (selectedTab === 'security') {
+    selectedTabContent = (
+      <EuiDescribedFormGroup title={<h3>Credentials</h3>} description={'Configure your Secutils.dev credentials'}>
+        <EuiFormRow fullWidth isDisabled={changeInProgress}>
+          <EuiFieldText
+            placeholder={uiState.user?.credentials.password ? 'New password' : 'Password'}
+            type={'password'}
+            autoComplete="new-password"
+            onChange={onPasswordChange}
+            minLength={8}
+            value={password}
+          />
+        </EuiFormRow>
+        <EuiFormRow fullWidth isDisabled={changeInProgress}>
+          <EuiFieldText
+            placeholder={uiState.user?.credentials.password ? 'Repeat new password' : 'Repeat password'}
+            type={'password'}
+            autoComplete="new-password"
+            onChange={onRepeatPasswordChange}
+            minLength={8}
+            isInvalid={repeatPassword !== password}
+            value={repeatPassword}
+          />
+        </EuiFormRow>
+        <EuiFormRow fullWidth>
+          <EuiFlexGroup justifyContent={'spaceBetween'} wrap>
+            <EuiFlexItem>
+              <EuiButton
+                disabled={password !== repeatPassword || password.length < 8 || changeInProgress}
+                isLoading={updatePasswordStatus?.status === 'pending'}
+                onClick={onUpdatePassword}
+              >
+                {uiState.user?.credentials.password ? 'Change password' : 'Add password'}
+              </EuiButton>
+            </EuiFlexItem>
+            {uiState.user?.credentials.password && uiState.user?.credentials.passkey && isPasskeySupported ? (
               <EuiFlexItem>
                 <EuiButton
-                  disabled={password !== repeatPassword || password.length < 8 || changeInProgress}
-                  isLoading={updatePasswordStatus?.status === 'pending'}
-                  onClick={onUpdatePassword}
+                  color="danger"
+                  onClick={() => setIsRemoveCredentialsModalVisible({ visible: true, credentials: 'password' })}
+                  disabled={changeInProgress}
+                  isLoading={
+                    removeCredentialsStatus?.status === 'pending' && removeCredentialsStatus?.state === 'password'
+                  }
                 >
-                  {uiState.user?.credentials.password ? 'Change password' : 'Add password'}
+                  Remove password
                 </EuiButton>
               </EuiFlexItem>
-              {uiState.user?.credentials.password && uiState.user?.credentials.passkey && isPasskeySupported ? (
-                <EuiFlexItem>
-                  <EuiButton
-                    color="danger"
-                    onClick={() => setIsRemoveCredentialsModalVisible({ visible: true, credentials: 'password' })}
-                    disabled={changeInProgress}
-                    isLoading={
-                      removeCredentialsStatus?.status === 'pending' && removeCredentialsStatus?.state === 'password'
-                    }
-                  >
-                    Remove password
-                  </EuiButton>
-                </EuiFlexItem>
-              ) : null}
-            </EuiFlexGroup>
+            ) : null}
+          </EuiFlexGroup>
+        </EuiFormRow>
+        {passkeySection}
+      </EuiDescribedFormGroup>
+    );
+  } else {
+    const subscription = uiState.user?.subscription;
+    let trialSection = null;
+    if (subscription?.trialStartedAt && (subscription?.tier === 'basic' || subscription?.tier === 'standard')) {
+      let text;
+      if (subscription?.trialEndsAt !== undefined) {
+        const nowUtc = utc();
+        const trialEndsAtUtc = unix(subscription?.trialEndsAt);
+        text = trialEndsAtUtc.isSameOrBefore(nowUtc) ? (
+          <EuiText size={'s'} color={'danger'}>
+            <b>Expired</b>
+          </EuiText>
+        ) : (
+          <EuiText size={'s'} color={'success'}>
+            <b>Active</b> (
+            {(trialEndsAtUtc.diff(nowUtc, 'days') || 1).toLocaleString('en-GB', {
+              style: 'unit',
+              unit: 'day',
+              unitDisplay: 'long',
+            })}{' '}
+            left)
+          </EuiText>
+        );
+      }
+      trialSection = (
+        <EuiFormRow label="Trial" helpText={'Trial gives you access to all available Secutils.dev features.'} fullWidth>
+          {text ?? <EuiText size={'s'}>-</EuiText>}
+        </EuiFormRow>
+      );
+    }
+
+    const subscriptionDescription = <span>View and manage your current Secutils.dev subscription</span>;
+    selectedTabContent = (
+      <>
+        <EuiDescribedFormGroup
+          title={<h3>Account</h3>}
+          description={
+            <>
+              <span>Manage your Secutils.dev account</span>
+              <br />
+              <br />
+              <EuiButtonEmpty
+                iconType={'trash'}
+                color={'danger'}
+                title={'The action is not supported yet. Please, contact us instead.'}
+                isDisabled
+                flush={'left'}
+              >
+                Delete account
+              </EuiButtonEmpty>
+            </>
+          }
+        >
+          <EuiFormRow label={'Email'} helpText={'Used for all communications and notifications.'} fullWidth isDisabled>
+            <EuiFieldText type={'email'} value={uiState.user?.email} />
           </EuiFormRow>
-          {passkeySection}
-        </EuiDescribedFormGroup>
-        <EuiDescribedFormGroup title={<h3>Account</h3>} description={'Manage your Secutils.dev account'}>
           {uiState.user?.activated ? null : (
             <EuiFormRow
               fullWidth
@@ -322,19 +385,53 @@ export function SettingsFlyout({ onClose }: Props) {
               </EuiButton>
             </EuiFormRow>
           )}
-          <EuiFormRow fullWidth>
-            <EuiButton
-              color={'danger'}
-              fullWidth
-              isDisabled={true}
-              title={'The action is not supported yet. Please, contact us instead.'}
+        </EuiDescribedFormGroup>
+        <EuiDescribedFormGroup
+          title={<h3>Subscription</h3>}
+          description={
+            uiState.subscription?.manageUrl ? (
+              <>
+                {subscriptionDescription}
+                <br />
+                <br />
+                <EuiButtonEmpty iconType={'payment'} flush={'left'} href={uiState.subscription.manageUrl}>
+                  Manage subscription
+                </EuiButtonEmpty>
+              </>
+            ) : (
+              subscriptionDescription
+            )
+          }
+        >
+          <EuiFormRow
+            label="Tier"
+            helpText={
+              uiState.subscription?.featureOverviewUrl ? (
+                <span>
+                  Compare your current tier to other available tiers at the{' '}
+                  <EuiLink target="_blank" href={uiState.subscription.featureOverviewUrl}>
+                    <b>feature overview page</b>
+                  </EuiLink>
+                  .
+                </span>
+              ) : null
+            }
+            fullWidth
+          >
+            <EuiText
+              css={css`
+                text-transform: capitalize;
+              `}
+              size={'s'}
             >
-              Delete account
-            </EuiButton>
+              <b>{subscription?.tier ?? ''}</b>
+            </EuiText>
           </EuiFormRow>
+          {trialSection}
         </EuiDescribedFormGroup>
       </>
     );
+  }
 
   const removeCredentialsConfirmModal = isRemoveCredentialsModalVisible.visible ? (
     <EuiConfirmModal
@@ -372,6 +469,9 @@ export function SettingsFlyout({ onClose }: Props) {
           </EuiTab>
           <EuiTab onClick={() => setSelectedTab('security')} isSelected={selectedTab === 'security'}>
             Security
+          </EuiTab>
+          <EuiTab onClick={() => setSelectedTab('account')} isSelected={selectedTab === 'account'}>
+            Account
           </EuiTab>
         </EuiTabs>
         <EuiSpacer />

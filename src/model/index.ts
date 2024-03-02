@@ -17,3 +17,4 @@ export { getApiUrl, getApiRequestConfig } from './urls';
 export type { SerializedSearchItem, SearchItem } from './search_item';
 export { deserializeSearchItem } from './search_item';
 export { getErrorMessage, isClientError } from './errors';
+export type { UserSubscription } from './user_subscription';

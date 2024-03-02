@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import { getApiUrl } from './urls';
+import type { UserSubscription } from './user_subscription';
 
 export interface User {
   email: string;
@@ -8,6 +9,7 @@ export interface User {
   roles: string[];
   credentials: { password: boolean; passkey: boolean };
   activated: boolean;
+  subscription: UserSubscription;
 }
 
 export async function getUserData<RType>(dataNamespace: string) {

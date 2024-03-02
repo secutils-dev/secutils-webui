@@ -14,9 +14,7 @@
     "Firefox ESR",
     "not dead"
   ],
-  "alias": {
-    "process": false
-  },
+  "alias": { "process": "process/browser.js" },
   "source": [
     "src/index.html",
     "src/favicon.ico"

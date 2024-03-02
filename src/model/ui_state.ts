@@ -16,6 +16,24 @@ export interface License {
 
 export type WebhookUrlType = 'path' | 'subdomain';
 
+/**
+ * Defines subscription related properties returned as a part of the UI state.
+ */
+export interface SubscriptionState {
+  /**
+   * The subscription-dependent features available to the user.
+   */
+  features?: { admin?: boolean };
+  /**
+   * The URL to the subscription management page.
+   */
+  manageUrl?: string;
+  /**
+   * The URL to the subscription feature overview page.
+   */
+  featureOverviewUrl?: string;
+}
+
 export interface UiState {
   synced: boolean;
   status: ServerStatus;
@@ -25,4 +43,5 @@ export interface UiState {
   settings?: UserSettings;
   utils: Util[];
   webhookUrlType: WebhookUrlType;
+  subscription?: SubscriptionState;
 }

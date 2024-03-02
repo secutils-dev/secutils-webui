@@ -51,6 +51,7 @@ import { icon as EuiIconListAdd } from '@elastic/eui/es/components/icon/assets/l
 import { icon as EuiIconMinus } from '@elastic/eui/es/components/icon/assets/minus';
 import { icon as EuiIconMinusInCircle } from '@elastic/eui/es/components/icon/assets/minus_in_circle';
 import { icon as EuiIconNode } from '@elastic/eui/es/components/icon/assets/node';
+import { icon as EuiIconPayment } from '@elastic/eui/es/components/icon/assets/payment';
 import { icon as EuiIconPencil } from '@elastic/eui/es/components/icon/assets/pencil';
 import { icon as EuiIconPlusInCircle } from '@elastic/eui/es/components/icon/assets/plus_in_circle';
 import { icon as EuiIconPopout } from '@elastic/eui/es/components/icon/assets/popout';
@@ -75,6 +76,7 @@ import { icon as EuiIconTimeRefresh } from '@elastic/eui/es/components/icon/asse
 import { icon as EuiIconTokenNumber } from '@elastic/eui/es/components/icon/assets/tokenNumber';
 import { icon as EuiIconTokenString } from '@elastic/eui/es/components/icon/assets/tokenString';
 import { icon as EuiIconTraining } from '@elastic/eui/es/components/icon/assets/training';
+import { icon as EuiIconTrash } from '@elastic/eui/es/components/icon/assets/trash';
 import { icon as EuiIconUser } from '@elastic/eui/es/components/icon/assets/user';
 import { icon as EuiIconWarning } from '@elastic/eui/es/components/icon/assets/warning';
 import { appendIconComponentCache } from '@elastic/eui/es/components/icon/icon';
@@ -132,6 +134,7 @@ appendIconComponentCache({
   minus: EuiIconMinus,
   minusInCircle: EuiIconMinusInCircle,
   node: EuiIconNode,
+  payment: EuiIconPayment,
   pencil: EuiIconPencil,
   plusInCircle: EuiIconPlusInCircle,
   popout: EuiIconPopout,
@@ -157,6 +160,7 @@ appendIconComponentCache({
   tokenNumber: EuiIconTokenNumber,
   tokenString: EuiIconTokenString,
   training: EuiIconTraining,
+  trash: EuiIconTrash,
   user: EuiIconUser,
   warning: EuiIconWarning,
 });
