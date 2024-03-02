@@ -11,6 +11,7 @@ import TSWorker from 'url:monaco-editor/esm/vs/language/typescript/ts.worker.js'
 
 loader.config({ monaco });
 
+// See https://github.com/microsoft/monaco-editor/blob/main/docs/integrate-esm.md#using-parcel
 self.MonacoEnvironment = {
   getWorkerUrl: (_, label) => (label === 'typescript' || label === 'javascript' ? TSWorker : EditorWorker),
 };
@@ -99,6 +100,7 @@ export function ScriptEditor({ onChange, defaultValue }: Props) {
     <Editor
       height="15vh"
       defaultLanguage="javascript"
+      options={{ mouseWheelZoom: true }}
       defaultValue={defaultValue}
       onChange={(value) => onChange(value)}
       theme={'euiTheme'}
