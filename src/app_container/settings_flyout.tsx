@@ -394,7 +394,12 @@ export function SettingsFlyout({ onClose }: Props) {
                 {subscriptionDescription}
                 <br />
                 <br />
-                <EuiButtonEmpty iconType={'payment'} flush={'left'} href={uiState.subscription.manageUrl}>
+                <EuiButtonEmpty
+                  iconType={'payment'}
+                  flush={'left'}
+                  href={uiState.subscription.manageUrl}
+                  target="_blank"
+                >
                   Manage subscription
                 </EuiButtonEmpty>
               </>
