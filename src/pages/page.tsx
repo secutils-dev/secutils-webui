@@ -169,7 +169,11 @@ export function Page({
             </EuiLink>{' '}
             ·{' '}
             <EuiLink target="_blank" href="/docs" color={'success'}>
-              Documentation
+              Docs
+            </EuiLink>{' '}
+            ·{' '}
+            <EuiLink target="_blank" href="/pricing" color={'success'}>
+              Pricing
             </EuiLink>{' '}
             ·{' '}
             <EuiLink target="_blank" href="/privacy" color={'success'}>
