@@ -17,7 +17,7 @@ import {
   EuiText,
 } from '@elastic/eui';
 import type { EuiPageSectionProps, IconType } from '@elastic/eui';
-import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/breadcrumb';
+import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/types';
 import { css } from '@emotion/react';
 
 import { PageHeader } from './page_header';
