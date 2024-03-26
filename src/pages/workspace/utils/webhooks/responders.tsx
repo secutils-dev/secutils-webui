@@ -17,6 +17,7 @@ import {
   EuiSpacer,
   EuiText,
   EuiToolTip,
+  useEuiTheme,
 } from '@elastic/eui';
 import axios from 'axios';
 import { unix } from 'moment';
@@ -30,6 +31,7 @@ import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from 
 import { useWorkspaceContext } from '../../hooks';
 
 export default function Responders() {
+  const theme = useEuiTheme();
   const { uiState, setTitleActions } = useWorkspaceContext();
 
   const [responders, setResponders] = useState<AsyncData<Responder[]>>({ status: 'pending' });
@@ -243,7 +245,11 @@ export default function Responders() {
             name: 'Method',
             field: 'method',
             width: '100px',
-            render: (_, { method }: Responder) => <b>{method}</b>,
+            render: (_, { enabled, method }: Responder) => (
+              <EuiText size={'s'} color={enabled ? undefined : theme.euiTheme.colors.disabledText}>
+                <b>{method}</b>
+              </EuiText>
+            ),
             sortable: true,
           },
           {
@@ -251,10 +257,18 @@ export default function Responders() {
             field: 'statusCode',
             sortable: true,
             width: '75px',
-            render: (_, { settings }: Responder) => (
+            render: (_, { enabled, settings }: Responder) => (
               <EuiText
                 size={'s'}
-                color={settings.statusCode <= 200 ? '#5cb800' : settings.statusCode < 400 ? '#aea300' : 'danger'}
+                color={
+                  enabled
+                    ? settings.statusCode <= 200
+                      ? '#5cb800'
+                      : settings.statusCode < 400
+                        ? '#aea300'
+                        : 'danger'
+                    : theme.euiTheme.colors.disabledText
+                }
               >
                 <b>{settings.statusCode.toString().toUpperCase()}</b>
               </EuiText>
@@ -265,8 +279,11 @@ export default function Responders() {
             field: 'body',
             width: '50px',
             align: 'center',
-            render: (_, { settings }: Responder) => (
-              <EuiIcon color={settings.body ? '#5cb800' : undefined} type={settings.body ? 'dot' : 'minus'} />
+            render: (_, { enabled, settings }: Responder) => (
+              <EuiIcon
+                color={enabled ? (settings.body ? '#5cb800' : undefined) : theme.euiTheme.colors.disabledText}
+                type={settings.body ? 'dot' : 'minus'}
+              />
             ),
           },
           {
@@ -274,9 +291,15 @@ export default function Responders() {
             field: 'headers',
             width: '50px',
             align: 'center',
-            render: (_, { settings }: Responder) => (
+            render: (_, { enabled, settings }: Responder) => (
               <EuiIcon
-                color={settings.headers && settings.headers.length > 0 ? '#5cb800' : undefined}
+                color={
+                  enabled
+                    ? settings.headers && settings.headers.length > 0
+                      ? '#5cb800'
+                      : undefined
+                    : theme.euiTheme.colors.disabledText
+                }
                 type={settings.headers && settings.headers.length > 0 ? 'dot' : 'minus'}
               />
             ),
@@ -293,12 +316,16 @@ export default function Responders() {
             sortable: true,
             render: (_, responder: Responder) => {
               const url = getResponderUrl(responder);
-              return url ? (
+              return responder.enabled && url ? (
                 <EuiLink href={url} target="_blank">
                   {url}
                 </EuiLink>
+              ) : url ? (
+                <EuiText size={'s'} color={theme.euiTheme.colors.disabledText}>
+                  {url}
+                </EuiText>
               ) : (
-                <EuiIcon type="minus" />
+                <EuiIcon type="minus" color={responder.enabled ? undefined : theme.euiTheme.colors.disabledText} />
               );
             },
           },
@@ -308,7 +335,11 @@ export default function Responders() {
             width: '160px',
             mobileOptions: { width: 'unset' },
             sortable: (responder) => responder.createdAt,
-            render: (_, responder: Responder) => unix(responder.createdAt).format('ll HH:mm'),
+            render: (_, responder: Responder) => (
+              <EuiText size={'s'} color={responder.enabled ? undefined : theme.euiTheme.colors.disabledText}>
+                {unix(responder.createdAt).format('ll HH:mm')}
+              </EuiText>
+            ),
           },
           {
             name: 'Actions',

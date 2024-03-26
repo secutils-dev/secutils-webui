@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 
+import type { EuiSwitchEvent } from '@elastic/eui';
 import {
   EuiComboBox,
   EuiDescribedFormGroup,
@@ -10,6 +11,7 @@ import {
   EuiFormRow,
   EuiLink,
   EuiSelect,
+  EuiSwitch,
   EuiTextArea,
 } from '@elastic/eui';
 import axios from 'axios';
@@ -63,6 +65,11 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
     setMethod(e.target.value);
   }, []);
 
+  const [isEnabled, setIsEnabled] = useState<boolean>(responder?.enabled ?? true);
+  const onIsEnabledChange = useCallback((e: EuiSwitchEvent) => {
+    setIsEnabled(e.target.checked);
+  }, []);
+
   const [headers, setHeaders] = useState<Array<{ label: string }>>(
     responder?.settings.headers?.map(([header, value]) => ({ label: `${header}: ${value}` })) ?? [],
   );
@@ -112,6 +119,7 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
       name: responder ? (responder.name !== name ? name.trim() : null) : name.trim(),
       path: responder ? (responder.path !== path ? path.trim() : null) : path.trim(),
       method: responder ? (responder.method !== method ? method : null) : method,
+      enabled: responder ? (responder.enabled !== isEnabled ? isEnabled : null) : isEnabled,
       settings: {
         requestsToTrack,
         statusCode,
@@ -170,7 +178,7 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
         });
       },
     );
-  }, [name, method, path, requestsToTrack, statusCode, body, headers, script, responder, updatingStatus]);
+  }, [name, method, path, isEnabled, requestsToTrack, statusCode, body, headers, script, responder, updatingStatus]);
 
   return (
     <EditorFlyout
@@ -196,6 +204,12 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
               value={requestsToTrack}
               onChange={onRequestsToTrackChange}
             />
+          </EuiFormRow>
+          <EuiFormRow
+            label={'Enable'}
+            helpText={'Instructs the responder whether it should process incoming requests or not.'}
+          >
+            <EuiSwitch showLabel={false} label="Enable" checked={isEnabled} onChange={onIsEnabledChange} />
           </EuiFormRow>
         </EuiDescribedFormGroup>
         <EuiDescribedFormGroup

@@ -51,6 +51,7 @@ import { icon as EuiIconListAdd } from '@elastic/eui/es/components/icon/assets/l
 import { icon as EuiIconMinus } from '@elastic/eui/es/components/icon/assets/minus';
 import { icon as EuiIconMinusInCircle } from '@elastic/eui/es/components/icon/assets/minus_in_circle';
 import { icon as EuiIconNode } from '@elastic/eui/es/components/icon/assets/node';
+import { icon as EuiIconOffline } from '@elastic/eui/es/components/icon/assets/offline';
 import { icon as EuiIconPayment } from '@elastic/eui/es/components/icon/assets/payment';
 import { icon as EuiIconPencil } from '@elastic/eui/es/components/icon/assets/pencil';
 import { icon as EuiIconPlusInCircle } from '@elastic/eui/es/components/icon/assets/plus_in_circle';
@@ -134,6 +135,7 @@ appendIconComponentCache({
   minus: EuiIconMinus,
   minusInCircle: EuiIconMinusInCircle,
   node: EuiIconNode,
+  offline: EuiIconOffline,
   payment: EuiIconPayment,
   pencil: EuiIconPencil,
   plusInCircle: EuiIconPlusInCircle,

@@ -3,6 +3,7 @@ export interface Responder {
   name: string;
   path: string;
   method: string;
+  enabled: boolean;
   settings: {
     requestsToTrack: number;
     statusCode: number;
