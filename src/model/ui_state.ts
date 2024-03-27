@@ -23,7 +23,13 @@ export interface SubscriptionState {
   /**
    * The subscription-dependent features available to the user.
    */
-  features?: { admin?: boolean };
+  features?: {
+    admin?: boolean;
+    certificates: { privateKeyAlgorithms?: string[] };
+    webhooks: { responderRequests: number };
+    webScraping: { trackerRevisions: number; trackerSchedules?: string[] };
+    webSecurity: { importPolicyFromUrl: boolean };
+  };
   /**
    * The URL to the subscription management page.
    */

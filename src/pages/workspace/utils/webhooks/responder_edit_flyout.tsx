@@ -10,6 +10,7 @@ import {
   EuiForm,
   EuiFormRow,
   EuiLink,
+  EuiRange,
   EuiSelect,
   EuiSwitch,
   EuiTextArea,
@@ -17,6 +18,7 @@ import {
 import axios from 'axios';
 
 import type { Responder } from './responder';
+import { useRangeTicks } from '../../../../hooks';
 import type { AsyncData } from '../../../../model';
 import { getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { EditorFlyout } from '../../components/editor_flyout';
@@ -35,7 +37,8 @@ const isHeaderValid = (header: string) => {
 };
 
 export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutProps) {
-  const { addToast } = useWorkspaceContext();
+  const { addToast, uiState } = useWorkspaceContext();
+  const maxTicks = useRangeTicks();
 
   const httpMethods = useMemo(() => HTTP_METHODS.map((method) => ({ value: method, text: method })), []);
 
@@ -51,9 +54,6 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
   const isPathValid = path.startsWith('/') && (path.length === 1 || !path.endsWith('/'));
 
   const [requestsToTrack, setRequestsToTrack] = useState<number>(responder?.settings.requestsToTrack ?? 0);
-  const onRequestsToTrackChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setRequestsToTrack(+e.target.value);
-  }, []);
 
   const [statusCode, setStatusCode] = useState<number>(responder?.settings.statusCode ?? 200);
   const onStatusCodeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -180,6 +180,8 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
     );
   }, [name, method, path, isEnabled, requestsToTrack, statusCode, body, headers, script, responder, updatingStatus]);
 
+  const maxResponderRequests = uiState.subscription?.features?.webhooks.responderRequests ?? 0;
+  const tickInterval = Math.ceil(maxResponderRequests / maxTicks);
   return (
     <EditorFlyout
       title={`${responder ? 'Edit' : 'Add'} responder`}
@@ -196,13 +198,16 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
             <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
           <EuiFormRow label="Tracking" helpText="Responder will track only specified number of incoming requests">
-            <EuiFieldNumber
-              fullWidth
+            <EuiRange
               min={0}
-              max={100}
-              step={1}
+              max={maxResponderRequests}
               value={requestsToTrack}
-              onChange={onRequestsToTrackChange}
+              fullWidth
+              onChange={(e) => setRequestsToTrack(+e.currentTarget.value)}
+              showRange
+              showTicks
+              tickInterval={tickInterval > 1 ? Math.ceil(tickInterval / 5) * 5 : tickInterval}
+              showValue={maxResponderRequests > maxTicks}
             />
           </EuiFormRow>
           <EuiFormRow
