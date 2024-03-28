@@ -18,6 +18,7 @@ import axios from 'axios';
 import { getDefaultRetryStrategy, WEB_PAGE_TRACKER_SCHEDULES } from './consts';
 import type { SchedulerJobConfig, WebPageResourcesTracker } from './web_page_tracker';
 import { WebPageTrackerRetryStrategy } from './web_page_tracker_retry_strategy';
+import { useRangeTicks } from '../../../../hooks';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
 import { isValidURL } from '../../../../tools/url';
 import { EditorFlyout } from '../../components/editor_flyout';
@@ -34,7 +35,8 @@ const isHeaderValid = (header: string) => {
 };
 
 export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
-  const { addToast } = useWorkspaceContext();
+  const { addToast, uiState } = useWorkspaceContext();
+  const maxTicks = useRangeTicks();
 
   const [name, setName] = useState<string>(tracker?.name ?? '');
   const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -156,6 +158,8 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
     </EuiFormRow>
   ) : null;
 
+  const maxTrackerRevisions = uiState.subscription?.features?.webScraping.trackerRevisions ?? 0;
+  const tickInterval = Math.ceil(maxTrackerRevisions / maxTicks);
   return (
     <EditorFlyout
       title={`${tracker ? 'Edit' : 'Add'} tracker`}
@@ -175,12 +179,14 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
           <EuiFormRow label="Revisions" helpText="Tracker will persist only specified number of revisions">
             <EuiRange
               min={0}
-              max={10}
-              step={1}
+              max={maxTrackerRevisions}
               value={revisions}
               fullWidth
               onChange={(e) => setRevisions(+e.currentTarget.value)}
+              showRange
               showTicks
+              tickInterval={tickInterval > 1 ? Math.ceil(tickInterval / 5) * 5 : tickInterval}
+              showValue={maxTrackerRevisions > maxTicks}
             />
           </EuiFormRow>
           <EuiFormRow
