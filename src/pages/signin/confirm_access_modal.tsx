@@ -1,53 +1,35 @@
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
   EuiButton,
-  EuiButtonEmpty,
   EuiFieldText,
   EuiForm,
   EuiFormRow,
   EuiHorizontalRule,
-  EuiPanel,
+  EuiModal,
+  EuiModalBody,
+  EuiModalHeader,
+  EuiModalHeaderTitle,
+  EuiTitle,
 } from '@elastic/eui';
 import type { FrontendApi, LoginFlow, UiNodeInputAttributes } from '@ory/client';
 
-import { RecoverAccountModal } from './recover_account_modal';
-import { useAppContext, usePageMeta } from '../../hooks';
-import { getCsrfToken, getSecurityErrorMessage, isClientError } from '../../model';
+import { useAppContext } from '../../hooks';
 import type { AsyncData, SerializedPublicKeyCredentialRequestOptions } from '../../model';
+import { getCsrfToken, getSecurityErrorMessage, isClientError } from '../../model';
 import { signinWithPasskey } from '../../model/webauthn';
 import { getOryApi } from '../../tools/ory';
-import { isSafeNextUrl } from '../../tools/url';
 import { isWebAuthnSupported } from '../../tools/webauthn';
-import { Page } from '../page';
 
-async function getSigninFlow(api: FrontendApi, searchParams: URLSearchParams) {
-  const flowId = searchParams.get('flow');
-  if (flowId) {
-    // Try to retrieve existing flow first, otherwise create a new one.
-    try {
-      return await api.getLoginFlow({ id: flowId });
-    } catch (err) {
-      console.error('Failed to initialize signin flow.', err);
-    }
-  }
-
-  return await api.createBrowserLoginFlow();
+export interface ConfirmAccessModalProps {
+  email: string;
+  action: () => Promise<void>;
+  onClose: () => void;
 }
-export function SigninPage() {
-  usePageMeta('Sign-in');
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const navigate = useNavigate();
-  const { uiState, refreshUiState, addToast } = useAppContext();
-
-  const [email, setEmail] = useState<string>('');
-  const onEmailChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  }, []);
+export default function ConfirmAccessModal({ email, action, onClose }: ConfirmAccessModalProps) {
+  const { refreshUiState, addToast } = useAppContext();
 
   const [password, setPassword] = useState<string>('');
   const onPasswordChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -59,29 +41,30 @@ export function SigninPage() {
   function startSigninFlow(signinFunc: (api: FrontendApi, flow: LoginFlow) => Promise<void>) {
     getOryApi()
       .then(async (api) => {
-        // Start/retrieve a flow and remember it in the URL.
-        const { data: flow } = await getSigninFlow(api, searchParams);
-
-        searchParams.set('flow', flow.id);
-        setSearchParams(searchParams);
+        const { data: flow } = await api.createBrowserLoginFlow({ refresh: true });
 
         await signinFunc(api, flow);
-
         refreshUiState();
+
+        try {
+          await action();
+        } finally {
+          onClose();
+        }
       })
       .catch((err: Error) => {
         const originalErrorMessage = getSecurityErrorMessage(err);
         setSigninStatus({ status: 'failed', error: originalErrorMessage ?? 'Unknown error' });
 
         addToast({
-          id: 'signin-toast',
+          id: 'confirm-access-toast',
           color: 'danger',
-          title: 'Failed to sign in',
+          title: 'Failed to confirm access',
           text: (
             <>
               {isClientError(err) && originalErrorMessage
                 ? originalErrorMessage
-                : 'Unable to sign you in, please try again later or contact us.'}
+                : 'Unable to confirm access, please try again later or contact us.'}
             </>
           ),
         });
@@ -160,33 +143,19 @@ export function SigninPage() {
     [email, signinStatus],
   );
 
-  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
-  const onToggleResetPasswordModal = useCallback(() => {
-    setIsResetPasswordModalOpen((isOpen) => !isOpen);
-  }, []);
-
-  const resetPasswordModal = isResetPasswordModalOpen ? (
-    <RecoverAccountModal onClose={onToggleResetPasswordModal} email={email} />
-  ) : null;
-
-  if (uiState.user) {
-    const urlToRedirect = searchParams.get('next');
-    return <Navigate to={urlToRedirect && isSafeNextUrl(urlToRedirect) ? urlToRedirect : '/ws'} />;
-  }
-
   return (
-    <Page contentAlignment={'center'}>
-      <EuiPanel>
-        <EuiForm id="signin-form" component="form" className="signin-form">
+    <EuiModal onClose={() => onClose()}>
+      <EuiModalHeader>
+        <EuiModalHeaderTitle>
+          <EuiTitle size={'s'}>
+            <span>Confirm access</span>
+          </EuiTitle>
+        </EuiModalHeaderTitle>
+      </EuiModalHeader>
+      <EuiModalBody>
+        <EuiForm id="signin-form" component="form">
           <EuiFormRow>
-            <EuiFieldText
-              placeholder="Email"
-              value={email}
-              autoComplete={'email'}
-              type={'email'}
-              disabled={signinStatus?.status === 'pending'}
-              onChange={onEmailChange}
-            />
+            <EuiFieldText placeholder="Email" value={email} autoComplete={'email'} type={'email'} disabled />
           </EuiFormRow>
           <EuiFormRow>
             <EuiFieldText
@@ -213,7 +182,7 @@ export function SigninPage() {
                 signinStatus?.status === 'pending'
               }
             >
-              Sign in
+              Use password
             </EuiButton>
           </EuiFormRow>
           {isPasskeySupported ? (
@@ -231,35 +200,13 @@ export function SigninPage() {
                   isLoading={signinStatus?.status === 'pending' && signinStatus?.state?.isPasskey === true}
                   isDisabled={email.trim().length === 0 || signinStatus?.status === 'pending'}
                 >
-                  Sign in with passkey
+                  Use passkey or security key
                 </EuiButton>
               </EuiFormRow>
             </>
           ) : null}
-
-          <EuiFormRow className="eui-textCenter">
-            <>
-              <EuiButtonEmpty
-                size={'s'}
-                onClick={() => {
-                  navigate('/signup');
-                }}
-              >
-                Create account
-              </EuiButtonEmpty>
-              <EuiButtonEmpty
-                size={'s'}
-                onClick={() => {
-                  setIsResetPasswordModalOpen(true);
-                }}
-              >
-                Cannot sign in?
-              </EuiButtonEmpty>
-            </>
-          </EuiFormRow>
         </EuiForm>
-        {resetPasswordModal}
-      </EuiPanel>
-    </Page>
+      </EuiModalBody>
+    </EuiModal>
   );
 }

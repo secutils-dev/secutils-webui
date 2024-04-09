@@ -31,6 +31,7 @@ import { icon as EuiIconDiscuss } from '@elastic/eui/es/components/icon/assets/d
 import { icon as EuiIconDocumentation } from '@elastic/eui/es/components/icon/assets/documentation';
 import { icon as EuiIconDot } from '@elastic/eui/es/components/icon/assets/dot';
 import { icon as EuiIconDownload } from '@elastic/eui/es/components/icon/assets/download';
+import { icon as EuiIconEmail } from '@elastic/eui/es/components/icon/assets/email';
 import { icon as EuiIconEmpty } from '@elastic/eui/es/components/icon/assets/empty';
 import { icon as EuiIconExit } from '@elastic/eui/es/components/icon/assets/exit';
 import { icon as EuiIconExpandMini } from '@elastic/eui/es/components/icon/assets/expandMini';
@@ -89,7 +90,6 @@ import { WorkspacePage } from './pages';
 const SigninPage = lazy(() => import('./pages/signin'));
 const SignupPage = lazy(() => import('./pages/signup'));
 const ActivatePage = lazy(() => import('./pages/activate'));
-const ResetCredentialsPage = lazy(() => import('./pages/reset_credentials'));
 
 appendIconComponentCache({
   apps: EuiIconApps,
@@ -116,6 +116,7 @@ appendIconComponentCache({
   dot: EuiIconDot,
   download: EuiIconDownload,
   empty: EuiIconEmpty,
+  email: EuiIconEmail,
   exit: EuiIconExit,
   eyeClosed: EuiIconEyeClosed,
   expandMini: EuiIconExpandMini,
@@ -197,14 +198,6 @@ const IndexPage = () => {
             element={
               <Suspense fallback={<PageLoadingState />}>
                 <ActivatePage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="reset_credentials"
-            element={
-              <Suspense fallback={<PageLoadingState />}>
-                <ResetCredentialsPage />
               </Suspense>
             }
           />

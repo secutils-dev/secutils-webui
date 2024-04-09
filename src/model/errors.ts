@@ -5,19 +5,20 @@ export function isAbortError(err: unknown) {
   return err instanceof CanceledError || (err instanceof DOMException && err.name === 'AbortError');
 }
 
-export function getErrorMessage(err: Error) {
-  return (isApplicationError(err) ? err.response?.data.message : undefined) ?? err.message;
+export function getErrorMessage(err: unknown) {
+  return (isApplicationError(err) ? err.response?.data.message : undefined) ?? (err as Error).message;
 }
 
-export function isClientError(err: Error) {
-  const forceCastedError = err as AxiosError<{ message: string }>;
-  if (!forceCastedError.isAxiosError || !forceCastedError.response) {
-    return false;
-  }
-  return forceCastedError.response.status >= 400 && forceCastedError.response.status < 500;
+export function isClientError(err: unknown) {
+  const status = getErrorStatus(err);
+  return status ? status >= 400 && status < 500 : false;
 }
 
-function isApplicationError(err: Error): err is AxiosError<{ message: string }> {
+export function getErrorStatus(err: unknown) {
+  return (err as AxiosError).response?.status ?? (err as { status?: number }).status;
+}
+
+function isApplicationError(err: unknown): err is AxiosError<{ message: string }> {
   const forceCastedError = err as AxiosError<{ message: string }>;
   return forceCastedError.isAxiosError && !!forceCastedError.response?.data?.message;
 }

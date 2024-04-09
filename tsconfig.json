@@ -9,6 +9,7 @@
     "strict": true,
     "lib": [
       "dom",
+      "dom.iterable",
       "es5",
       "es2015",
       "es2019",

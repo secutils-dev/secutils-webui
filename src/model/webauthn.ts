@@ -1,6 +1,3 @@
-import axios from 'axios';
-
-import { getApiUrl } from './urls';
 import { arrayBufferToSafeBase64Url, safeBase64UrlToArrayBuffer } from '../tools/webauthn';
 
 interface SerializedPublicKeyCredentialDescriptor extends Omit<PublicKeyCredentialDescriptor, 'id'> {
@@ -11,18 +8,14 @@ interface SerializedPublicKeyCredentialUserEntity extends Omit<PublicKeyCredenti
   id: string;
 }
 
-interface SerializedCredentialsRequestOptions extends Omit<CredentialRequestOptions, 'publicKey'> {
-  publicKey: SerializedPublicKeyCredentialRequestOptions;
-}
-
-interface SerializedPublicKeyCredentialCreationOptions
+export interface SerializedPublicKeyCredentialCreationOptions
   extends Omit<PublicKeyCredentialCreationOptions, 'challenge' | 'excludeCredentials' | 'user'> {
   challenge: string;
   excludeCredentials?: SerializedPublicKeyCredentialDescriptor[];
   user: SerializedPublicKeyCredentialUserEntity;
 }
 
-interface SerializedPublicKeyCredentialRequestOptions
+export interface SerializedPublicKeyCredentialRequestOptions
   extends Omit<PublicKeyCredentialRequestOptions, 'challenge' | 'allowCredentials'> {
   challenge: string;
   allowCredentials?: SerializedPublicKeyCredentialDescriptor[];
@@ -54,39 +47,36 @@ interface SerializedPublicKeyCredential {
 }
 
 function deserializePublicKeyCredentialCreationOptions(
-  serializedOptions: SerializedPublicKeyCredentialCreationOptions,
+  serializedPublicKey: SerializedPublicKeyCredentialCreationOptions,
 ): PublicKeyCredentialCreationOptions {
   return {
-    ...serializedOptions,
-    challenge: safeBase64UrlToArrayBuffer(serializedOptions.challenge),
-    excludeCredentials: serializedOptions.excludeCredentials
-      ? serializedOptions.excludeCredentials.map((serializedCredential) => ({
+    ...serializedPublicKey,
+    challenge: safeBase64UrlToArrayBuffer(serializedPublicKey.challenge),
+    excludeCredentials: serializedPublicKey.excludeCredentials
+      ? serializedPublicKey.excludeCredentials.map((serializedCredential) => ({
           ...serializedCredential,
           id: safeBase64UrlToArrayBuffer(serializedCredential.id),
         }))
       : undefined,
     user: {
-      ...serializedOptions.user,
-      id: safeBase64UrlToArrayBuffer(serializedOptions.user.id),
+      ...serializedPublicKey.user,
+      id: safeBase64UrlToArrayBuffer(serializedPublicKey.user.id),
     },
   };
 }
 
 function deserializeCredentialRequestOptions(
-  serializedOptions: SerializedCredentialsRequestOptions,
-): CredentialRequestOptions {
+  serializedPublicKey: SerializedPublicKeyCredentialRequestOptions,
+): PublicKeyCredentialRequestOptions {
   return {
-    ...serializedOptions,
-    publicKey: {
-      ...serializedOptions.publicKey,
-      challenge: safeBase64UrlToArrayBuffer(serializedOptions.publicKey.challenge),
-      allowCredentials: serializedOptions.publicKey.allowCredentials
-        ? serializedOptions.publicKey.allowCredentials.map((serializedCredential) => ({
-            ...serializedCredential,
-            id: safeBase64UrlToArrayBuffer(serializedCredential.id),
-          }))
-        : undefined,
-    },
+    ...serializedPublicKey,
+    challenge: safeBase64UrlToArrayBuffer(serializedPublicKey.challenge),
+    allowCredentials: serializedPublicKey.allowCredentials
+      ? serializedPublicKey.allowCredentials.map((serializedCredential) => ({
+          ...serializedCredential,
+          id: safeBase64UrlToArrayBuffer(serializedCredential.id),
+        }))
+      : undefined,
   };
 }
 
@@ -124,59 +114,24 @@ function serializeCredential(credential: PublicKeyCredential): SerializedPublicK
   };
 }
 
-export async function updatePasskey() {
-  // First, retrieve a registration challenge.
-  const { data: challenge } = await axios.post<{ publicKey: SerializedPublicKeyCredentialCreationOptions }>(
-    getApiUrl('/api/credentials/passkey/start'),
-  );
-
+export async function signupWithPasskey(publicKey: SerializedPublicKeyCredentialCreationOptions) {
   // Then, ask browser to create credentials.
   const credentials = await navigator.credentials.create({
-    publicKey: deserializePublicKeyCredentialCreationOptions(challenge.publicKey),
+    publicKey: deserializePublicKeyCredentialCreationOptions(publicKey),
   });
   if (!credentials) {
     throw new Error('Browser could not create credentials.');
   }
 
-  await axios.post(
-    getApiUrl('/api/credentials/passkey/finish'),
-    serializeRegisterCredential(credentials as PublicKeyCredential),
-  );
+  return JSON.stringify(serializeRegisterCredential(credentials as PublicKeyCredential));
 }
 
-export async function signupWithPasskey(email: string) {
-  // First, retrieve a registration challenge.
-  const { data: challenge } = await axios.post<{ publicKey: SerializedPublicKeyCredentialCreationOptions }>(
-    getApiUrl('/api/webauthn/signup/start'),
-    { email },
-  );
-
+export async function signinWithPasskey(publicKey: SerializedPublicKeyCredentialRequestOptions) {
   // Then, ask browser to create credentials.
-  const credentials = await navigator.credentials.create({
-    publicKey: deserializePublicKeyCredentialCreationOptions(challenge.publicKey),
-  });
-  if (!credentials) {
-    throw new Error('Browser could not create credentials.');
-  }
-
-  await axios.post(
-    getApiUrl('/api/webauthn/signup/finish'),
-    serializeRegisterCredential(credentials as PublicKeyCredential),
-  );
-}
-
-export async function signinWithPasskey(email: string) {
-  // First, retrieve a registration challenge.
-  const { data: challenge } = await axios.post<{ publicKey: SerializedPublicKeyCredentialRequestOptions }>(
-    getApiUrl('/api/webauthn/signin/start'),
-    { email },
-  );
-
-  // Then, ask browser to create credentials.
-  const credentials = await navigator.credentials.get(deserializeCredentialRequestOptions(challenge));
+  const credentials = await navigator.credentials.get({ publicKey: deserializeCredentialRequestOptions(publicKey) });
   if (!credentials) {
     throw new Error('Browser could not get credentials.');
   }
 
-  await axios.post(getApiUrl('/api/webauthn/signin/finish'), serializeCredential(credentials as PublicKeyCredential));
+  return JSON.stringify(serializeCredential(credentials as PublicKeyCredential));
 }

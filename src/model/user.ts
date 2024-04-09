@@ -6,8 +6,6 @@ import type { UserSubscription } from './user_subscription';
 export interface User {
   email: string;
   handle: string;
-  roles: string[];
-  credentials: { password: boolean; passkey: boolean };
   activated: boolean;
   subscription: UserSubscription;
 }

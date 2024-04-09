@@ -3,36 +3,18 @@ import type { ReactNode } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import type { EuiSideNavItemType } from '@elastic/eui';
-import {
-  EuiButton,
-  EuiButtonEmpty,
-  EuiButtonIcon,
-  EuiContextMenuItem,
-  EuiContextMenuPanel,
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiIcon,
-  EuiPopover,
-  EuiSideNav,
-  EuiSpacer,
-  useEuiTheme,
-} from '@elastic/eui';
+import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem, EuiIcon, EuiSideNav, EuiSpacer, useEuiTheme } from '@elastic/eui';
 import type { EuiBreadcrumbProps } from '@elastic/eui/src/components/breadcrumbs/types';
 import { css } from '@emotion/react';
-import axios from 'axios';
 
 import { SiteSearchBar } from './components/site_search_bar';
 import { getUtilIcon, UTIL_HANDLES, UtilsComponents, UtilsShareComponents } from './utils';
 import { WorkspaceContext } from './workspace_context';
 import { SettingsFlyout } from '../../app_container';
 import { PageLoadingState } from '../../components';
-import { useAppContext, usePageMeta } from '../../hooks';
+import { useAppContext, usePageHeaderActions, usePageMeta } from '../../hooks';
 import type { Util } from '../../model';
-import {
-  getApiUrl,
-  USER_SETTINGS_KEY_COMMON_FAVORITES,
-  USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES,
-} from '../../model';
+import { USER_SETTINGS_KEY_COMMON_FAVORITES, USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES } from '../../model';
 import { Page } from '../page';
 
 const DEFAULT_COMPONENT = lazy(() => import('../../components/page_under_construction_state'));
@@ -58,7 +40,9 @@ export function WorkspacePage() {
   const euiTheme = useEuiTheme();
   const navigate = useNavigate();
 
-  const { addToast, uiState, refreshUiState, settings, setSettings } = useAppContext();
+  const { actions, isSettingsOpen, hideSettings } = usePageHeaderActions();
+
+  const { uiState, settings, setSettings } = useAppContext();
   const { util: utilIdFromParam = UTIL_HANDLES.home, deepLink: deepLinkFromParam } = useParams<{
     util?: string;
     deepLink?: string;
@@ -184,17 +168,6 @@ export function WorkspacePage() {
     return <UtilComponent />;
   }, [selectedUtil, utilsMap, utilIdFromParam, uiState]);
 
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const onToggleSettings = useCallback(() => {
-    // Refresh UI state every time settings are opened.
-    if (!isSettingsOpen) {
-      refreshUiState();
-    }
-
-    setIsAccountPopoverOpen(false);
-    setIsSettingsOpen(!isSettingsOpen);
-  }, [isSettingsOpen, refreshUiState]);
-
   const onChangeShowOnlyFavorites = (showOnlyFavoritesValue: boolean) => {
     setSettings({ [USER_SETTINGS_KEY_COMMON_SHOW_ONLY_FAVORITES]: showOnlyFavoritesValue || null });
 
@@ -242,22 +215,6 @@ export function WorkspacePage() {
     )
   ) : null;
 
-  const settingsFlyout = isSettingsOpen ? <SettingsFlyout onClose={onToggleSettings} /> : null;
-
-  const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState<boolean>(false);
-  const onSignout = useCallback(() => {
-    setIsAccountPopoverOpen(false);
-    axios.post(getApiUrl('/api/signout')).then(
-      () => {
-        window.location.replace('/signin');
-        setTimeout(() => window.location.reload(), 500);
-      },
-      () => {
-        addToast({ id: 'signout-error', title: 'Failed to sign out' });
-      },
-    );
-  }, []);
-
   // Sidebar is only available to authenticated users.
   const sidebar = uiState.user ? (
     <aside>
@@ -286,63 +243,9 @@ export function WorkspacePage() {
           aria-label={`Only show favorite utilities`}
           onClick={() => onChangeShowOnlyFavorites(!showOnlyFavorites)}
         />,
-        <EuiButtonIcon
-          iconType={'documentation'}
-          css={css`
-            margin-right: ${euiTheme.euiTheme.size.xxs};
-          `}
-          iconSize="m"
-          size="m"
-          title={`Documentation`}
-          aria-label={`Open documentation`}
-          target={'_blank'}
-          href={'/docs'}
-        />,
-        <EuiPopover
-          className="eui-fullWidth"
-          button={
-            <EuiButtonIcon
-              aria-label={'Account menu'}
-              size={'m'}
-              display={'empty'}
-              iconType="user"
-              title={'Account'}
-              onClick={() => setIsAccountPopoverOpen(!isAccountPopoverOpen)}
-            />
-          }
-          isOpen={isAccountPopoverOpen}
-          closePopover={() => setIsAccountPopoverOpen(false)}
-          panelPaddingSize="none"
-          anchorPosition="downLeft"
-        >
-          <EuiContextMenuPanel
-            size="m"
-            title={uiState.user ? uiState.user.email : null}
-            items={[
-              <EuiContextMenuItem key="settings" icon="gear" onClick={onToggleSettings}>
-                Settings
-              </EuiContextMenuItem>,
-              <EuiContextMenuItem key="signout" icon="exit" onClick={onSignout}>
-                Sign out
-              </EuiContextMenuItem>,
-            ]}
-          />
-        </EuiPopover>,
+        ...actions,
       ]
-    : [
-        <EuiButtonEmpty
-          href="/signin"
-          size="s"
-          css={css`
-            margin-right: ${euiTheme.euiTheme.size.xxs};
-          `}
-        >
-          Sign in
-        </EuiButtonEmpty>,
-        <EuiButton href="/signup" fill size="s">
-          Get started
-        </EuiButton>,
-      ];
+    : actions;
 
   return (
     <Page
@@ -368,7 +271,7 @@ export function WorkspacePage() {
     >
       <Suspense fallback={<PageLoadingState />}>
         <WorkspaceContext.Provider value={{ setTitleActions, setTitle }}>{content}</WorkspaceContext.Provider>
-        {settingsFlyout}
+        {isSettingsOpen ? <SettingsFlyout onClose={hideSettings} /> : null}
       </Suspense>
     </Page>
   );

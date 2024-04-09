@@ -1,6 +1,6 @@
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
   EuiButton,
@@ -14,11 +14,13 @@ import {
   useEuiTheme,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
-import axios from 'axios';
+import type { FrontendApi, RegistrationFlow, UiNodeInputAttributes } from '@ory/client';
 
 import { useAppContext, usePageMeta } from '../../hooks';
-import { type AsyncData, getApiUrl, getErrorMessage, isClientError } from '../../model';
+import { getCsrfToken, getSecurityErrorMessage, isClientError } from '../../model';
+import type { AsyncData, SerializedPublicKeyCredentialCreationOptions } from '../../model';
 import { signupWithPasskey } from '../../model/webauthn';
+import { getOryApi } from '../../tools/ory';
 import { isWebAuthnSupported } from '../../tools/webauthn';
 import { Page } from '../page';
 
@@ -27,8 +29,24 @@ enum FormState {
   WithPassword,
 }
 
+async function getSignupFlow(api: FrontendApi, searchParams: URLSearchParams) {
+  const flowId = searchParams.get('flow');
+  if (flowId) {
+    // Try to retrieve existing flow first, otherwise create a new one.
+    try {
+      return await api.getRegistrationFlow({ id: flowId });
+    } catch (err) {
+      console.error('Failed to initialize signup flow.', err);
+    }
+  }
+
+  return await api.createBrowserRegistrationFlow();
+}
+
 export function SignupPage() {
   usePageMeta('Sign-up');
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const navigate = useNavigate();
   const { uiState, refreshUiState, addToast } = useAppContext();
@@ -53,6 +71,36 @@ export function SignupPage() {
 
   const [isPasskeySupported] = useState<boolean>(isWebAuthnSupported());
 
+  function startSignupFlow(signupFunc: (api: FrontendApi, flow: RegistrationFlow) => Promise<void>) {
+    getOryApi()
+      .then(async (api) => {
+        // Start/retrieve a flow and remember it in the URL.
+        const { data: flow } = await getSignupFlow(api, searchParams);
+        setSearchParams({ flow: flow.id });
+
+        await signupFunc(api, flow);
+
+        refreshUiState();
+      })
+      .catch((err: Error) => {
+        const originalErrorMessage = getSecurityErrorMessage(err);
+        setSignupStatus({ status: 'failed', error: originalErrorMessage ?? 'Unknown error' });
+
+        addToast({
+          id: 'signup-toast',
+          color: 'danger',
+          title: 'Failed to sign up',
+          text: (
+            <>
+              {isClientError(err) && originalErrorMessage
+                ? originalErrorMessage
+                : 'Unable to sign you up, please try again later or contact us.'}
+            </>
+          ),
+        });
+      });
+  }
+
   const [signupStatus, setSignupStatus] = useState<AsyncData<null, { isPasskey: boolean }> | null>(null);
   const onSignupWithPassword: MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {
@@ -63,28 +111,19 @@ export function SignupPage() {
       }
 
       setSignupStatus({ status: 'pending', state: { isPasskey: false } });
-      axios.post(getApiUrl('/api/signup'), { email, password }).then(refreshUiState, (err: Error) => {
-        const originalErrorMessage = getErrorMessage(err);
-        setSignupStatus({
-          status: 'failed',
-          error: originalErrorMessage,
-        });
-
-        addToast({
-          id: 'signup-password',
-          color: 'danger',
-          title: 'Failed to sign up',
-          text: (
-            <>
-              {isClientError(err)
-                ? originalErrorMessage
-                : 'Unable to sign you up, please try again later or contact us.'}
-            </>
-          ),
+      startSignupFlow(async (api, flow) => {
+        await api.updateRegistrationFlow({
+          flow: flow.id,
+          updateRegistrationFlowBody: {
+            method: 'password' as const,
+            password,
+            csrf_token: getCsrfToken(flow),
+            traits: { email },
+          },
         });
       });
     },
-    [email, password, signupStatus, refreshUiState],
+    [email, password, signupStatus],
   );
 
   const onContinueWithPassword: MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
@@ -102,28 +141,46 @@ export function SignupPage() {
       }
 
       setSignupStatus({ status: 'pending', state: { isPasskey: true } });
-      signupWithPasskey(email).then(refreshUiState, (err: Error) => {
-        const originalErrorMessage = getErrorMessage(err);
-        setSignupStatus({
-          status: 'failed',
-          error: originalErrorMessage,
-        });
+      startSignupFlow(async (api, flow) => {
+        const axiosResponse = await api.updateRegistrationFlow(
+          {
+            flow: flow.id,
+            updateRegistrationFlowBody: {
+              // @ts-expect-error new flow type is not yet available.
+              method: 'profile' as const,
+              csrf_token: getCsrfToken(flow),
+              traits: { email },
+            },
+          },
+          { validateStatus: (status) => status < 500 },
+        );
 
-        addToast({
-          id: 'signup-passkey',
-          color: 'danger',
-          title: 'Failed to sign up with a passkey',
-          text: (
-            <>
-              {isClientError(err)
-                ? originalErrorMessage
-                : 'Unable to sign you up, please try again later or contact us.'}
-            </>
-          ),
+        const updatedFlow = axiosResponse.data as unknown as RegistrationFlow;
+        const publicKeyNode = updatedFlow?.ui?.nodes?.find(
+          (node) => node.attributes.node_type === 'input' && node.attributes.name === 'webauthn_register_trigger',
+        );
+        if (!publicKeyNode) {
+          throw axiosResponse;
+        }
+
+        const { publicKey } = JSON.parse(
+          // Trim `window.__oryWebAuthnRegistration(...)`
+          ((publicKeyNode.attributes as UiNodeInputAttributes).onclick as string).slice(33, -1),
+        ) as { publicKey: SerializedPublicKeyCredentialCreationOptions };
+
+        await api.updateRegistrationFlow({
+          flow: updatedFlow.id,
+          updateRegistrationFlowBody: {
+            method: 'webauthn' as const,
+            csrf_token: getCsrfToken(updatedFlow),
+            webauthn_register: await signupWithPasskey(publicKey),
+            webauthn_register_displayname: email,
+            traits: { email },
+          },
         });
       });
     },
-    [email, signupStatus, refreshUiState],
+    [email, signupStatus],
   );
 
   if (uiState.user) {

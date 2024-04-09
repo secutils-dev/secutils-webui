@@ -1,6 +1,6 @@
 import type { MouseEventHandler, ReactElement, ReactNode } from 'react';
 import { useCallback, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useSearchParams } from 'react-router-dom';
 
 import {
   EuiHeader,
@@ -44,9 +44,7 @@ export interface PageToast {
 }
 
 function isUnauthenticatedPage(pathname: string) {
-  return ['/signin', '/signup', '/activate', '/reset_credentials'].some((unauthenticatedPagePathname) =>
-    pathname.startsWith(unauthenticatedPagePathname),
-  );
+  return ['/signin', '/signup'].some((unauthenticatedPagePathname) => pathname.startsWith(unauthenticatedPagePathname));
 }
 
 export function Page({
@@ -60,6 +58,7 @@ export function Page({
 }: PageProps) {
   const { uiState } = useAppContext();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const [isContactFormOpen, setIsContactFormOpen] = useState<boolean>(false);
   const onToggleContactForm = useCallback(() => {
@@ -97,7 +96,7 @@ export function Page({
       <Navigate
         to={
           location.pathname !== '/' && location.pathname !== '/ws'
-            ? `/signin?next=${encodeURIComponent(location.pathname)}`
+            ? `/signin?next=${encodeURIComponent(`${location.pathname}?${searchParams.toString()}`)}`
             : '/signin'
         }
       />

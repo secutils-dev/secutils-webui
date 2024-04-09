@@ -18,3 +18,8 @@ export type { SerializedSearchItem, SearchItem } from './search_item';
 export { deserializeSearchItem } from './search_item';
 export { getErrorMessage, isClientError } from './errors';
 export type { UserSubscription } from './user_subscription';
+export { getCsrfToken, getSecurityErrorMessage } from './security_flows';
+export type {
+  SerializedPublicKeyCredentialCreationOptions,
+  SerializedPublicKeyCredentialRequestOptions,
+} from './webauthn';
