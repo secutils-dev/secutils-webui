@@ -71,7 +71,10 @@
     "url": "^0.11.3"
   },
   "optionalDependencies": {
-    "@parcel/watcher-linux-x64-glibc": "^2.4.1"
+    "@parcel/watcher-linux-x64-glibc": "^2.4.1",
+    "@parcel/watcher-linux-arm64-musl": "^2.4.1",
+    "lightningcss-linux-arm64-musl": "^1.24.1",
+    "lightningcss-linux-x64-gnu": "^1.24.1"
   },
   "overrides": {
     "typescript": "^5.4.5"
