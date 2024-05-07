@@ -219,7 +219,6 @@ export default function WebPageResourcesTrackers() {
         onTableChange={onTableChange}
         items={trackers.data}
         itemId={(item) => item.id}
-        isExpandable={true}
         itemIdToExpandedRowMap={itemIdToExpandedRowMap}
         tableLayout={'auto'}
         columns={[

@@ -224,7 +224,6 @@ export default function Responders() {
         onTableChange={onTableChange}
         items={responders.data}
         itemId={(responder) => responder.id}
-        isExpandable={true}
         itemIdToExpandedRowMap={itemIdToExpandedRowMap}
         tableLayout={'auto'}
         columns={[
