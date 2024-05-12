@@ -24,7 +24,6 @@ export interface SubscriptionState {
    * The subscription-dependent features available to the user.
    */
   features?: {
-    admin?: boolean;
     certificates: { privateKeyAlgorithms?: string[] };
     webhooks: { responderRequests: number };
     webScraping: { trackerRevisions: number; trackerSchedules?: string[] };

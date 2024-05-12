@@ -60,7 +60,7 @@ export function ActivatePage() {
       return;
     }
 
-    if (user.activated) {
+    if (user.isActivated) {
       setProcess({ status: 'succeeded', data: { step: 'doesnt_require_activation' } });
       return;
     }

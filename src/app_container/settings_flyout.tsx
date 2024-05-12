@@ -341,7 +341,7 @@ export function SettingsFlyout({ onClose }: Props) {
               <span>Manage your Secutils.dev account</span>
               <br />
               <br />
-              {uiState.user?.activated ? null : (
+              {uiState.user?.isActivated ? null : (
                 <>
                   <EuiButtonEmpty
                     iconType={'email'}

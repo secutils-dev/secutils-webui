@@ -6,7 +6,8 @@ import type { UserSubscription } from './user_subscription';
 export interface User {
   email: string;
   handle: string;
-  activated: boolean;
+  isActivated: boolean;
+  isOperator?: boolean;
   subscription: UserSubscription;
 }
 
