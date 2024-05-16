@@ -292,7 +292,7 @@ export default function CertificatesPrivateKeys() {
             {
               name: 'Actions',
               field: 'headers',
-              width: '75px',
+              width: '105px',
               actions: [
                 {
                   name: 'Export',

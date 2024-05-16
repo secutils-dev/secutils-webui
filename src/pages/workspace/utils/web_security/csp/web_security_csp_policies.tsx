@@ -278,7 +278,7 @@ export default function WebSecurityContentSecurityPolicies() {
           {
             name: 'Actions',
             field: 'headers',
-            width: '75px',
+            width: '105px',
             actions: [
               {
                 name: 'Copy policy',
