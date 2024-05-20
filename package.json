@@ -24,21 +24,21 @@
   "dependencies": {
     "@babel/runtime": "^7.24.5",
     "@elastic/datemath": "^5.0.3",
-    "@elastic/eui": "^94.3.0",
+    "@elastic/eui": "^94.5.0",
     "@emotion/css": "^11.11.2",
     "@emotion/react": "^11.11.4",
     "@monaco-editor/react": "^4.6.0",
     "@ory/client": "^1.9.0",
-    "axios": "^1.6.8",
+    "axios": "^1.7.1",
     "moment": "^2.30.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.0"
+    "react-router-dom": "^6.23.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
-    "@eslint/eslintrc": "^3.0.2",
+    "@eslint/eslintrc": "^3.1.0",
     "@parcel/compressor-brotli": "^2.12.0",
     "@parcel/compressor-gzip": "^2.12.0",
     "@parcel/config-default": "^2.12.0",
@@ -51,10 +51,10 @@
     "@parcel/transformer-typescript-tsc": "^2.12.0",
     "@parcel/transformer-webmanifest": "^2.12.0",
     "@parcel/validator-typescript": "^2.12.0",
-    "@types/react": "^18.3.1",
+    "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
-    "@typescript-eslint/eslint-plugin": "^7.8.0",
-    "@typescript-eslint/parser": "^7.8.0",
+    "@typescript-eslint/eslint-plugin": "^7.9.0",
+    "@typescript-eslint/parser": "^7.9.0",
     "buffer": "^6.0.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -73,8 +73,8 @@
   "optionalDependencies": {
     "@parcel/watcher-linux-x64-glibc": "^2.4.1",
     "@parcel/watcher-linux-arm64-musl": "^2.4.1",
-    "lightningcss-linux-arm64-musl": "^1.24.1",
-    "lightningcss-linux-x64-gnu": "^1.24.1"
+    "lightningcss-linux-arm64-musl": "^1.25.0",
+    "lightningcss-linux-x64-gnu": "^1.25.0"
   },
   "overrides": {
     "typescript": "^5.4.5"
