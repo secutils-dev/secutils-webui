@@ -1,60 +1,32 @@
-import { useEffect, useState } from 'react';
-
 import { EuiFormRow, EuiRange, EuiSelect } from '@elastic/eui';
 
-import {
-  getDefaultRetryInterval,
-  getDefaultRetryStrategy,
-  WEB_PAGE_TRACKER_RETRY_INTERVALS,
-  WEB_PAGE_TRACKER_RETRY_STRATEGIES,
-} from './consts';
-import type { SchedulerJobConfig, SchedulerJobRetryStrategy } from './web_page_tracker';
+import type { RetryInterval } from './consts';
+import { getDefaultRetryStrategy, getRetryStrategies } from './consts';
+import type { SchedulerJobRetryStrategy } from './web_page_tracker';
 
 export interface WebPageTrackerRetryStrategyProps {
-  jobConfig: SchedulerJobConfig;
+  intervals: RetryInterval[];
+  strategy?: SchedulerJobRetryStrategy;
   onChange: (strategy: SchedulerJobRetryStrategy | null) => void;
 }
 
-export function WebPageTrackerRetryStrategy({ jobConfig, onChange }: WebPageTrackerRetryStrategyProps) {
-  const [currentJobConfig, setCurrentJobConfig] = useState<SchedulerJobConfig>(jobConfig);
-
-  useEffect(() => {
-    const changedSchedule = currentJobConfig.schedule !== jobConfig.schedule;
-    if (currentJobConfig.retryStrategy === jobConfig.retryStrategy && !changedSchedule) {
-      return;
-    }
-
-    const newRetryStrategy =
-      currentJobConfig.retryStrategy && changedSchedule
-        ? { ...currentJobConfig.retryStrategy, interval: getDefaultRetryInterval(jobConfig.schedule) }
-        : currentJobConfig.retryStrategy;
-    setCurrentJobConfig({ ...jobConfig, retryStrategy: newRetryStrategy });
-    onChange(newRetryStrategy ?? null);
-  }, [jobConfig, currentJobConfig, onChange]);
-
-  const retryStrategy = currentJobConfig.retryStrategy;
+export function WebPageTrackerRetryStrategy({ intervals, strategy, onChange }: WebPageTrackerRetryStrategyProps) {
   let maxAttempts = null;
   let interval = null;
-  if (retryStrategy) {
+  if (strategy && intervals.length > 0) {
     maxAttempts = (
       <EuiFormRow label="Attemtps" helpText="How many retries should be attempted if check fails">
         <EuiRange
           min={1}
           max={10}
           step={1}
-          value={retryStrategy.maxAttempts}
-          onChange={(e) =>
-            setCurrentJobConfig({
-              ...currentJobConfig,
-              retryStrategy: { ...retryStrategy, maxAttempts: +e.currentTarget.value },
-            })
-          }
+          value={strategy.maxAttempts}
+          onChange={(e) => onChange({ ...strategy, maxAttempts: +e.currentTarget.value })}
           showTicks
         />
       </EuiFormRow>
     );
 
-    const intervals = WEB_PAGE_TRACKER_RETRY_INTERVALS.get(currentJobConfig.schedule)!;
     const minInterval = intervals[0].value;
     const maxInterval = intervals[intervals.length - 1].value;
     interval = (
@@ -63,32 +35,29 @@ export function WebPageTrackerRetryStrategy({ jobConfig, onChange }: WebPageTrac
           min={minInterval}
           max={maxInterval}
           step={minInterval}
-          value={retryStrategy.interval}
-          disabled={retryStrategy.maxAttempts === 0}
+          value={strategy.interval}
+          disabled={strategy.maxAttempts === 0}
           ticks={intervals}
-          onChange={(e) =>
-            setCurrentJobConfig({
-              ...currentJobConfig,
-              retryStrategy: { ...retryStrategy, interval: +e.currentTarget.value },
-            })
-          }
+          onChange={(e) => onChange({ ...strategy, interval: +e.currentTarget.value })}
           showTicks
         />
       </EuiFormRow>
     );
   }
 
+  const strategies = getRetryStrategies(intervals);
+  const canChangeStrategy = strategies.length > 1;
   return (
     <>
       <EuiFormRow label="Strategy" helpText="What strategy should be used to retry failed checks">
         <EuiSelect
-          options={WEB_PAGE_TRACKER_RETRY_STRATEGIES}
-          value={currentJobConfig.retryStrategy?.type ?? 'none'}
-          onChange={(e) =>
-            setCurrentJobConfig({
-              ...currentJobConfig,
-              retryStrategy: e.target.value === 'none' ? undefined : getDefaultRetryStrategy(currentJobConfig.schedule),
-            })
+          options={strategies}
+          disabled={!canChangeStrategy}
+          value={strategy?.type ?? strategies[0].value}
+          onChange={
+            canChangeStrategy
+              ? (e) => onChange(e.target.value === 'none' ? null : getDefaultRetryStrategy(intervals))
+              : undefined
           }
         />
       </EuiFormRow>
