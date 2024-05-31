@@ -10,13 +10,19 @@ import {
   EuiFormRow,
   EuiLink,
   EuiRange,
-  EuiSelect,
   EuiSwitch,
 } from '@elastic/eui';
 import axios from 'axios';
 
-import { getDefaultRetryStrategy, WEB_PAGE_TRACKER_SCHEDULES } from './consts';
+import {
+  getDefaultRetryStrategy,
+  getRetryIntervals,
+  getScheduleMinInterval,
+  type RetryInterval,
+  WEB_PAGE_TRACKER_CUSTOM_SCHEDULE,
+} from './consts';
 import type { SchedulerJobConfig, WebPageResourcesTracker } from './web_page_tracker';
+import { WebPageTrackerJobSchedule } from './web_page_tracker_job_schedule';
 import { WebPageTrackerRetryStrategy } from './web_page_tracker_retry_strategy';
 import { useRangeTicks } from '../../../../hooks';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage, isClientError } from '../../../../model';
@@ -49,6 +55,9 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
   }, []);
 
   const [jobConfig, setJobConfig] = useState<SchedulerJobConfig | null>(tracker?.jobConfig ?? null);
+  const [retryIntervals, setRetryIntervals] = useState<RetryInterval[]>(
+    jobConfig?.schedule ? getRetryIntervals(getScheduleMinInterval(jobConfig.schedule)) : [],
+  );
 
   const [delay, setDelay] = useState<number>(tracker?.settings.delay ?? 5000);
   const onDelayChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +167,26 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
     </EuiFormRow>
   ) : null;
 
+  // Link to the cron expression documentation only if it's allowed by the subscription.
+  const supportsCustomSchedule =
+    !uiState.subscription?.features?.webScraping.trackerSchedules ||
+    uiState.subscription.features.webScraping.trackerSchedules.includes(WEB_PAGE_TRACKER_CUSTOM_SCHEDULE);
+  const scheduleHelpText = supportsCustomSchedule ? (
+    <span>
+      How often web page should be checked for changes. By default, automatic checks are disabled and can be initiated
+      manually. Custom schedules can be set using a cron expression. Refer to the{' '}
+      <EuiLink target="_blank" href="/docs/guides/web_scraping/resources#annex-custom-cron-schedules">
+        <b>documentation</b>
+      </EuiLink>{' '}
+      for supported cron expression formats and examples
+    </span>
+  ) : (
+    <>
+      How often web page should be checked for changes. By default, automatic checks are disabled and can be initiated
+      manually
+    </>
+  );
+
   const maxTrackerRevisions = uiState.subscription?.features?.webScraping.trackerRevisions ?? 0;
   const tickInterval = Math.ceil(maxTrackerRevisions / maxTicks);
   return (
@@ -165,7 +194,9 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
       title={`${tracker ? 'Edit' : 'Add'} tracker`}
       onClose={() => onClose()}
       onSave={onSave}
-      canSave={name.trim().length > 0 && isValidURL(url.trim()) && !headers.invalid}
+      canSave={
+        name.trim().length > 0 && isValidURL(url.trim()) && !headers.invalid && (!jobConfig || !!jobConfig.schedule)
+      }
       saveInProgress={updatingStatus?.status === 'pending'}
     >
       <EuiForm fullWidth>
@@ -229,26 +260,28 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
             'Properties defining how frequently web page should be checked for changes and how those changes should be reported'
           }
         >
-          <EuiFormRow
-            label="Frequency"
-            helpText="How often web page should be checked for changes. By default, automatic checks are disabled and can be initiated manually"
-          >
-            <EuiSelect
-              options={WEB_PAGE_TRACKER_SCHEDULES}
-              value={jobConfig?.schedule ?? '@'}
-              onChange={(e) =>
-                setJobConfig(
-                  e.target.value === '@'
-                    ? null
-                    : {
-                        ...(jobConfig ?? {
-                          retryStrategy: getDefaultRetryStrategy(e.target.value),
-                          notifications: true,
-                        }),
-                        schedule: e.target.value,
-                      },
-                )
-              }
+          <EuiFormRow label="Frequency" helpText={scheduleHelpText}>
+            <WebPageTrackerJobSchedule
+              schedule={jobConfig?.schedule}
+              onChange={(schedule, retryIntervals) => {
+                // If schedule is invalid, update only schedule.
+                if (schedule === '' && jobConfig) {
+                  setJobConfig({ ...jobConfig, schedule });
+                  return;
+                }
+
+                if (schedule === null) {
+                  setJobConfig(null);
+                } else if (schedule !== jobConfig?.schedule) {
+                  setJobConfig({
+                    ...(jobConfig ?? { notifications: true }),
+                    retryStrategy: retryIntervals.length > 0 ? getDefaultRetryStrategy(retryIntervals) : undefined,
+                    schedule,
+                  });
+                }
+
+                setRetryIntervals(retryIntervals);
+              }}
             />
           </EuiFormRow>
           {notifications}
@@ -259,7 +292,8 @@ export function WebPageResourcesTrackerEditFlyout({ onClose, tracker }: Props) {
             description={'Properties defining how failed automatic checks should be retried'}
           >
             <WebPageTrackerRetryStrategy
-              jobConfig={jobConfig}
+              strategy={jobConfig.retryStrategy}
+              intervals={retryIntervals}
               onChange={(newStrategy) => {
                 if (jobConfig) {
                   setJobConfig({ ...jobConfig, retryStrategy: newStrategy ?? undefined });
