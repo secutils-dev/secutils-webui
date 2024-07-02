@@ -186,7 +186,7 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
   );
 
   if (requests.status === 'pending') {
-    return <PageLoadingState title={`Loading requests for "${responder.name}" (${responder.path})…`} />;
+    return <PageLoadingState title={`Loading requests for "${responder.name}" responder…`} />;
   }
 
   if (requests.status === 'failed') {
@@ -272,11 +272,7 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
       confirmButtonText="Clear"
       buttonColor="danger"
     >
-      The request history for{' '}
-      <b>
-        {responder.name} ({responder.path})
-      </b>{' '}
-      will be cleared. Are you sure you want to proceed?
+      The request history for <b>{responder.name}</b> will be cleared. Are you sure you want to proceed?
     </EuiConfirmModal>
   ) : null;
 
