@@ -36,15 +36,16 @@ const PATH_TYPES = [
   { value: '^', text: 'Prefix' },
 ];
 
-const SUBDOMAIN_REGEX = /^[a-z0-9.-]+$/i;
+const SUBDOMAIN_PREFIX_REGEX = /^[a-z0-9-]+$/i;
 
 const isHeaderValid = (header: string) => {
   return header.length >= 3 && header.includes(':') && !header.startsWith(':') && !header.endsWith(':');
 };
 
-// Only basic validation to assist the user in entering a valid subdomain. The full validation is done on the server.
-const isSubdomainValid = (subdomain: string) => {
-  const hostname = `${subdomain}.example.com`;
+// Only basic validation to assist the user in entering a valid subdomain prefix.
+// The full validation is done on the server.
+const isSubdomainPrefixValid = (subdomainPrefix: string) => {
+  const hostname = `${subdomainPrefix}-handle.example.com`;
   let url;
   try {
     url = new URL(`https://${hostname}`);
@@ -56,7 +57,7 @@ const isSubdomainValid = (subdomain: string) => {
     return false;
   }
 
-  return SUBDOMAIN_REGEX.test(subdomain) && subdomain.split('.').every((part) => part.length > 0 && part.length < 64);
+  return SUBDOMAIN_PREFIX_REGEX.test(subdomainPrefix) && !subdomainPrefix.includes('.') && subdomainPrefix.length < 45;
 };
 
 export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutProps) {
@@ -70,9 +71,9 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
     setName(e.target.value);
   }, []);
 
-  const [subdomain, setSubdomain] = useState<string>(responder?.location.subdomain ?? '');
-  const onSubdomainChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSubdomain(e.target.value.toLowerCase());
+  const [subdomainPrefix, setSubdomainPrefix] = useState<string>(responder?.location.subdomainPrefix ?? '');
+  const onSubdomainPrefixChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSubdomainPrefix(e.target.value.toLowerCase());
   };
 
   const [path, setPath] = useState<string>(responder?.location.path ?? '');
@@ -148,17 +149,17 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
 
     setUpdatingStatus({ status: 'pending' });
 
-    const locationSubdomain = subdomain || undefined;
+    const locationSubdomainPrefix = subdomainPrefix || undefined;
     let location;
     if (responder) {
       location =
         responder.location.path !== path ||
         responder.location.pathType !== pathType ||
-        responder.location.subdomain !== locationSubdomain
-          ? { pathType, path: path.trim(), subdomain: locationSubdomain }
+        responder.location.subdomainPrefix !== locationSubdomainPrefix
+          ? { pathType, path: path.trim(), subdomainPrefix: locationSubdomainPrefix }
           : null;
     } else {
-      location = { pathType, path: path.trim(), subdomain: locationSubdomain };
+      location = { pathType, path: path.trim(), subdomainPrefix: locationSubdomainPrefix };
     }
 
     const responderToUpdate = {
@@ -228,7 +229,7 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
     name,
     method,
     path,
-    subdomain,
+    subdomainPrefix,
     pathType,
     isEnabled,
     requestsToTrack,
@@ -251,7 +252,7 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
         name.trim().length > 0 &&
         !areHeadersInvalid &&
         isPathValid &&
-        (!subdomain || isSubdomainValid(subdomain)) &&
+        (!subdomainPrefix || isSubdomainPrefixValid(subdomainPrefix)) &&
         requestsToTrack >= 0 &&
         requestsToTrack <= 100
       }
@@ -287,17 +288,17 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
           description={'Properties of the responder related to the HTTP requests it handles'}
         >
           {uiState.webhookUrlType === 'subdomain' &&
-            uiState.subscription?.features?.webhooks.responderCustomSubdomains && (
+            uiState.subscription?.features?.webhooks.responderCustomSubdomainPrefix && (
               <EuiFormRow
-                label="Subdomain"
-                helpText="Responder will only respond to requests with the specified subdomain, e.g., <subdomain>.<user-handle>.webhooks.secutils.dev"
+                label="Subdomain prefix"
+                helpText="Responder will only respond to requests with the specified subdomain prefix, e.g., <subdomain-prefix>-<user-handle>.webhooks.secutils.dev"
               >
                 <EuiFieldText
-                  value={subdomain}
-                  isInvalid={subdomain.length > 0 && !isSubdomainValid(subdomain)}
+                  value={subdomainPrefix}
+                  isInvalid={subdomainPrefix.length > 0 && !isSubdomainPrefixValid(subdomainPrefix)}
                   placeholder="If not specified, <user-handle> subdomain will be used"
                   type={'text'}
-                  onChange={onSubdomainChange}
+                  onChange={onSubdomainPrefixChange}
                 />
               </EuiFormRow>
             )}

@@ -63,8 +63,8 @@ export default function Responders() {
       if (!uiState.user) {
         return '-';
       }
-      const subdomain = responder.location.subdomain
-        ? `${responder.location.subdomain}.${uiState.user.handle}`
+      const subdomain = responder.location.subdomainPrefix
+        ? `${responder.location.subdomainPrefix}-${uiState.user.handle}`
         : uiState.user.handle;
       return uiState.webhookUrlType === 'path'
         ? `${location.origin}/api/webhooks/${uiState.user.handle}${responder.location.path}`

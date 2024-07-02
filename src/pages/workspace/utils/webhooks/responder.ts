@@ -4,7 +4,7 @@ export interface Responder {
   location: {
     pathType: '=' | '^';
     path: string;
-    subdomain?: string;
+    subdomainPrefix?: string;
   };
   method: string;
   enabled: boolean;

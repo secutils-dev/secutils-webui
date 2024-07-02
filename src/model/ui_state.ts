@@ -25,7 +25,7 @@ export interface SubscriptionState {
    */
   features?: {
     certificates: { privateKeyAlgorithms?: string[] };
-    webhooks: { responderRequests: number; responderCustomSubdomains: boolean };
+    webhooks: { responderRequests: number; responderCustomSubdomainPrefix: boolean };
     webScraping: { trackerRevisions: number; trackerSchedules?: string[] };
     webSecurity: { importPolicyFromUrl: boolean };
   };
