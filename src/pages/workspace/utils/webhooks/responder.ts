@@ -1,7 +1,11 @@
 export interface Responder {
   id: string;
   name: string;
-  path: string;
+  location: {
+    pathType: '=' | '^';
+    path: string;
+    subdomain?: string;
+  };
   method: string;
   enabled: boolean;
   settings: {

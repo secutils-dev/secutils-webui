@@ -31,9 +31,32 @@ export interface ResponderEditFlyoutProps {
 }
 
 const HTTP_METHODS = ['ANY', 'GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'CONNECT', 'TRACE', 'PATCH'];
+const PATH_TYPES = [
+  { value: '=', text: 'Exact' },
+  { value: '^', text: 'Prefix' },
+];
+
+const SUBDOMAIN_REGEX = /^[a-z0-9.-]+$/i;
 
 const isHeaderValid = (header: string) => {
   return header.length >= 3 && header.includes(':') && !header.startsWith(':') && !header.endsWith(':');
+};
+
+// Only basic validation to assist the user in entering a valid subdomain. The full validation is done on the server.
+const isSubdomainValid = (subdomain: string) => {
+  const hostname = `${subdomain}.example.com`;
+  let url;
+  try {
+    url = new URL(`https://${hostname}`);
+  } catch (e) {
+    return false;
+  }
+
+  if (url.hostname !== hostname) {
+    return false;
+  }
+
+  return SUBDOMAIN_REGEX.test(subdomain) && subdomain.split('.').every((part) => part.length > 0 && part.length < 64);
 };
 
 export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutProps) {
@@ -47,23 +70,33 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
     setName(e.target.value);
   }, []);
 
-  const [path, setPath] = useState<string>(responder?.path ?? '');
-  const onPathChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setPath(e.target.value);
-  }, []);
+  const [subdomain, setSubdomain] = useState<string>(responder?.location.subdomain ?? '');
+  const onSubdomainChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSubdomain(e.target.value.toLowerCase());
+  };
+
+  const [path, setPath] = useState<string>(responder?.location.path ?? '');
+  const onPathChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPath(e.target.value.toLowerCase());
+  };
   const isPathValid = path.startsWith('/') && (path.length === 1 || !path.endsWith('/'));
+
+  const [pathType, setPathType] = useState<string>(responder?.location.pathType ?? '=');
+  const onPathTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setPathType(e.target.value);
+  };
 
   const [requestsToTrack, setRequestsToTrack] = useState<number>(responder?.settings.requestsToTrack ?? 0);
 
   const [statusCode, setStatusCode] = useState<number>(responder?.settings.statusCode ?? 200);
-  const onStatusCodeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const onStatusCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     setStatusCode(+e.target.value);
-  }, []);
+  };
 
   const [method, setMethod] = useState<string>(responder?.method ?? 'ANY');
-  const onMethodChange = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+  const onMethodChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setMethod(e.target.value);
-  }, []);
+  };
 
   const [isEnabled, setIsEnabled] = useState<boolean>(responder?.enabled ?? true);
   const onIsEnabledChange = useCallback((e: EuiSwitchEvent) => {
@@ -115,9 +148,22 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
 
     setUpdatingStatus({ status: 'pending' });
 
+    const locationSubdomain = subdomain || undefined;
+    let location;
+    if (responder) {
+      location =
+        responder.location.path !== path ||
+        responder.location.pathType !== pathType ||
+        responder.location.subdomain !== locationSubdomain
+          ? { pathType, path: path.trim(), subdomain: locationSubdomain }
+          : null;
+    } else {
+      location = { pathType, path: path.trim(), subdomain: locationSubdomain };
+    }
+
     const responderToUpdate = {
       name: responder ? (responder.name !== name ? name.trim() : null) : name.trim(),
-      path: responder ? (responder.path !== path ? path.trim() : null) : path.trim(),
+      location,
       method: responder ? (responder.method !== method ? method : null) : method,
       enabled: responder ? (responder.enabled !== isEnabled ? isEnabled : null) : isEnabled,
       settings: {
@@ -178,7 +224,21 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
         });
       },
     );
-  }, [name, method, path, isEnabled, requestsToTrack, statusCode, body, headers, script, responder, updatingStatus]);
+  }, [
+    name,
+    method,
+    path,
+    subdomain,
+    pathType,
+    isEnabled,
+    requestsToTrack,
+    statusCode,
+    body,
+    headers,
+    script,
+    responder,
+    updatingStatus,
+  ]);
 
   const maxResponderRequests = uiState.subscription?.features?.webhooks.responderRequests ?? 0;
   const tickInterval = Math.ceil(maxResponderRequests / maxTicks);
@@ -188,7 +248,12 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
       onClose={() => onClose()}
       onSave={onSave}
       canSave={
-        name.trim().length > 0 && !areHeadersInvalid && isPathValid && requestsToTrack >= 0 && requestsToTrack <= 100
+        name.trim().length > 0 &&
+        !areHeadersInvalid &&
+        isPathValid &&
+        (!subdomain || isSubdomainValid(subdomain)) &&
+        requestsToTrack >= 0 &&
+        requestsToTrack <= 100
       }
       saveInProgress={updatingStatus?.status === 'pending'}
     >
@@ -221,7 +286,22 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
           title={<h3>Request</h3>}
           description={'Properties of the responder related to the HTTP requests it handles'}
         >
-          <EuiFormRow label="Path" helpText="The responder path should start with a '/', and should not end with a '/'">
+          {uiState.webhookUrlType === 'subdomain' &&
+            uiState.subscription?.features?.webhooks.responderCustomSubdomains && (
+              <EuiFormRow
+                label="Subdomain"
+                helpText="Responder will only respond to requests with the specified subdomain, e.g., <subdomain>.<user-handle>.webhooks.secutils.dev"
+              >
+                <EuiFieldText
+                  value={subdomain}
+                  isInvalid={subdomain.length > 0 && !isSubdomainValid(subdomain)}
+                  placeholder="If not specified, <user-handle> subdomain will be used"
+                  type={'text'}
+                  onChange={onSubdomainChange}
+                />
+              </EuiFormRow>
+            )}
+          <EuiFormRow label="Path" helpText="Responder path should start with a '/', and should not end with a '/'">
             <EuiFieldText
               value={path}
               isInvalid={path.length > 0 && !isPathValid}
@@ -229,6 +309,12 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
               type={'text'}
               onChange={onPathChange}
             />
+          </EuiFormRow>
+          <EuiFormRow
+            label="Path type"
+            helpText="Responder will respond to requests with the path that either matches the specified `Path` exactly or starts with it"
+          >
+            <EuiSelect options={PATH_TYPES} value={pathType} onChange={onPathTypeChange} />
           </EuiFormRow>
           <EuiFormRow label="Method" helpText="Responder will only respond to requests with the specified HTTP method">
             <EuiSelect options={httpMethods} value={method} onChange={onMethodChange} />

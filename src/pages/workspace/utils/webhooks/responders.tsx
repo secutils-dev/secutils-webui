@@ -63,10 +63,12 @@ export default function Responders() {
       if (!uiState.user) {
         return '-';
       }
-
+      const subdomain = responder.location.subdomain
+        ? `${responder.location.subdomain}.${uiState.user.handle}`
+        : uiState.user.handle;
       return uiState.webhookUrlType === 'path'
-        ? `${location.origin}/api/webhooks/${uiState.user.handle}${responder.path}`
-        : `${location.protocol}//${uiState.user.handle}.webhooks.${location.host}${responder.path}`;
+        ? `${location.origin}/api/webhooks/${uiState.user.handle}${responder.location.path}`
+        : `${location.protocol}//${subdomain}.webhooks.${location.host}${responder.location.path}`;
     },
     [uiState],
   );
