@@ -24,17 +24,17 @@
   "dependencies": {
     "@babel/runtime": "^7.24.7",
     "@elastic/datemath": "^5.0.3",
-    "@elastic/eui": "^95.2.0",
+    "@elastic/eui": "^95.3.0",
     "@emotion/css": "^11.11.2",
     "@emotion/react": "^11.11.4",
     "@monaco-editor/react": "^4.6.0",
-    "@ory/client": "^1.12.1",
+    "@ory/client": "^1.13.2",
     "axios": "^1.7.2",
     "moment": "^2.30.1",
     "nanoid": "^5.0.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.24.0"
+    "react-router-dom": "^6.24.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
