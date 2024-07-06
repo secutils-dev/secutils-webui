@@ -3,19 +3,25 @@ import { useCallback, useMemo, useState } from 'react';
 
 import type { EuiSwitchEvent } from '@elastic/eui';
 import {
+  EuiButtonIcon,
   EuiComboBox,
   EuiDescribedFormGroup,
   EuiFieldNumber,
   EuiFieldText,
+  EuiFlexGroup,
+  EuiFlexItem,
   EuiForm,
   EuiFormRow,
   EuiLink,
   EuiRange,
   EuiSelect,
   EuiSwitch,
+  EuiText,
   EuiTextArea,
+  EuiTitle,
 } from '@elastic/eui';
 import axios from 'axios';
+import { customAlphabet, urlAlphabet } from 'nanoid';
 
 import type { Responder } from './responder';
 import { useRangeTicks } from '../../../../hooks';
@@ -60,34 +66,52 @@ const isSubdomainPrefixValid = (subdomainPrefix: string) => {
   return SUBDOMAIN_PREFIX_REGEX.test(subdomainPrefix) && !subdomainPrefix.includes('.') && subdomainPrefix.length < 45;
 };
 
+const nanoidCustom = customAlphabet(urlAlphabet.replace('_', '').replace('-', ''), 7);
+
 export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutProps) {
   const { addToast, uiState } = useWorkspaceContext();
   const maxTicks = useRangeTicks();
 
   const httpMethods = useMemo(() => HTTP_METHODS.map((method) => ({ value: method, text: method })), []);
 
+  const [isAdvancedMode, setIsAdvancedMode] = useState(!!responder);
+
   const [name, setName] = useState<string>(responder?.name ?? '');
   const onNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
   }, []);
 
-  const [subdomainPrefix, setSubdomainPrefix] = useState<string>(responder?.location.subdomainPrefix ?? '');
+  const defaultRandom = useMemo(() => (!responder ? nanoidCustom().toLowerCase() : ''), [responder]);
+  const supportsCustomSubdomainPrefixes =
+    uiState.webhookUrlType === 'subdomain' && !!uiState.subscription?.features?.webhooks.responderCustomSubdomainPrefix;
+  const [subdomainPrefix, setSubdomainPrefix] = useState<string>(
+    responder?.location.subdomainPrefix ?? (supportsCustomSubdomainPrefixes ? defaultRandom : ''),
+  );
   const onSubdomainPrefixChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSubdomainPrefix(e.target.value.toLowerCase());
   };
 
-  const [path, setPath] = useState<string>(responder?.location.path ?? '');
+  const [path, setPath] = useState<string>(
+    // If custom subdomain prefixes are supported, then when a creating a new responder a random prefix will be
+    // generated, so we safely default path to `/` (prefix).
+    responder?.location.path ?? (supportsCustomSubdomainPrefixes ? '/' : `/${defaultRandom}`),
+  );
   const onPathChange = (e: ChangeEvent<HTMLInputElement>) => {
     setPath(e.target.value.toLowerCase());
   };
   const isPathValid = path.startsWith('/') && (path.length === 1 || !path.endsWith('/'));
 
-  const [pathType, setPathType] = useState<string>(responder?.location.pathType ?? '=');
+  const [pathType, setPathType] = useState<string>(
+    responder?.location.pathType ?? (supportsCustomSubdomainPrefixes ? '^' : '='),
+  );
   const onPathTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setPathType(e.target.value);
   };
 
-  const [requestsToTrack, setRequestsToTrack] = useState<number>(responder?.settings.requestsToTrack ?? 0);
+  const [requestsToTrack, setRequestsToTrack] = useState<number>(
+    responder?.settings.requestsToTrack ??
+      Math.min(uiState.subscription?.features?.webhooks.responderRequests ?? 0, 10),
+  );
 
   const [statusCode, setStatusCode] = useState<number>(responder?.settings.statusCode ?? 200);
   const onStatusCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -105,7 +129,9 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
   }, []);
 
   const [headers, setHeaders] = useState<Array<{ label: string }>>(
-    responder?.settings.headers?.map(([header, value]) => ({ label: `${header}: ${value}` })) ?? [],
+    responder?.settings.headers?.map(([header, value]) => ({ label: `${header}: ${value}` })) ?? [
+      { label: 'Content-Type: text/html; charset=utf-8' },
+    ],
   );
   const [areHeadersInvalid, setAreHeadersInvalid] = useState(false);
 
@@ -136,7 +162,9 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
     setAreHeadersInvalid(false);
   };
 
-  const [body, setBody] = useState<string>(responder?.settings.body ?? '');
+  const [body, setBody] = useState<string>(
+    responder?.settings.body ?? 'Hello from <a href="https://secutils.dev">Secutils.dev</a>!',
+  );
   const onBodyChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     setBody(e.target.value);
   }, []);
@@ -149,7 +177,7 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
 
     setUpdatingStatus({ status: 'pending' });
 
-    const locationSubdomainPrefix = subdomainPrefix || undefined;
+    const locationSubdomainPrefix = supportsCustomSubdomainPrefixes ? subdomainPrefix || undefined : undefined;
     let location;
     if (responder) {
       location =
@@ -239,13 +267,33 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
     script,
     responder,
     updatingStatus,
+    supportsCustomSubdomainPrefixes,
   ]);
 
   const maxResponderRequests = uiState.subscription?.features?.webhooks.responderRequests ?? 0;
   const tickInterval = Math.ceil(maxResponderRequests / maxTicks);
   return (
     <EditorFlyout
-      title={`${responder ? 'Edit' : 'Add'} responder`}
+      title={
+        <EuiFlexGroup>
+          <EuiFlexItem>
+            <EuiTitle size="s">
+              <h1>{`${responder ? 'Edit' : 'Add'} responder`}</h1>
+            </EuiTitle>
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiSwitch
+              label={
+                <EuiText color={'subdued'} size={'s'}>
+                  Advanced mode
+                </EuiText>
+              }
+              checked={isAdvancedMode}
+              onChange={(e) => setIsAdvancedMode(e.target.checked)}
+            />
+          </EuiFlexItem>
+        </EuiFlexGroup>
+      }
       onClose={() => onClose()}
       onSave={onSave}
       canSave={
@@ -261,47 +309,67 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
       <EuiForm id="update-form" component="form" fullWidth>
         <EuiDescribedFormGroup title={<h3>General</h3>} description={'General properties of the responder'}>
           <EuiFormRow label="Name" helpText="Arbitrary responder name." fullWidth>
-            <EuiFieldText value={name} required type={'text'} onChange={onNameChange} />
+            <EuiFieldText autoFocus value={name} required type={'text'} onChange={onNameChange} />
           </EuiFormRow>
-          <EuiFormRow label="Tracking" helpText="Responder will track only specified number of incoming requests">
-            <EuiRange
-              min={0}
-              max={maxResponderRequests}
-              value={requestsToTrack}
-              fullWidth
-              onChange={(e) => setRequestsToTrack(+e.currentTarget.value)}
-              showRange
-              showTicks
-              tickInterval={tickInterval > 1 ? Math.ceil(tickInterval / 5) * 5 : tickInterval}
-              showValue={maxResponderRequests > maxTicks}
-            />
-          </EuiFormRow>
-          <EuiFormRow
-            label={'Enable'}
-            helpText={'Instructs the responder whether it should process incoming requests or not.'}
-          >
-            <EuiSwitch showLabel={false} label="Enable" checked={isEnabled} onChange={onIsEnabledChange} />
-          </EuiFormRow>
+          {isAdvancedMode ? (
+            <EuiFormRow label="Tracking" helpText="Responder will track only specified number of incoming requests">
+              <EuiRange
+                min={0}
+                max={maxResponderRequests}
+                value={requestsToTrack}
+                fullWidth
+                onChange={(e) => setRequestsToTrack(+e.currentTarget.value)}
+                showRange
+                showTicks
+                tickInterval={tickInterval > 1 ? Math.ceil(tickInterval / 5) * 5 : tickInterval}
+                showValue={maxResponderRequests > maxTicks}
+              />
+            </EuiFormRow>
+          ) : null}
+          {isAdvancedMode ? (
+            <EuiFormRow
+              label={'Enable'}
+              helpText={'Instructs the responder whether it should process incoming requests or not.'}
+            >
+              <EuiSwitch showLabel={false} label="Enable" checked={isEnabled} onChange={onIsEnabledChange} />
+            </EuiFormRow>
+          ) : null}
         </EuiDescribedFormGroup>
         <EuiDescribedFormGroup
           title={<h3>Request</h3>}
           description={'Properties of the responder related to the HTTP requests it handles'}
         >
-          {uiState.webhookUrlType === 'subdomain' &&
-            uiState.subscription?.features?.webhooks.responderCustomSubdomainPrefix && (
-              <EuiFormRow
-                label="Subdomain prefix"
-                helpText="Responder will only respond to requests with the specified subdomain prefix, e.g., <subdomain-prefix>-<user-handle>.webhooks.secutils.dev"
-              >
-                <EuiFieldText
-                  value={subdomainPrefix}
-                  isInvalid={subdomainPrefix.length > 0 && !isSubdomainPrefixValid(subdomainPrefix)}
-                  placeholder="If not specified, <user-handle> subdomain will be used"
-                  type={'text'}
-                  onChange={onSubdomainPrefixChange}
-                />
-              </EuiFormRow>
-            )}
+          {supportsCustomSubdomainPrefixes && (
+            <EuiFormRow
+              label="Subdomain prefix"
+              helpText={
+                <>
+                  Responder will only respond to requests with the&nbsp;
+                  <b>
+                    {subdomainPrefix || '<subdomain-prefix>'}-{uiState.user?.handle ?? '<user-handle>'}
+                    .webhooks.secutils.dev
+                  </b>
+                  &nbsp;domain
+                </>
+              }
+            >
+              <EuiFieldText
+                value={subdomainPrefix}
+                isInvalid={subdomainPrefix.length > 0 && !isSubdomainPrefixValid(subdomainPrefix)}
+                placeholder={`If not specified, ${uiState.user?.handle ?? '<user-handle>'} subdomain will be used`}
+                type={'text'}
+                onChange={onSubdomainPrefixChange}
+                append={
+                  <EuiButtonIcon
+                    iconType="refresh"
+                    title={'Generate random prefix'}
+                    aria-label="Generate random prefix"
+                    onClick={() => setSubdomainPrefix(nanoidCustom().toLowerCase())}
+                  />
+                }
+              />
+            </EuiFormRow>
+          )}
           <EuiFormRow label="Path" helpText="Responder path should start with a '/', and should not end with a '/'">
             <EuiFieldText
               value={path}
@@ -309,17 +377,32 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
               required
               type={'text'}
               onChange={onPathChange}
+              append={
+                <EuiButtonIcon
+                  iconType="refresh"
+                  title={'Generate random path'}
+                  aria-label="Generate random path"
+                  onClick={() => setPath(`/${nanoidCustom().toLowerCase()}`)}
+                />
+              }
             />
           </EuiFormRow>
-          <EuiFormRow
-            label="Path type"
-            helpText="Responder will respond to requests with the path that either matches the specified `Path` exactly or starts with it"
-          >
-            <EuiSelect options={PATH_TYPES} value={pathType} onChange={onPathTypeChange} />
-          </EuiFormRow>
-          <EuiFormRow label="Method" helpText="Responder will only respond to requests with the specified HTTP method">
-            <EuiSelect options={httpMethods} value={method} onChange={onMethodChange} />
-          </EuiFormRow>
+          {isAdvancedMode ? (
+            <EuiFormRow
+              label="Path type"
+              helpText="Responder will respond to requests with the path that either matches the specified `Path` exactly or starts with it"
+            >
+              <EuiSelect options={PATH_TYPES} value={pathType} onChange={onPathTypeChange} />
+            </EuiFormRow>
+          ) : null}
+          {isAdvancedMode ? (
+            <EuiFormRow
+              label="Method"
+              helpText="Responder will only respond to requests with the specified HTTP method"
+            >
+              <EuiSelect options={httpMethods} value={method} onChange={onMethodChange} />
+            </EuiFormRow>
+          ) : null}
         </EuiDescribedFormGroup>
         <EuiDescribedFormGroup
           title={<h3>Response</h3>}
@@ -353,26 +436,28 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
           <EuiFormRow label="Body" isDisabled={method === 'HEAD'}>
             <EuiTextArea value={body} onChange={onBodyChange} />
           </EuiFormRow>
-          <EuiFormRow
-            label="Script"
-            helpText={
-              <span>
-                The script is executed within a constrained version of the{' '}
-                <EuiLink target="_blank" href="https://deno.com/">
-                  <b>Deno JavaScript runtime</b>
-                </EuiLink>{' '}
-                for every received request. It returns an object that can override the default response status code,
-                headers, or body. Request information is available through the global "context" variable. Refer to the{' '}
-                <EuiLink target="_blank" href="/docs/guides/webhooks#annex-responder-script-examples">
-                  <b>documentation</b>
-                </EuiLink>{' '}
-                for a list of script examples, expected return value and properties available in the "context" object
-                argument.
-              </span>
-            }
-          >
-            <ScriptEditor onChange={onUserScriptChange} defaultValue={script} />
-          </EuiFormRow>
+          {isAdvancedMode ? (
+            <EuiFormRow
+              label="Script"
+              helpText={
+                <span>
+                  The script is executed within a constrained version of the{' '}
+                  <EuiLink target="_blank" href="https://deno.com/">
+                    <b>Deno JavaScript runtime</b>
+                  </EuiLink>{' '}
+                  for every received request. It returns an object that can override the default response status code,
+                  headers, or body. Request information is available through the global "context" variable. Refer to the{' '}
+                  <EuiLink target="_blank" href="/docs/guides/webhooks#annex-responder-script-examples">
+                    <b>documentation</b>
+                  </EuiLink>{' '}
+                  for a list of script examples, expected return value and properties available in the "context" object
+                  argument.
+                </span>
+              }
+            >
+              <ScriptEditor onChange={onUserScriptChange} defaultValue={script} />
+            </EuiFormRow>
+          ) : null}
         </EuiDescribedFormGroup>
       </EuiForm>
     </EditorFlyout>
