@@ -13,7 +13,7 @@ import {
 } from '@elastic/eui';
 
 export interface Props {
-  title: string;
+  title: ReactNode;
   children: ReactNode;
   onClose: () => void;
   onSave: () => void;
@@ -24,11 +24,15 @@ export interface Props {
 
 export function EditorFlyout({ title, children, onSave, onClose, canSave, saveInProgress }: Props) {
   return (
-    <EuiFlyout size="l" maxWidth onClose={onClose} ownFocus>
+    <EuiFlyout size="l" maxWidth onClose={onClose} ownFocus hideCloseButton>
       <EuiFlyoutHeader hasBorder>
-        <EuiTitle size="s">
-          <h1>{title}</h1>
-        </EuiTitle>
+        {typeof title === 'string' ? (
+          <EuiTitle size="s">
+            <h1>{title}</h1>
+          </EuiTitle>
+        ) : (
+          title
+        )}
       </EuiFlyoutHeader>
       <EuiFlyoutBody>{children}</EuiFlyoutBody>
       <EuiFlyoutFooter>
