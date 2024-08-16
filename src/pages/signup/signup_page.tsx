@@ -146,7 +146,6 @@ export function SignupPage() {
           {
             flow: flow.id,
             updateRegistrationFlowBody: {
-              // @ts-expect-error new flow type is not yet available.
               method: 'profile' as const,
               csrf_token: getCsrfToken(flow),
               traits: { email },

@@ -16,8 +16,8 @@ export default function Home() {
           <EuiLink href="https://github.com/secutils-dev" target="_blank">
             open-source
           </EuiLink>{' '}
-          toolbox that's versatile and simple, designed for both application security engineers and any other engineers
-          looking to develop secure applications.
+          toolbox that&apos;s versatile and simple, designed for both application security engineers and any other
+          engineers looking to develop secure applications.
         </p>
         <p>
           The toolbox aims to simplify and streamline the process of developing and testing secure applications by
@@ -33,12 +33,12 @@ export default function Home() {
           <EuiLink href="https://github.com/secutils-dev/secutils/issues" target="_blank">
             Github Issues
           </EuiLink>
-          . If you need to contact us for anything else, feel free to do so using the "Contact" form.
+          . If you need to contact us for anything else, feel free to do so using the &quot;Contact&quot; form.
         </p>
         <h2>Learn and get help</h2>
         <p>
-          Whether you're a new or experienced user, these links will help you get the most out of Secutils.dev: learn
-          how to use it, see what's new, and connect with other users and contributors.
+          Whether you&apos;re a new or experienced user, these links will help you get the most out of Secutils.dev:
+          learn how to use it, see what&apos;s new, and connect with other users and contributors.
         </p>
       </EuiText>
       <EuiFlexGroup gutterSize="xl" justifyContent={'center'} wrap alignItems={'center'}>

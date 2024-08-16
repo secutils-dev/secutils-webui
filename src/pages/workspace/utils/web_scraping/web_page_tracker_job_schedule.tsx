@@ -41,7 +41,7 @@ export function WebPageTrackerJobSchedule({ schedule, onChange }: WebPageTracker
   });
 
   const [customSchedule, setCustomSchedule] = useState<string>(
-    scheduleType === WEB_PAGE_TRACKER_CUSTOM_SCHEDULE ? schedule ?? '' : '',
+    scheduleType === WEB_PAGE_TRACKER_CUSTOM_SCHEDULE ? (schedule ?? '') : '',
   );
   const [customScheduleCheck, setCustomScheduleCheck] = useState<AsyncData<CustomScheduleCheck> | null>(null);
   useEffect(() => {

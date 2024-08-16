@@ -80,7 +80,7 @@ export function RecoverAccountModal({ email, onClose }: RecoverAccountModalProps
           title: 'Account recovery code sent',
           text: (
             <>
-              Account recovery code is on its way to your email. If you don't see it soon, please check your spam
+              Account recovery code is on its way to your email. If you don&apos;t see it soon, please check your spam
               folder.
             </>
           ),
@@ -134,7 +134,9 @@ export function RecoverAccountModal({ email, onClose }: RecoverAccountModalProps
           color: 'success',
           title: 'Account access is recovered',
           text: (
-            <>You've regained access to your account. Please navigate to the Settings and update your credentials.</>
+            <>
+              You&apos;ve regained access to your account. Please navigate to the Settings and update your credentials.
+            </>
           ),
         });
 

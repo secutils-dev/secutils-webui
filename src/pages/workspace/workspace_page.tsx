@@ -120,7 +120,7 @@ export function WorkspacePage() {
               },
         items: (showOnlyFavorites && util.utils
           ? util.utils.filter((util) => showDisplayUtil(util, favorites))
-          : util.utils ?? []
+          : (util.utils ?? [])
         ).map((util) => createItem(util)),
       };
     };
@@ -136,7 +136,7 @@ export function WorkspacePage() {
   useEffect(() => {
     const newSelectedUtil =
       utilIdFromParam && utilIdFromParam !== selectedUtil?.handle
-        ? utilsMap.get(utilIdFromParam) ?? selectedUtil
+        ? (utilsMap.get(utilIdFromParam) ?? selectedUtil)
         : selectedUtil;
     if (newSelectedUtil && (newSelectedUtil !== selectedUtil || navigationBar.deepLink !== deepLinkFromParam)) {
       setSelectedUtil(newSelectedUtil);
@@ -233,6 +233,7 @@ export function WorkspacePage() {
   const headerActions = uiState.user
     ? [
         <EuiButtonIcon
+          key="hdr-favs"
           iconType={showOnlyFavorites ? 'starFilled' : 'starEmpty'}
           css={css`
             margin-right: ${euiTheme.euiTheme.size.xxs};

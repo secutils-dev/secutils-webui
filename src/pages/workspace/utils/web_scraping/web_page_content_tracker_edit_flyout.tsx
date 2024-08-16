@@ -306,8 +306,8 @@ export function WebPageContentTrackerEditFlyout({ onClose, tracker }: Props) {
             label="Content extractor"
             helpText={
               <span>
-                The script accepts a single "context" object argument, and should return the content intended for
-                tracking. The returned value can be anything as long as it can be serialized to a{' '}
+                The script accepts a single &quot;context&quot; object argument, and should return the content intended
+                for tracking. The returned value can be anything as long as it can be serialized to a{' '}
                 <EuiLink
                   target="_blank"
                   href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#description"
@@ -326,7 +326,7 @@ export function WebPageContentTrackerEditFlyout({ onClose, tracker }: Props) {
                 >
                   <b>documentation</b>
                 </EuiLink>{' '}
-                for a list of script examples and properties available in the "context" object argument.
+                for a list of script examples and properties available in the &quot;context&quot; object argument.
               </span>
             }
           >
