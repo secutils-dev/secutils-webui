@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1
 
-FROM --platform=$BUILDPLATFORM node:20-alpine3.19 AS ui_builder
+FROM --platform=$BUILDPLATFORM node:20-alpine3.20 AS ui_builder
 WORKDIR /app
 # See, https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#node-gyp-alpine
 RUN apk add --no-cache python3 make g++
-COPY ["./*.json", "./.parcelrc", "./"]
+COPY ["./*.json", "./.parcelrc", "./eslint.config.mjs", "./"]
 RUN --mount=type=cache,target=/app/npm/cache set -x && npm ci --cache /app/npm/cache
 COPY ["./src", "./src"]
 RUN set -x && npm run build
