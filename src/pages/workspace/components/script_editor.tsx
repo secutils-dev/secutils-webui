@@ -4,9 +4,7 @@ import { default as v8Light } from '@elastic/eui/dist/eui_theme_light.json';
 import { Editor, loader } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import * as monaco from 'monaco-editor';
-// eslint-disable-next-line import/no-unresolved
 import EditorWorker from 'url:monaco-editor/esm/vs/editor/editor.worker.js';
-// eslint-disable-next-line import/no-unresolved
 import TSWorker from 'url:monaco-editor/esm/vs/language/typescript/ts.worker.js';
 
 loader.config({ monaco });

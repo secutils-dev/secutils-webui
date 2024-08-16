@@ -224,7 +224,7 @@ export function WebPageTrackerHistory({ kind, tracker, children }: WebPageTracke
     );
   }
 
-  const revisionsToSelect = revisions.status === 'succeeded' ? revisions.data : revisions.state ?? [];
+  const revisionsToSelect = revisions.status === 'succeeded' ? revisions.data : (revisions.state ?? []);
   const shouldDisplayControlPanel =
     (revisions.status === 'succeeded' && revisions.data.length > 0) || (revisions.state?.length ?? 0 > 0);
   const controlPanel = shouldDisplayControlPanel ? (

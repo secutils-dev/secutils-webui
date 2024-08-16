@@ -8,7 +8,6 @@ import { SettingsFlyout } from '../../app_container';
 import { PageErrorState, PageLoadingState, PageSuccessState } from '../../components';
 import { useAppContext, usePageHeaderActions, usePageMeta } from '../../hooks';
 import { type AsyncData, getCsrfToken, getSecurityErrorMessage } from '../../model';
-// eslint-disable-next-line import/order
 import { getOryApi } from '../../tools/ory';
 
 async function getVerificationFlow(api: FrontendApi, flowId?: string) {
@@ -121,7 +120,10 @@ export function ActivatePage() {
             color: 'success',
             title: 'Activation link sent',
             text: (
-              <>Activation link is on its way to your email. If you don't see it soon, please check your spam folder.</>
+              <>
+                Activation link is on its way to your email. If you don&apos;t see it soon, please check your spam
+                folder.
+              </>
             ),
           });
           setProcess({

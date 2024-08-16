@@ -195,7 +195,7 @@ export default function WebPageResourcesTrackers() {
         <EuiFlexItem>
           <EuiEmptyPrompt
             icon={<EuiIcon type={'cut'} size={'xl'} />}
-            title={<h2>You don't have any web page trackers yet</h2>}
+            title={<h2>You don&apos;t have any web page trackers yet</h2>}
             titleSize="s"
             style={{ maxWidth: '60em', display: 'flex' }}
             body={

@@ -183,7 +183,7 @@ export default function CertificatesCertificateTemplates() {
         <EuiFlexItem>
           <EuiEmptyPrompt
             icon={<EuiIcon type={'securityApp'} size={'xl'} />}
-            title={<h2>You don't have any certificate templates yet</h2>}
+            title={<h2>You don&apos;t have any certificate templates yet</h2>}
             titleSize="s"
             style={{ maxWidth: '60em', display: 'flex' }}
             body={

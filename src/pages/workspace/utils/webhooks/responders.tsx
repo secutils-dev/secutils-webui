@@ -202,7 +202,7 @@ export default function Responders() {
         <EuiFlexItem>
           <EuiEmptyPrompt
             icon={<EuiIcon type={'node'} size={'xl'} />}
-            title={<h2>You don't have any responders yet</h2>}
+            title={<h2>You don&apos;t have any responders yet</h2>}
             titleSize="s"
             style={{ maxWidth: '60em', display: 'flex' }}
             body={

@@ -55,7 +55,7 @@ const isSubdomainPrefixValid = (subdomainPrefix: string) => {
   let url;
   try {
     url = new URL(`https://${hostname}`);
-  } catch (e) {
+  } catch {
     return false;
   }
 
@@ -446,12 +446,13 @@ export function ResponderEditFlyout({ onClose, responder }: ResponderEditFlyoutP
                     <b>Deno JavaScript runtime</b>
                   </EuiLink>{' '}
                   for every received request. It returns an object that can override the default response status code,
-                  headers, or body. Request information is available through the global "context" variable. Refer to the{' '}
+                  headers, or body. Request information is available through the global &quot;context&quot; variable.
+                  Refer to the{' '}
                   <EuiLink target="_blank" href="/docs/guides/webhooks#annex-responder-script-examples">
                     <b>documentation</b>
                   </EuiLink>{' '}
-                  for a list of script examples, expected return value and properties available in the "context" object
-                  argument.
+                  for a list of script examples, expected return value and properties available in the
+                  &quot;context&quot; object argument.
                 </span>
               }
             >

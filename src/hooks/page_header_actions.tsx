@@ -52,6 +52,7 @@ export function usePageHeaderActions() {
   const actions = uiState.user
     ? [
         <EuiButtonIcon
+          key="btn-docs"
           iconType={'documentation'}
           css={css`
             margin-right: ${euiTheme.euiTheme.size.xxs};
@@ -64,6 +65,7 @@ export function usePageHeaderActions() {
           href={'/docs'}
         />,
         <EuiPopover
+          key="btn-account"
           className="eui-fullWidth"
           button={
             <EuiButtonIcon
@@ -96,6 +98,7 @@ export function usePageHeaderActions() {
       ]
     : [
         <EuiButtonEmpty
+          key="btn-signin"
           href="/signin"
           size="s"
           css={css`
@@ -104,7 +107,7 @@ export function usePageHeaderActions() {
         >
           Sign in
         </EuiButtonEmpty>,
-        <EuiButton href="/signup" fill size="s">
+        <EuiButton key="btn-get-started" href="/signup" fill size="s">
           Get started
         </EuiButton>,
       ];

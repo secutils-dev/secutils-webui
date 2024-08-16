@@ -60,7 +60,7 @@ export function CertificateTemplateShareModal({ template, onClose }: Certificate
         )
         .then(
           (res) => {
-            setUserShare({ status: 'succeeded', data: share ? res.data ?? null : null });
+            setUserShare({ status: 'succeeded', data: share ? (res.data ?? null) : null });
           },
           (err: Error) => {
             setUserShare({ status: 'failed', error: getErrorMessage(err) });

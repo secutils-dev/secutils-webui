@@ -219,7 +219,7 @@ export function ResponderRequestsTable({ responder }: ResponderRequestsTableProp
               tracksRequests ? (
                 <h2>Still waiting for the first request to arrive</h2>
               ) : (
-                <h2>Responder doesn't track requests</h2>
+                <h2>Responder doesn&apos;t track requests</h2>
               )
             }
             titleSize="s"
