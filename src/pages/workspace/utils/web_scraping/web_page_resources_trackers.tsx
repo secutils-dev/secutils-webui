@@ -18,7 +18,7 @@ import {
   EuiToolTip,
 } from '@elastic/eui';
 import axios from 'axios';
-import { unix } from 'moment/moment';
+import { TimestampTableCell } from '../../components/timestamp_table_cell';
 
 import type { WebPageResourcesRevision } from './web_page_data_revision';
 import { WebPageResourcesTrackerEditFlyout } from './web_page_resources_tracker_edit_flyout';
@@ -252,12 +252,12 @@ export default function WebPageResourcesTrackers() {
             ),
           },
           {
-            name: 'Created',
-            field: 'createdAt',
+            name: 'Last updated',
+            field: 'updatedAt',
             width: '160px',
             mobileOptions: { width: 'unset' },
-            sortable: (tracker) => tracker.createdAt,
-            render: (_, tracker: WebPageTracker) => unix(tracker.createdAt).format('ll HH:mm'),
+            sortable: (tracker) => tracker.updatedAt,
+            render: (_, tracker: WebPageTracker) => <TimestampTableCell timestamp={tracker.updatedAt} />,
           },
           {
             name: 'Actions',

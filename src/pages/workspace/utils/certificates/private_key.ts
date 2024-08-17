@@ -7,4 +7,5 @@ export interface PrivateKey {
   alg: PrivateKeyAlgorithm;
   encrypted: boolean;
   createdAt: number;
+  updatedAt: number;
 }

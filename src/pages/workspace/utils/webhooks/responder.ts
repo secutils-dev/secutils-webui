@@ -16,4 +16,5 @@ export interface Responder {
     script?: string;
   };
   createdAt: number;
+  updatedAt: number;
 }
