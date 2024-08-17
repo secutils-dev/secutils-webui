@@ -20,7 +20,7 @@ import {
   useEuiTheme,
 } from '@elastic/eui';
 import axios from 'axios';
-import { unix } from 'moment';
+import { TimestampTableCell } from '../../components/timestamp_table_cell';
 
 import type { Responder } from './responder';
 import { ResponderEditFlyout } from './responder_edit_flyout';
@@ -331,15 +331,16 @@ export default function Responders() {
             },
           },
           {
-            name: 'Created',
-            field: 'createdAt',
+            name: 'Last updated',
+            field: 'updatedAt',
             width: '160px',
             mobileOptions: { width: 'unset' },
-            sortable: (responder) => responder.createdAt,
+            sortable: (responder) => responder.updatedAt,
             render: (_, responder: Responder) => (
-              <EuiText size={'s'} color={responder.enabled ? undefined : theme.euiTheme.colors.disabledText}>
-                {unix(responder.createdAt).format('ll HH:mm')}
-              </EuiText>
+              <TimestampTableCell
+                timestamp={responder.updatedAt}
+                color={responder.enabled ? undefined : theme.euiTheme.colors.disabledText}
+              />
             ),
           },
           {

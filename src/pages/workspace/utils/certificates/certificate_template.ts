@@ -5,4 +5,5 @@ export interface CertificateTemplate {
   name: string;
   attributes: CertificateAttributes;
   createdAt: number;
+  updatedAt: number;
 }

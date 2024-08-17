@@ -3,6 +3,7 @@ export interface WebPageTracker<S = unknown> {
   name: string;
   url: string;
   createdAt: number;
+  updatedAt: number;
   settings: {
     revisions: number;
     delay: number;

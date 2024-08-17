@@ -22,6 +22,7 @@ export function SaveCertificateTemplateFlyout({ onClose, template }: SaveCertifi
     template ?? {
       id: '',
       createdAt: 0,
+      updatedAt: 0,
       name: '',
       attributes: {
         commonName: 'CA Issuer',

@@ -6,6 +6,7 @@ export interface ContentSecurityPolicy<Directives = ContentSecurityPolicyDirecti
   name: string;
   directives: Directives;
   createdAt: number;
+  updatedAt: number;
 }
 
 export function getContentSecurityPolicyString(policy: ContentSecurityPolicy) {

@@ -19,7 +19,7 @@ export function SaveContentSecurityPolicyFlyout({ onClose, policy }: Props) {
   const { addToast } = useWorkspaceContext();
 
   const [policyToSave, setPolicyToSave] = useState<ContentSecurityPolicy>(
-    policy ?? { id: '', createdAt: 0, name: '', directives: new Map() },
+    policy ?? { id: '', createdAt: 0, updatedAt: 0, name: '', directives: new Map() },
   );
 
   const [updatingStatus, setUpdatingStatus] = useState<AsyncData<void>>();

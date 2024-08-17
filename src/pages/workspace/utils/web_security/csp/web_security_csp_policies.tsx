@@ -14,7 +14,7 @@ import {
   EuiToolTip,
 } from '@elastic/eui';
 import axios from 'axios';
-import { unix } from 'moment';
+import { TimestampTableCell } from '../../../components/timestamp_table_cell';
 
 import type { ContentSecurityPolicy, SerializedContentSecurityPolicyDirectives } from './content_security_policy';
 import { deserializeContentSecurityPolicyDirectives, getContentSecurityPolicyString } from './content_security_policy';
@@ -268,12 +268,12 @@ export default function WebSecurityContentSecurityPolicies() {
             render: (_, policy: ContentSecurityPolicy) => getContentSecurityPolicyString(policy),
           },
           {
-            name: 'Created',
-            field: 'createdAt',
+            name: 'Last updated',
+            field: 'updatedAt',
             width: '160px',
             mobileOptions: { width: 'unset' },
-            sortable: (policy) => policy.createdAt,
-            render: (_, policy: ContentSecurityPolicy) => unix(policy.createdAt).format('ll HH:mm'),
+            sortable: (policy) => policy.updatedAt,
+            render: (_, policy: ContentSecurityPolicy) => <TimestampTableCell timestamp={policy.updatedAt} />,
           },
           {
             name: 'Actions',

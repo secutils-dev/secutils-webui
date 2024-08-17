@@ -17,7 +17,7 @@ import {
   EuiToolTip,
 } from '@elastic/eui';
 import axios from 'axios';
-import { unix } from 'moment';
+import { TimestampTableCell } from '../../components/timestamp_table_cell';
 
 import { PRIVATE_KEYS_PROD_WARNING_USER_SETTINGS_KEY } from './consts';
 import type { PrivateKey } from './private_key';
@@ -282,12 +282,12 @@ export default function CertificatesPrivateKeys() {
               ),
             },
             {
-              name: 'Created',
-              field: 'createdAt',
+              name: 'Last updated',
+              field: 'updatedAt',
               width: '160px',
               mobileOptions: { width: 'unset' },
-              sortable: (privateKey) => privateKey.createdAt,
-              render: (_, privateKey: PrivateKey) => unix(privateKey.createdAt).format('ll HH:mm'),
+              sortable: (privateKey) => privateKey.updatedAt,
+              render: (_, privateKey: PrivateKey) => <TimestampTableCell timestamp={privateKey.updatedAt} />,
             },
             {
               name: 'Actions',
