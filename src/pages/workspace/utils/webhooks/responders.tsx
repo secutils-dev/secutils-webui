@@ -29,20 +29,32 @@ import { ResponderRequestsTable } from './responder_requests_table';
 import { PageErrorState, PageLoadingState } from '../../../../components';
 import { type AsyncData, getApiRequestConfig, getApiUrl, getErrorMessage } from '../../../../model';
 import { useWorkspaceContext } from '../../hooks';
+import type { ResponderStats } from './responder_stats';
 
 export default function Responders() {
   const theme = useEuiTheme();
   const { uiState, setTitleActions } = useWorkspaceContext();
 
-  const [responders, setResponders] = useState<AsyncData<Responder[]>>({ status: 'pending' });
+  const [responders, setResponders] = useState<
+    AsyncData<{ responders: Responder[]; stats: Map<string, ResponderStats> }>
+  >({ status: 'pending' });
   const [responderToRemove, setResponderToRemove] = useState<Responder | null>(null);
   const [responderToEdit, setResponderToEdit] = useState<Responder | null | undefined>(null);
 
   const loadResponders = () => {
-    axios.get<Responder[]>(getApiUrl('/api/utils/webhooks/responders'), getApiRequestConfig()).then(
-      (res) => {
-        setResponders({ status: 'succeeded', data: res.data });
-        setTitleActions(res.data.length === 0 ? null : createButton);
+    Promise.all([
+      axios.get<Responder[]>(getApiUrl('/api/utils/webhooks/responders'), getApiRequestConfig()),
+      axios.get<ResponderStats[]>(getApiUrl('/api/utils/webhooks/responders/stats'), getApiRequestConfig()),
+    ]).then(
+      ([respondersRes, respondersStatsRes]) => {
+        setResponders({
+          status: 'succeeded',
+          data: {
+            responders: respondersRes.data,
+            stats: new Map(respondersStatsRes.data.map((stats) => [stats.responderId, stats])),
+          },
+        });
+        setTitleActions(respondersRes.data.length === 0 ? null : createButton);
       },
       (err: Error) => {
         setResponders({ status: 'failed', error: getErrorMessage(err) });
@@ -190,7 +202,7 @@ export default function Responders() {
   }
 
   let content;
-  if (responders.data.length === 0) {
+  if (responders.data.responders.length === 0) {
     content = (
       <EuiFlexGroup
         direction={'column'}
@@ -224,7 +236,7 @@ export default function Responders() {
         allowNeutralSort={false}
         sorting={sorting}
         onTableChange={onTableChange}
-        items={responders.data}
+        items={responders.data.responders}
         itemId={(responder) => responder.id}
         itemIdToExpandedRowMap={itemIdToExpandedRowMap}
         tableLayout={'auto'}
@@ -241,69 +253,6 @@ export default function Responders() {
             sortable: true,
             textOnly: true,
             render: (_, responder: Responder) => <ResponderName responder={responder} />,
-          },
-          {
-            name: 'Method',
-            field: 'method',
-            width: '100px',
-            render: (_, { enabled, method }: Responder) => (
-              <EuiText size={'s'} color={enabled ? undefined : theme.euiTheme.colors.disabledText}>
-                <b>{method}</b>
-              </EuiText>
-            ),
-            sortable: true,
-          },
-          {
-            name: 'Status code',
-            field: 'statusCode',
-            sortable: true,
-            width: '75px',
-            render: (_, { enabled, settings }: Responder) => (
-              <EuiText
-                size={'s'}
-                color={
-                  enabled
-                    ? settings.statusCode <= 200
-                      ? '#5cb800'
-                      : settings.statusCode < 400
-                        ? '#aea300'
-                        : 'danger'
-                    : theme.euiTheme.colors.disabledText
-                }
-              >
-                <b>{settings.statusCode.toString().toUpperCase()}</b>
-              </EuiText>
-            ),
-          },
-          {
-            name: 'Body',
-            field: 'body',
-            width: '50px',
-            align: 'center',
-            render: (_, { enabled, settings }: Responder) => (
-              <EuiIcon
-                color={enabled ? (settings.body ? '#5cb800' : undefined) : theme.euiTheme.colors.disabledText}
-                type={settings.body ? 'dot' : 'minus'}
-              />
-            ),
-          },
-          {
-            name: 'Headers',
-            field: 'headers',
-            width: '50px',
-            align: 'center',
-            render: (_, { enabled, settings }: Responder) => (
-              <EuiIcon
-                color={
-                  enabled
-                    ? settings.headers && settings.headers.length > 0
-                      ? '#5cb800'
-                      : undefined
-                    : theme.euiTheme.colors.disabledText
-                }
-                type={settings.headers && settings.headers.length > 0 ? 'dot' : 'minus'}
-              />
-            ),
           },
           {
             name: (
@@ -327,6 +276,38 @@ export default function Responders() {
                 </EuiText>
               ) : (
                 <EuiIcon type="minus" color={responder.enabled ? undefined : theme.euiTheme.colors.disabledText} />
+              );
+            },
+          },
+          {
+            name: 'Method',
+            field: 'method',
+            width: '100px',
+            render: (_, { enabled, method }: Responder) => (
+              <EuiText size={'s'} color={enabled ? undefined : theme.euiTheme.colors.disabledText}>
+                <b>{method}</b>
+              </EuiText>
+            ),
+            sortable: true,
+          },
+          {
+            name: 'Last requested',
+            field: 'createdAt',
+            width: '160px',
+            mobileOptions: { width: 'unset' },
+            sortable: (responder) => responders.data.stats.get(responder.id)?.lastRequestedAt ?? 0,
+            render: (_, responder: Responder) => {
+              const stats = responders.data.stats.get(responder.id);
+              return stats?.lastRequestedAt ? (
+                <TimestampTableCell
+                  timestamp={stats.lastRequestedAt}
+                  highlightRecent
+                  color={responder.enabled ? undefined : theme.euiTheme.colors.disabledText}
+                />
+              ) : (
+                <EuiText size={'s'} color={responder.enabled ? undefined : theme.euiTheme.colors.disabledText}>
+                  <b>-</b>
+                </EuiText>
               );
             },
           },
