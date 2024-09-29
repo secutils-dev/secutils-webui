@@ -28,7 +28,7 @@
     "@emotion/css": "^11.13.0",
     "@emotion/react": "^11.13.0",
     "@monaco-editor/react": "^4.6.0",
-    "@ory/client": "^1.14.3",
+    "@ory/client": "^1.15.4",
     "axios": "^1.7.4",
     "moment": "^2.30.1",
     "nanoid": "^5.0.7",

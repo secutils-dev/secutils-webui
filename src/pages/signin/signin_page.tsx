@@ -139,12 +139,11 @@ export function SigninPage() {
           throw axiosResponse;
         }
 
-        const publicKey = // Trim `window.__oryWebAuthnLogin(...)`
-          (
-            JSON.parse(((publicKeyNode.attributes as UiNodeInputAttributes).onclick as string).slice(26, -1)) as {
-              publicKey: SerializedPublicKeyCredentialRequestOptions;
-            }
-          ).publicKey;
+        const publicKey = (
+          JSON.parse((publicKeyNode.attributes as UiNodeInputAttributes).value as string) as {
+            publicKey: SerializedPublicKeyCredentialRequestOptions;
+          }
+        ).publicKey;
 
         await api.updateLoginFlow({
           flow: updatedFlow.id,

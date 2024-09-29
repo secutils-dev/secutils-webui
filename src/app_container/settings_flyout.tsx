@@ -165,10 +165,9 @@ export function SettingsFlyout({ onClose }: Props) {
           throw new Error('Cannot set passkey.');
         }
 
-        const { publicKey } = JSON.parse(
-          // Trim `window.__oryWebAuthnRegistration(...)`
-          ((publicKeyNode.attributes as UiNodeInputAttributes).onclick as string).slice(33, -1),
-        ) as { publicKey: SerializedPublicKeyCredentialCreationOptions };
+        const { publicKey } = JSON.parse((publicKeyNode.attributes as UiNodeInputAttributes).value as string) as {
+          publicKey: SerializedPublicKeyCredentialCreationOptions;
+        };
 
         try {
           await api.updateSettingsFlow({
