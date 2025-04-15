@@ -1,6 +1,6 @@
 import type { MouseEventHandler, ReactElement, ReactNode } from 'react';
 import { useCallback, useState } from 'react';
-import { Navigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation, useSearchParams } from 'react-router';
 
 import {
   EuiHeader,

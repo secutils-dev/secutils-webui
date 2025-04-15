@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 // Height of the website fixed header.
 const FIXED_HEADER_HEIGHT = 48;

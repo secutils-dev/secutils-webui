@@ -1,5 +1,5 @@
 import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 
 import { EuiButton, EuiFieldText, EuiForm, EuiFormRow, EuiLink, EuiPanel } from '@elastic/eui';
 import type { FrontendApi, VerificationFlow } from '@ory/client';

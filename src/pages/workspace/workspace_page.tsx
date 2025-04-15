@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router';
 
 import type { EuiSideNavItemType } from '@elastic/eui';
 import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem, EuiIcon, EuiSideNav, EuiSpacer, useEuiTheme } from '@elastic/eui';

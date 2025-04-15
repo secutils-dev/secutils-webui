@@ -1,6 +1,6 @@
 import type { ChangeEvent, MouseEventHandler } from 'react';
 import { useCallback, useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 
 import {
   EuiButton,

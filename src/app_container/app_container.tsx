@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router';
 
 import type { EuiThemeColorMode } from '@elastic/eui';
 import { EuiGlobalToastList, EuiProvider } from '@elastic/eui';
@@ -94,10 +94,6 @@ export function AppContainer() {
   }, []);
 
   const uiTheme = settings?.[USER_SETTINGS_KEY_COMMON_UI_THEME] as EuiThemeColorMode | undefined;
-  if (uiTheme == 'dark') {
-    import('@elastic/eui/dist/eui_theme_dark.min.css');
-  }
-
   const [toasts, setToasts] = useState<PageToast[]>([]);
   const addToast = useCallback((toast: PageToast) => {
     setToasts((currentToasts) => [...currentToasts, toast]);

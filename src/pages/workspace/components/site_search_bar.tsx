@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from 'react';
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import type { EuiSelectableTemplateSitewideOption } from '@elastic/eui';
 import {

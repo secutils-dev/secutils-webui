@@ -46,9 +46,6 @@ export function SettingsFlyout({ onClose }: Props) {
   const onThemeChange = useCallback(
     (e: ChangeEvent<HTMLSelectElement>) => {
       setSettings({ [USER_SETTINGS_KEY_COMMON_UI_THEME]: e.target.value });
-      if (e.target.value === 'light') {
-        setTimeout(() => window.location.reload(), 100);
-      }
     },
     [settings],
   );
