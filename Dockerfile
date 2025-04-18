@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM --platform=$BUILDPLATFORM node:20-alpine3.20 AS ui_builder
+FROM --platform=$BUILDPLATFORM node:22-alpine3.21 AS ui_builder
 WORKDIR /app
 # See, https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md#node-gyp-alpine
 RUN apk add --no-cache python3 make g++
@@ -9,6 +9,6 @@ RUN --mount=type=cache,target=/app/npm/cache set -x && npm ci --cache /app/npm/c
 COPY ["./src", "./src"]
 RUN set -x && npm run build
 
-FROM nginxinc/nginx-unprivileged:alpine3.19-slim
+FROM nginxinc/nginx-unprivileged:alpine3.21-slim
 COPY --from=ui_builder ["/app/dist/", "/usr/share/nginx/html/"]
 COPY ["./config/nginx.conf", "/etc/nginx/conf.d/default.conf"]
