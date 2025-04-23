@@ -1,3 +1,6 @@
+>[!IMPORTANT]
+> **The repository is deprecated, the code has been moved to [secutils-dev/secutils](https://github.com/secutils-dev/secutils/tree/main/components/secutils-webui).**
+
 # <img src="https://raw.githubusercontent.com/secutils-dev/secutils/main/assets/logo/secutils-logo-initials.png" alt="Secutils.dev" width="22"> [Secutils.dev](https://secutils.dev) Web UI &middot; [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://github.com/secutils-dev/secutils-webui/blob/main/LICENSE) [![Build Status](https://github.com/secutils-dev/secutils-webui/actions/workflows/ci.yml/badge.svg)](https://github.com/secutils-dev/secutils-webui/actions)
 
 The web user interface for Secutils.dev, refer to [secutils-dev/secutils](https://github.com/secutils-dev/secutils) for more details.
